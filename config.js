@@ -1,16 +1,12 @@
+const influx = require("./influx.json");
+
 module.exports = {
 	
 	express: {
 		port: 8080
 	},
 
-	influx: {
-		host: '192.168.1.100',
-		port: '8086',
-		username: '',
-		password: '',
-		db: 'matahari'
-	},
+	influx: influx,
 
 	matahari: {
 
