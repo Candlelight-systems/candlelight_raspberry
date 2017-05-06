@@ -304,6 +304,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
 				let data = "";				
+				console.log( command );
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data
