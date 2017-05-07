@@ -14,11 +14,9 @@ let forbidLog = {};
 
 async function schedule( instrumentId, chanId, status ) {
 
-
 	scheduleTrack( ...arguments );
 	setupTimeout("voc", instrumentId, chanId, measureVoc, status );	
-	setupTimeout("jsc", instrumentId, chanId, measureJsc, status );
-			
+	setupTimeout("jsc", instrumentId, chanId, measureJsc, status );			
 }
 
 
@@ -111,6 +109,7 @@ function measureJsc( instrumentId, chanId, delay, status ) {
 
 			status.tracking_mode = 3;
 			status.tracking_interval = 10;
+
 			await commandUpdateChannelStatus( instrumentId, chanId );
 				
 			setTimeout( () => {

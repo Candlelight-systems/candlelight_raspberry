@@ -7,6 +7,8 @@ let influx = require("influx");
 const config = require("../config");
 const MataHariIVScheduler = require("./ivscheduler");
 const MataHariTrackScheduler = require("./trackscheduler");
+const queryManager = require("./queryhandler");
+
 const matahariconfig = config.matahari;
 const fs = require("fs");
 
@@ -77,6 +79,7 @@ function openConnections() {
 
 		connections[ instrumentConfig.instrumentId ] = connection;
 		connections[ instrumentConfig.instrumentId ].lease = Promise.resolve();
+		connections[ instrumentConfig.instrumentId ].queryManager = new queryManager( connection );
 	} );
 }
 
@@ -179,39 +182,39 @@ async function requestTrackingData( instrumentId, channelId ) {
 		rejecter("Cannot find communication stream with the instrument based on the instrument id");
 	}
 
-	await comm.lease;
+	return comm.queryManager.addQuery( async ( ) => {
 
-	return comm.lease = new Promise( ( resolver, rejecter ) => {
+		await comm.lease;
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
 
+			comm.removeAllListeners( "data" );
+			let count = 0;
+			comm.on( "data", async ( d ) => {
 
-    const startSave = Date.now();
+				data += d.toString('ascii'); // SAMD sends ASCII data
+				while( data.indexOf("\r\n") > -1 ) {
+					count++;
+					
+					if( count == 1 ) {
+						data2 = data.substr( 0, data.indexOf("\r\n") );
+						data2 = data2.split(",");
+						data = data.substr( data.indexOf("\r\n") + 2 );
+					}
 
-		comm.removeAllListeners( "data" );
-
-		let count = 0;
-		comm.on( "data", async ( d ) => {
-
-			data += d.toString('ascii'); // SAMD sends ASCII data
-			while( data.indexOf("\r\n") > -1 ) {
-				count++;
-				
-				if( count == 1 ) {
-					data2 = data.substr( 0, data.indexOf("\r\n") );
-					data2 = data2.split(",");
-					data = data.substr( data.indexOf("\r\n") + 2 );
+					if( count >= 2 ) {
+						await delay( 100 );
+						comm.removeAllListeners( "data" );
+						resolver( data2 );
+						data = "";
+						break;
+					}
 				}
+			} );	
+			comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
+		} );
 
-				if( count >= 2 ) {
-					await delay( 100 );
-					comm.removeAllListeners( "data" );
-					resolver( data2 );
-					data = "";
-					break;
-				}
-			}
-		} );	
-		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
-	} );
+	});
+
 }
 
 
@@ -304,14 +307,11 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
 				let data = "";				
-				console.log( command );
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data
 					if( data.indexOf("\n") > -1 ) {
-						console.log('dataok');
 						comm.removeAllListeners( "data" );
-						
 						data = "";	
 						resolver();
 					}

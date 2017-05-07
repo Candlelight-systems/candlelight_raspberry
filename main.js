@@ -29,8 +29,6 @@ app.get("/getChannels", function( req, res ) {
 	res.send( JSON.stringify( matahari.getChannels() ) );
 } );
 
-
-
 app.post("/setInfluxDB", function( req, res ) {
 
 	let cfg = req.body;
