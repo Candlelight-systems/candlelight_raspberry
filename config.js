@@ -4,7 +4,7 @@ const influx = require("./influx.json");
 module.exports = {
 	
 	express: {
-		port: 80
+		port: 8080
 	},
 
 	influx: influx,

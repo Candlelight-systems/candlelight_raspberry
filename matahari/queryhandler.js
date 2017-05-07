@@ -1,5 +1,5 @@
 
-class queryManager() {
+class queryManager {
 
 	constructor( stream ) {
 		this.queue = [];
@@ -8,16 +8,32 @@ class queryManager() {
 	}
 
 	addQuery( q ) {
-		this.queue.push( q );
+		console.log('add');
+		let done = new Promise( ( resolver, rejecter ) => {
+			this.queue.push( { 
+				query: q,
+				resolver: resolver,
+				rejecter: rejecter
+			} );
+		} );
 		this.processQueue();
+		return done;
 	}
 
 	processQueue() {
+
+
 		if( this.processing ) { 
 			return;
 		}
 		this.processing = true;
-		this.doQuery( queue.shift() );
+
+		if( this.queue.length == 0 ) {
+			this.processing = false;
+			return;
+		}
+console.log('q');
+		this.doQuery( this.queue.shift() );
 	}
 
 	doQuery( query ) {
@@ -25,10 +41,14 @@ class queryManager() {
 			throw "Stream does not exist";
 		}
 
-		query().then( ( results ) => {
+		query.query().then( ( results ) => {
+			
 			this.processing = false;
-			processQueue();
-			return results;
+			this.processQueue();
+
+			query.resolver( results );
+		} ).catch( ( error ) => {
+			query.rejecter( error );
 		} );
 	}
 }
