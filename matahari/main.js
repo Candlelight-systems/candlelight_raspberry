@@ -7,6 +7,8 @@ let influx = require("influx");
 const config = require("../config");
 const MataHariIVScheduler = require("./ivscheduler");
 const MataHariTrackScheduler = require("./trackscheduler");
+const queryManager = require("./queryhandler");
+
 const matahariconfig = config.matahari;
 const fs = require("fs");
 
@@ -18,6 +20,26 @@ async function normalizeStatus() {
 
 	let instrumentId, chanId;
 
+	let defaultProps = { 
+		"tracking_record_interval": 1000,
+		"tracking_interval": 100,
+		"tracking_bwfwthreshold": 1,
+		"tracking_fwbwthreshold": 1,
+		"tracking_step": 1,
+		"tracking_switchdelay": 1,
+		"iv_start": 1,
+		"iv_stop": 0,
+		"iv_hysteresis": 0,
+		"iv_rate": 0.1,
+		"enable": 0,
+		"tracking_jsc": 0,
+		"tracking_voc": 0,
+		"tracking_jsc_time": 10000,
+		"tracking_voc_time": 10000,
+		"tracking_mode": 0,
+		"cellArea": 0.5
+	};
+
 	for( var i = 0; i < matahariconfig.instruments.length; i ++ ) {
 
 		for( var j = 0, l = matahariconfig.instruments[ i ].channels.length; j < l; j ++ ) {
@@ -26,8 +48,10 @@ async function normalizeStatus() {
 			chanId = matahariconfig.instruments[ i ].channels[ j ].chanId;
 
 			if( ! getStatus( instrumentId, chanId ) ) {
+				defaultProps.chanId = chanId;
+				defaultProps.instrumentId = instrumentId;
 
-				status.push( { instrumentId: instrumentId, chanId: chanId } );
+				status.push( Object.assign( {}, defaultProps ) );
 			}
 		}
 
@@ -77,6 +101,7 @@ function openConnections() {
 
 		connections[ instrumentConfig.instrumentId ] = connection;
 		connections[ instrumentConfig.instrumentId ].lease = Promise.resolve();
+		connections[ instrumentConfig.instrumentId ].queryManager = new queryManager( connection );
 	} );
 }
 
@@ -116,9 +141,13 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 		throw "Cannot set channels status";
 	}
 
+	let originalStatus = getStatus( instrumentId, chanId );
+	Object.assign( originalStatus, chanStatus );
+	chanStatus = originalStatus;
+
 	scheduleIVCurve( instrumentId, chanId, chanStatus.tracking_record_interval );
 	scheduleTracking( instrumentId, chanId, chanStatus.tracking_record_interval );
-
+	setTrackingInterval(  instrumentId, chanId, chanStatus.tracking_interval );
 	setTrackingInterval(  instrumentId, chanId, chanStatus.tracking_interval );
 	setTrackingBWFWThreshold( instrumentId, chanId, chanStatus.tracking_bwfwthreshold );
 	setTrackingFWBWThreshold( instrumentId, chanId, chanStatus.tracking_fwbwthresholds );
@@ -138,33 +167,24 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 
 	switch( chanStatus.tracking_mode ) {
 
-		case "voc":
-			startChannelVoc( instrumentId, chanId );
+		case 2:
+			startChannelVoc( instrumentId, chanId, true );
 		break;
 
-		case "jsc":
-			startChannelVoltage( instrumentId, chanId );
+		case 3:
+			startChannelVoltage( instrumentId, chanId, true );
 		break;
 
-		case "mppt":
-			startChannelMPPT( instrumentId, chanId );
+		case 1:
+			startChannelMPP( instrumentId, chanId, true );
 		break;
 
-		case "none":
+		case 0:
 			stopChannel( instrumentId, chanId );
 		break;
 	}
 
 	await updateInstrumentStatusChanId( instrumentId, chanId );
-
-	for( var i = 0; i < status.length; i ++ ) {
-
-		if( status[ i ].chanId == chanId && status[ i ].instrumentId == instrumentId ) {
-
-			status[ i ] = chanStatus;
-		}
-	}
-
 	return filesaveStatus();
 }
 
@@ -179,39 +199,42 @@ async function requestTrackingData( instrumentId, channelId ) {
 		rejecter("Cannot find communication stream with the instrument based on the instrument id");
 	}
 
-	await comm.lease;
+	return comm.queryManager.addQuery( async ( ) => {
 
-	return comm.lease = new Promise( ( resolver, rejecter ) => {
+		
+		await comm.lease;
+		
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
 
+			comm.removeAllListeners( "data" );
+			let count = 0;
+			comm.on( "data", async ( d ) => {
 
-    const startSave = Date.now();
+				data += d.toString('ascii'); // SAMD sends ASCII data
+				while( data.indexOf("\r\n") > -1 ) {
+					count++;
+					
+					if( count == 1 ) {
+						data2 = data.substr( 0, data.indexOf("\r\n") );
+						data2 = data2.split(",");
+						data = data.substr( data.indexOf("\r\n") + 2 );
+					}
 
-		comm.removeAllListeners( "data" );
-
-		let count = 0;
-		comm.on( "data", async ( d ) => {
-
-			data += d.toString('ascii'); // SAMD sends ASCII data
-			while( data.indexOf("\r\n") > -1 ) {
-				count++;
-				
-				if( count == 1 ) {
-					data2 = data.substr( 0, data.indexOf("\r\n") );
-					data2 = data2.split(",");
-					data = data.substr( data.indexOf("\r\n") + 2 );
+					if( count >= 2 ) {
+						await delay( 100 );
+						comm.removeAllListeners( "data" );
+						resolver( data2 );
+						data = "";
+						break;
+					}
 				}
+			} );	
+			console.log('req');
+			comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
+		} );
 
-				if( count >= 2 ) {
-					await delay( 100 );
-					comm.removeAllListeners( "data" );
-					resolver( data2 );
-					data = "";
-					break;
-				}
-			}
-		} );	
-		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
-	} );
+	});
+
 }
 
 
@@ -225,7 +248,6 @@ async function requestIVData( instrumentId, channelId ) {
 	}
 
 	await comm.lease;
-
 	return comm.lease = new Promise( async ( resolver, rejecter ) => {
 
 		comm.removeAllListeners( "data" );
@@ -292,7 +314,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	await ( comm.lease );
+	await comm.lease;
 
 	return comm.lease = new Promise( async ( resolver ) => {
 		
@@ -303,20 +325,18 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 			await new Promise( async ( resolver ) => {
 
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
+				
 				let data = "";				
-				console.log( command );
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data
 					if( data.indexOf("\n") > -1 ) {
-						console.log('dataok');
 						comm.removeAllListeners( "data" );
-						
 						data = "";	
 						resolver();
 					}
 				} );
-
+console.log( command );
 				if( comm.isOpen() ) {
 					comm.write( command );
 					comm.drain();
@@ -335,12 +355,12 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 		if( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) {
 			//MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
-
-		if( chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
+		
+		if( chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
-
+		
 		resolver();
 	} );
 }
@@ -408,7 +428,7 @@ function startChannelJsc( instrumentId, chanId, noEnable = false ) {
 	}
 }
 
-function stopChannel( instrumentId, chanId, noEnable = false ) {
+function stopChannel( instrumentId, chanId ) {
 	setStatus( instrumentId, chanId, "tracking_mode", 0 );
 	setStatus( instrumentId, chanId, "enable", 0 );
 }

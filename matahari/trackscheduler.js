@@ -14,11 +14,9 @@ let forbidLog = {};
 
 async function schedule( instrumentId, chanId, status ) {
 
-
 	scheduleTrack( ...arguments );
 	setupTimeout("voc", instrumentId, chanId, measureVoc, status );	
-	setupTimeout("jsc", instrumentId, chanId, measureJsc, status );
-			
+	setupTimeout("jsc", instrumentId, chanId, measureJsc, status );			
 }
 
 
@@ -38,16 +36,18 @@ function scheduleTrack( instrumentId, chanId, status ) {
 	}
 
 	intervals[ intervalId ] = setTimeout( () => {		
-		
+
 		if( parseInt( status.tracking_mode ) !== 1 || forbidLog[ intervalId ]) {
+			scheduleTrack( instrumentId, chanId, status );
 			return;
 		}
 
 		getData( instrumentId, chanId, status ).then( () => {
+
 			scheduleTrack( instrumentId, chanId, status );
 		});
 
-	}, 1000 );
+	}, status.tracking_record_interval );
 }
 
 function measureVoc( instrumentId, chanId, delay, status ) {
@@ -111,6 +111,7 @@ function measureJsc( instrumentId, chanId, delay, status ) {
 
 			status.tracking_mode = 3;
 			status.tracking_interval = 10;
+
 			await commandUpdateChannelStatus( instrumentId, chanId );
 				
 			setTimeout( () => {
@@ -216,7 +217,9 @@ function getData( instrumentId, chanId, status ) {
 			return;
 		}
 
-		let efficiency = powerMean / results[ 9 ] * 100;
+		//results[9] in sun
+		// W cm-2
+		let efficiency = ( powerMean / (status.cellArea) ) / ( results[ 9 ] * 0.1 ) * 100;
 
 		return influx.storeTrack( status.measurementName, {
 
@@ -233,7 +236,7 @@ function getData( instrumentId, chanId, status ) {
 		} );
 
 	} ).catch( ( error ) => {
-
+		console.log( error );
 		throw error;
 	} );
 }
