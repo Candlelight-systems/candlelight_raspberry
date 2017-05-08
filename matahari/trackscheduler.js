@@ -51,7 +51,7 @@ function scheduleTrack( instrumentId, chanId, status ) {
 }
 
 function measureVoc( instrumentId, chanId, delay, status ) {
-
+	
 	ready[ instrumentId + "_" + chanId ] = ready[ instrumentId + "_" + chanId ] || new Promise( ( resolver ) => { resolver(); } );
 	return ready[ instrumentId + "_" + chanId ] = ready[ instrumentId + "_" + chanId ].then( () => {
 
