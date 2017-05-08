@@ -32,7 +32,7 @@ class queryManager {
 			this.processing = false;
 			return;
 		}
-console.log('q');
+
 		this.doQuery( this.queue.shift() );
 	}
 

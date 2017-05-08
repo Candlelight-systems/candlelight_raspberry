@@ -141,6 +141,8 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 		throw "Cannot set channels status";
 	}
 
+	let previousStatus = Object.assign( {}, getStatus( instrumentId, chanId ) );
+
 	let originalStatus = getStatus( instrumentId, chanId );
 	Object.assign( originalStatus, chanStatus );
 	chanStatus = originalStatus;
@@ -184,7 +186,7 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 		break;
 	}
 
-	await updateInstrumentStatusChanId( instrumentId, chanId );
+	await updateInstrumentStatusChanId( instrumentId, chanId, previousStatus );
 	return filesaveStatus();
 }
 
@@ -200,7 +202,6 @@ async function requestTrackingData( instrumentId, channelId ) {
 	}
 
 	return comm.queryManager.addQuery( async ( ) => {
-
 		
 		await comm.lease;
 		
@@ -223,13 +224,14 @@ async function requestTrackingData( instrumentId, channelId ) {
 					if( count >= 2 ) {
 						await delay( 100 );
 						comm.removeAllListeners( "data" );
+						
 						resolver( data2 );
 						data = "";
 						break;
 					}
 				}
 			} );	
-			console.log('req');
+			
 			comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
 		} );
 
@@ -249,6 +251,7 @@ async function requestIVData( instrumentId, channelId ) {
 
 	await comm.lease;
 	return comm.lease = new Promise( async ( resolver, rejecter ) => {
+
 
 		comm.removeAllListeners( "data" );
 		comm.on( "data", async ( data ) => {
@@ -290,7 +293,7 @@ async function updateInstrumentStatusChanName( instrumentId, channelName ) {
 	return updateInstrumentStatusChanId( instrumentId, chanId );
 }
 
-async function updateInstrumentStatusChanId( instrumentId, chanId ) {
+async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatus ) {
 
 	if( ! chanId ) {
 		throw "Could not find channel id in config file based on the channel name";
@@ -315,6 +318,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 	}	
 
 	await comm.lease;
+	
 
 	return comm.lease = new Promise( async ( resolver ) => {
 		
@@ -324,9 +328,13 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 			
 			await new Promise( async ( resolver ) => {
 
+				if( previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ i ]( previousStatus ) ) {
+					continue;
+				}
+
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
-				
-				let data = "";				
+				let data = "";
+
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data
@@ -336,15 +344,14 @@ async function updateInstrumentStatusChanId( instrumentId, chanId ) {
 						resolver();
 					}
 				} );
-console.log( command );
+
 				if( comm.isOpen() ) {
 					comm.write( command );
-					comm.drain();
+					
 				}
 
 				comm.once("open", async () => {
 					comm.write( command );
-					comm.drain();
 				} );
 			} );
 
@@ -360,7 +367,7 @@ console.log( command );
 			
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
-		
+
 		resolver();
 	} );
 }
