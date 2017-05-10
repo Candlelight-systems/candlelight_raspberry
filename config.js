@@ -38,7 +38,7 @@ module.exports = {
 				instrumentId: "matahari1000",
 
 				config: {
-					host: "/dev/tty.usbmodem1411",
+					host: "/dev/tty.usbmodem1421",
 					params: {
 						baudrate: 115200
 					},
