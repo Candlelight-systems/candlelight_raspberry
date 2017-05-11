@@ -32,10 +32,12 @@ async function normalizeStatus() {
 		"iv_hysteresis": 0,
 		"iv_rate": 0.1,
 		"enable": 0,
-		"tracking_jsc": 0,
-		"tracking_voc": 0,
-		"tracking_jsc_time": 10000,
-		"tracking_voc_time": 10000,
+		"tracking_measure_jsc": 0,
+		"tracking_measure_voc": 0,
+		"tracking_measure_jsc_time": 10000,
+		"tracking_measure_voc_time": 10000,
+		"tracking_measure_jsc_interval": 30000,
+		"tracking_measure_voc_interval": 30000,
 		"tracking_mode": 0,
 		"cellArea": 0.5
 	};
@@ -65,12 +67,13 @@ async function normalizeStatus() {
 }
 
 
+normalizeStatus();
+
+
 function filesaveStatus() {
 	
 	return fs.writeFileSync("matahari/status.json", JSON.stringify( { channels: status }, undefined, "\t" ) );
 }
-
-normalizeStatus();
 
 
 
@@ -80,6 +83,7 @@ function openConnections() {
 
 		const cfg = instrumentConfig.config;
 		const connection = new serialport( cfg.host, cfg.params );
+
 		connection.on("error", ( err ) => {
 			throw "Error thrown by the serial communication: ", err;
 		} );
@@ -204,40 +208,155 @@ async function requestTrackingData( instrumentId, channelId ) {
 	return comm.queryManager.addQuery( async ( ) => {
 		
 		await comm.lease;
-		
-		return comm.lease = new Promise( ( resolver, rejecter ) => {
-
-			comm.removeAllListeners( "data" );
-			let count = 0;
-			comm.on( "data", async ( d ) => {
-
-				data += d.toString('ascii'); // SAMD sends ASCII data
-				while( data.indexOf("\r\n") > -1 ) {
-					count++;
-					
-					if( count == 1 ) {
-						data2 = data.substr( 0, data.indexOf("\r\n") );
-						data2 = data2.split(",");
-						data = data.substr( data.indexOf("\r\n") + 2 );
-					}
-
-					if( count >= 2 ) {
-						await delay( 100 );
-						comm.removeAllListeners( "data" );
-						
-						resolver( data2 );
-						data = "";
-						break;
-					}
-				}
-			} );	
-			
-			comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
-		} );
-
+		return comm.lease = _requestTrackingData( comm, channelId );
 	});
 
 }
+
+function _requestTrackingData( comm, channelId ) {
+
+	let data = "",
+		data2;
+
+	return new Promise( ( resolver, rejecter ) => {
+
+		comm.removeAllListeners( "data" );
+		let count = 0;
+		comm.on( "data", async ( d ) => {
+
+			data += d.toString('ascii'); // SAMD sends ASCII data
+			while( data.indexOf("\r\n") > -1 ) {
+				count++;
+				
+				if( count == 1 ) {
+					data2 = data.substr( 0, data.indexOf("\r\n") );
+					data2 = data2.split(",");
+					data = data.substr( data.indexOf("\r\n") + 2 );
+				}
+
+				if( count >= 2 ) {
+					await delay( 100 );
+					comm.removeAllListeners( "data" );
+			console.log('res');			
+					resolver( data2 );
+					data = "";
+					break;
+				}
+			}
+		} );	
+		console.log('wr');
+		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
+	});
+}
+
+
+async function requestVoc( instrumentId, channelId, status, onStart, equilibrationTime ) {
+
+	let comm = connections[ instrumentId ];
+
+	if( ! comm ) {
+		rejecter("Cannot find communication stream with the instrument based on the instrument id");
+	}
+
+	return comm.queryManager.addQuery( async ( ) => {
+		
+		await comm.lease;
+		
+		return comm.lease = new Promise( async ( resolver, rejecter ) => {
+
+			// Save the current mode
+			let statusSaved = status.tracking_mode,	
+				intervalSaved = status.tracking_interval;
+
+			// Change the mode to Voc tracking, with low interval
+			status.tracking_mode = 2;
+			status.tracking_interval = 10;
+
+			// Update the cell status. Wait for it to be done
+			await updateInstrumentStatusChanId( instrumentId, channelId );
+			
+			// Start counting
+			setTimeout( async () => {
+
+				let trackingData = await _requestTrackingData( comm, channelId ),
+					voc = trackingData[ 0 ];
+
+				// Set back the tracking mode to the previous one
+				status.tracking_mode = statusSaved;
+				status.tracking_interval = intervalSaved;
+
+				// Update the channel. Make it synchronous.
+				await updateInstrumentStatusChanId( instrumentId, channelId );
+
+				// Make storage purely asynchronous (no need to wait on it)
+			//	influx.storeVoc( status.measurementName, voc);
+
+				// Delay before continuing
+				await delay( 5000 );
+
+				resolver( voc );
+
+			}, equilibrationTime );
+		} );
+	} );
+}
+
+
+
+
+async function requestJsc( instrumentId, channelId, status, onStart, equilibrationTime ) {
+
+	let comm = connections[ instrumentId ];
+
+	if( ! comm ) {
+		rejecter("Cannot find communication stream with the instrument based on the instrument id");
+	}
+console.log('request Jsc');
+	return comm.queryManager.addQuery( async ( ) => {
+		
+		await comm.lease;console.log('leasing jsc');
+		
+		return comm.lease = new Promise( async ( resolver, rejecter ) => {
+
+			// Save the current mode
+			let statusSaved = status.tracking_mode,	
+				intervalSaved = status.tracking_interval;
+
+			// Change the mode to Jsc tracking, with low interval
+			status.tracking_mode = 3;
+			status.tracking_interval = 10;
+
+			// Update the cell status. Wait for it to be done
+			await updateInstrumentStatusChanId( instrumentId, channelId );
+			console.log('updated Jsc');
+			// Start counting
+			setTimeout( async () => {
+
+				let trackingData = await _requestTrackingData( comm, channelId ),
+					jsc = trackingData[ 1 ];
+
+
+				// Set back the tracking mode to the previous one
+				status.tracking_mode = statusSaved;
+				status.tracking_interval = intervalSaved;
+
+				// Update the channel. Make it synchronous.
+				await updateInstrumentStatusChanId( instrumentId, channelId );
+console.log('updated Jsc2');
+				// Make storage purely asynchronous (no need to wait on it)
+//				influx.storeJsc( status.measurementName, jsc );
+
+				// Delay before continuing
+				await delay( 5000 );
+console.log('resolving Jsc');
+				resolver( jsc );
+
+			}, equilibrationTime );
+		} );
+	} );
+}
+
+
 
 
 async function requestIVData( instrumentId, channelId ) {
@@ -293,6 +412,33 @@ async function updateInstrumentStatusChanName( instrumentId, channelName ) {
 	return updateInstrumentStatusChanId( instrumentId, chanId );
 }
 
+
+function _hasChanged( objectCollection, ...states ) {
+
+	var changed = false;
+	objectCollection.forEach( ( el ) => {
+
+		let stateRef;
+		states.forEach( ( state, index ) => {
+
+			if( index == 0 ) {
+
+				stateRef = state;
+			
+			} else {
+
+				if( stateRef !== state ) {
+					changed = true;
+				}
+			}
+		});
+	});
+
+	if( changed ) {
+		return true;
+	}
+}
+
 async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatus ) {
 
 	if( ! chanId ) {
@@ -329,11 +475,11 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			await new Promise( async ( resolver ) => {
 
 				if( previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ i ]( previousStatus ) ) {
-					continue;
+					return resolver();
 				}
 
-				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
-				let data = "";
+				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
+					data = "";
 
 				comm.on( "data", async ( d ) => {
 
@@ -363,9 +509,19 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			//MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
-		if( chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
-			
+console.log('dsf', _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ));
+		if( _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
+		}
+
+		// Scheduling Voc. Checks for applicability are done later
+		if( _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ) ) {
+			MataHariTrackScheduler.scheduleVoc( instrumentId, chanId, chanStatus );
+		}
+
+		// Scheduling Jsc. Checks for applicability are done later
+		if( _hasChanged( [ "enabled", "tracking_jsc", "tracking_jsc_interval"], chanStatus, previousStatus ) ) {
+			MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
 		}
 
 		resolver();
@@ -496,7 +652,7 @@ function scheduleIVCurve( instrumentId, chanId, interval ) {
 }
 
 MataHariIVScheduler.setCommand( requestIVData );
-MataHariTrackScheduler.setCommands( requestTrackingData, updateInstrumentStatusChanId );
+MataHariTrackScheduler.setCommands( requestTrackingData, updateInstrumentStatusChanId, requestVoc, requestJsc );
 
 module.exports = {
 	getChannels: getChannels,

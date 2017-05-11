@@ -18,7 +18,7 @@ module.exports.storeIV = function( measurementName, ivData ) {
 }
 
 module.exports.storeTrack = function( measurementName, trackData ) {
-
+console.log( trackData );
     return influxClient.writePoints([
       {
         measurement: measurementName,
