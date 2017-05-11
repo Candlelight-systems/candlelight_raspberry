@@ -16,11 +16,11 @@ function schedule( instrumentId, chanId, status ) {
 	scheduleTrack( ...arguments );
 }
 
-function scheduleVoc() {
+function scheduleVoc( instrumentId, chanId, status ) {
 	setupTimeout("voc", instrumentId, chanId, measureVoc, status );	
 }
 
-function scheduleJsc() {
+function scheduleJsc( instrumentId, chanId, status ) {
 	setupTimeout("jsc", instrumentId, chanId, measureJsc, status );	
 }
 
@@ -50,6 +50,8 @@ function scheduleTrack( instrumentId, chanId, status ) {
 		getData( instrumentId, chanId, status ).then( () => {
 
 			scheduleTrack( instrumentId, chanId, status );
+		}).catch( ( error ) => {
+			console.error(`Could not track data: ${error.stack}`);
 		});
 
 	}, status.tracking_record_interval );
@@ -84,7 +86,7 @@ function measureJsc( instrumentId, chanId, status, equilibration ) {
 function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 
 	let track, trackInterval, trackTime;
-console.log( mode );
+
 	switch( mode ) {
 
 		case "voc":
@@ -106,7 +108,7 @@ console.log( mode );
 	}
 	
 	const intervalId = instrumentId + chanId + "_" + mode;
-console.log( status, track );
+
 	if( ! track ) {
 		if( intervals[ intervalId ] ) {
 			clearTimeout( intervals[ intervalId ] );
@@ -115,12 +117,12 @@ console.log( status, track );
 
 		return;
 	}
-console.log('stillhere');
 
+console.log( status, track );
 	if( intervals[ intervalId ] ) {
 		return;
 	}
-console.log('stillhere2', trackInterval );
+
 	intervals[ intervalId ] = setTimeout( async () => {		
 		
 		intervals[ intervalId ] = false;

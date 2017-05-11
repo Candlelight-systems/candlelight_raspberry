@@ -22,8 +22,8 @@
 			"instrumentId": "matahari1000",
 			"cellName": "CH1_5",
 			"tracking_fw": null,
-			"tracking_measure_voc_interval": 60000,
-			"tracking_measure_jsc_interval": 30000,
+			"tracking_measure_voc_interval": 600000,
+			"tracking_measure_jsc_interval": 300000,
 			"measurementName": "CH1_5_1494164151288"
 		},
 		{

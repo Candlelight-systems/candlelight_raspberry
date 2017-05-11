@@ -478,8 +478,8 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 					return resolver();
 				}
 
-				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n";
-				let data = "";
+				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
+					data = "";
 
 				comm.on( "data", async ( d ) => {
 
@@ -509,7 +509,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			//MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
-
+console.log('dsf', _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ));
 		if( _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
