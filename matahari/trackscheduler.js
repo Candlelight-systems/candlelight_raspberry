@@ -168,7 +168,7 @@ function getData( instrumentId, chanId, status ) {
 			voltageMax = results[ 6 ],
 			currentMax = results[ 7 ],
 			powerMax = results[ 8 ],
-			sun = results[ 9 ];
+			sun = results[ 9 ],
 			nb = results[ 10 ];
 
 		if( parseInt( nb ) == 0 ) {
