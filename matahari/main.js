@@ -228,7 +228,7 @@ function _requestTrackingData( comm, channelId ) {
 			data += d.toString('ascii'); // SAMD sends ASCII data
 
 			while( data.indexOf("\r\n") > -1 ) {
-				console.log( data );
+				
 				count++;
 				
 				if( count == 1 ) {
@@ -247,7 +247,7 @@ function _requestTrackingData( comm, channelId ) {
 				}
 			}
 		} );	
-		console.log( channelId );
+		
 		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
 		comm.drain();
 	});
@@ -315,10 +315,10 @@ async function requestJsc( instrumentId, channelId, status, onStart, equilibrati
 	if( ! comm ) {
 		rejecter("Cannot find communication stream with the instrument based on the instrument id");
 	}
-console.log('request Jsc');
+
 	return comm.queryManager.addQuery( async ( ) => {
 		
-		await comm.lease;console.log('leasing jsc');
+		await comm.lease;
 		
 		return comm.lease = new Promise( async ( resolver, rejecter ) => {
 
