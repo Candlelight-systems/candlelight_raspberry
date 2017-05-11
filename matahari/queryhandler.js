@@ -8,7 +8,7 @@ class queryManager {
 	}
 
 	addQuery( q ) {
-		console.log('add');
+		
 		let done = new Promise( ( resolver, rejecter ) => {
 			this.queue.push( { 
 				query: q,
