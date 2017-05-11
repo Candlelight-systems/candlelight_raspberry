@@ -18,7 +18,7 @@ module.exports.storeIV = function( measurementName, ivData ) {
 }
 
 module.exports.storeTrack = function( measurementName, trackData ) {
-console.log( trackData );
+
     return influxClient.writePoints([
       {
         measurement: measurementName,
@@ -32,7 +32,8 @@ console.log( trackData );
           powerMin: trackData.powerMin,
           powerMean: trackData.powerMean,
           powerMax: trackData.powerMax,
-          efficiency: trackData.efficiency
+          efficiency: trackData.efficiency,
+          sun: trackData.sun
         },
       }
 
