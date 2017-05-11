@@ -89,6 +89,7 @@ function openConnections() {
 		} );
 
 		connection.on("open", () => {
+			connection.flush();
 			connection.write("RESERVED:REFENABLE\n");
 		} );
 
@@ -237,9 +238,9 @@ function _requestTrackingData( comm, channelId ) {
 				}
 
 				if( count >= 2 ) {
-					await delay( 100 );
 					comm.removeAllListeners( "data" );
-				
+					comm.flush();
+					await delay( 100 );
 					resolver( data2 );
 					data = "";
 					break;
@@ -248,6 +249,7 @@ function _requestTrackingData( comm, channelId ) {
 		} );	
 		console.log( channelId );
 		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
+		comm.drain();
 	});
 }
 
@@ -490,6 +492,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 					data += d.toString('ascii'); // SAMD sends ASCII data
 					if( data.indexOf("\n") > -1 ) {
 						comm.removeAllListeners( "data" );
+						comm.flush();
 						data = "";	
 						resolver();
 					}
@@ -502,6 +505,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 
 				comm.once("open", async () => {
 					comm.write( command );
+					comm.drain();
 				} );
 			} );
 
