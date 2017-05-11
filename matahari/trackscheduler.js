@@ -143,7 +143,7 @@ function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 	intervals[ intervalId ] = setTimeout( async () => {		
 		
 		intervals[ intervalId ] = false;
-		console.log('doing');
+		
 		await callback( instrumentId, chanId, status, trackTime );
 	}, trackInterval );
 }
@@ -203,7 +203,8 @@ module.exports = {
 	schedule: schedule,
 	scheduleVoc: scheduleVoc,
 	scheduleJsc: scheduleJsc,
-
+	hasTimeout: hasTimeout,
+	
 	setCommands: function( cmdRequestData, cmdUpdateChannelStatus, reqVoc, reqJsc ) {
 		command = cmdRequestData;
 		commandUpdateChannelStatus = cmdUpdateChannelStatus;
