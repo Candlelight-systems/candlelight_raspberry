@@ -124,7 +124,7 @@ function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 			trackTime = status.tracking_measure_jsc_time;
 		break;
 	}
-	
+	console.log( track );
 	const intervalId = instrumentId + chanId + "_" + mode;
 
 	if( ! track ) {
