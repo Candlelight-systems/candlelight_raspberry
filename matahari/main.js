@@ -237,14 +237,14 @@ function _requestTrackingData( comm, channelId ) {
 				if( count >= 2 ) {
 					await delay( 100 );
 					comm.removeAllListeners( "data" );
-			console.log('res');			
+				
 					resolver( data2 );
 					data = "";
 					break;
 				}
 			}
 		} );	
-		console.log('wr');
+		console.log( channelId );
 		comm.write( matahariconfig.specialcommands.getTrackData + ":CH" + channelId + "\n" );
 	});
 }
@@ -328,7 +328,7 @@ console.log('request Jsc');
 
 			// Update the cell status. Wait for it to be done
 			await updateInstrumentStatusChanId( instrumentId, channelId );
-			console.log('updated Jsc');
+
 			// Start counting
 			setTimeout( async () => {
 
@@ -342,13 +342,13 @@ console.log('request Jsc');
 
 				// Update the channel. Make it synchronous.
 				await updateInstrumentStatusChanId( instrumentId, channelId );
-console.log('updated Jsc2');
+
 				// Make storage purely asynchronous (no need to wait on it)
 //				influx.storeJsc( status.measurementName, jsc );
 
 				// Delay before continuing
 				await delay( 5000 );
-console.log('resolving Jsc');
+
 				resolver( jsc );
 
 			}, equilibrationTime );
@@ -437,6 +437,8 @@ function _hasChanged( objectCollection, ...states ) {
 	if( changed ) {
 		return true;
 	}
+
+	return false;
 }
 
 async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatus ) {
@@ -510,17 +512,17 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		}
 		
 
-		if( _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
+		if( ! MataHariTrackScheduler.hasTimeout( "mpp", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 
 		// Scheduling Voc. Checks for applicability are done later
-		if( _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ) ) {
+		if( ! MataHariTrackScheduler.hasTimeout( "voc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ) ) {
 			MataHariTrackScheduler.scheduleVoc( instrumentId, chanId, chanStatus );
 		}
 
 		// Scheduling Jsc. Checks for applicability are done later
-		if( _hasChanged( [ "enabled", "tracking_jsc", "tracking_jsc_interval"], chanStatus, previousStatus ) ) {
+		if( ! MataHariTrackScheduler.hasTimeout( "jsc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_jsc", "tracking_jsc_interval"], chanStatus, previousStatus ) ) {
 			MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
 		}
 

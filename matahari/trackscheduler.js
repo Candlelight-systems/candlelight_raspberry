@@ -12,6 +12,24 @@ let forbidLog = {};
 	This may be really problematic from the perspective of CPU. Maybe bundle in one single timer
 */
 
+hasTimeout( mode, instrumentId, chanId ) {
+
+	switch( mode ) {
+		case 'mpp':
+			return !! intervals[ instrumentId + "_" + chanId ]
+		break;
+
+		case 'voc':
+			return !! intervals[ instrumentId  + chanId + "_voc" ]
+		break;
+
+		case 'jsc':
+			return !! intervals[ instrumentId  + chanId  + "_jsc" ]
+		break;
+	}
+
+}
+
 function schedule( instrumentId, chanId, status ) {
 	scheduleTrack( ...arguments );
 }
@@ -118,7 +136,6 @@ function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 		return;
 	}
 
-console.log( status, track );
 	if( intervals[ intervalId ] ) {
 		return;
 	}
