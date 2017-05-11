@@ -177,7 +177,7 @@ function getData( instrumentId, chanId, status ) {
 		//results[9] in sun
 		// W cm-2
 		let efficiency = ( powerMean / (status.cellArea) ) / ( results[ 9 ] * 0.1 ) * 100;
-console.log( status.measurementName, chanId, instrumentId );
+console.log( status.measurementName, chanId, instrumentId, results );
 		return influx.storeTrack( status.measurementName, {
 
 			voltageMean: voltageMean,
