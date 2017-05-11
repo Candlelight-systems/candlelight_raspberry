@@ -474,7 +474,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			
 			await new Promise( async ( resolver ) => {
 
-				if( previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ i ]( previousStatus ) ) {
+				if( previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus ) ) {
 					return resolver();
 				}
 
@@ -509,7 +509,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			//MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
-console.log('dsf', _hasChanged( [ "enabled", "tracking_voc", "tracking_voc_interval"], chanStatus, previousStatus ));
+
 		if( _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
