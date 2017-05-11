@@ -12,7 +12,7 @@ let forbidLog = {};
 	This may be really problematic from the perspective of CPU. Maybe bundle in one single timer
 */
 
-hasTimeout( mode, instrumentId, chanId ) {
+function hasTimeout( mode, instrumentId, chanId ) {
 
 	switch( mode ) {
 		case 'mpp':
@@ -204,7 +204,7 @@ module.exports = {
 	scheduleVoc: scheduleVoc,
 	scheduleJsc: scheduleJsc,
 	hasTimeout: hasTimeout,
-	
+
 	setCommands: function( cmdRequestData, cmdUpdateChannelStatus, reqVoc, reqJsc ) {
 		command = cmdRequestData;
 		commandUpdateChannelStatus = cmdUpdateChannelStatus;
