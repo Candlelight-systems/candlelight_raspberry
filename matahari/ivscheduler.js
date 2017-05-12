@@ -52,7 +52,7 @@ function makeIV( instrumentId, chanId, status ) {
 			console.log('waiting');
 			var status = await requestIVCurveStatus( instrumentId, chanId );
 			console.log("Status: " + status );
-			if( status ) { // Once the curve is done, let's validate it
+			if( !status ) { // Once the curve is done, let's validate it
 				break;
 			}
 			if( i > 100 ) { // Problem. 
