@@ -196,6 +196,123 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 }
 
 
+function requestIVCurve( instrumentId, chanId, status ) {
+
+	return comm.queryManager.addQuery( async ( ) => {
+
+		await comm.lease;
+		
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
+
+			comm.removeAllListeners( "data" );
+			comm.on( "data", async ( d ) => {
+
+				data += d.toString('ascii'); // SAMD sends ASCII data
+
+				while( data.indexOf("\r\n") > -1 ) {
+					
+					comm.removeAllListeners( "data" );
+					comm.flush();
+					await delay( 100 );
+					resolver( data2 );
+				}
+			} );	
+			
+			comm.write( matahariconfig.specialcommands.executeIV + ":CH" + channelId + "\n" );
+			comm.drain();
+		});
+	});
+}
+
+
+
+function requestIVCurveStatus( instrumentId, chanId, status ) {
+
+	return comm.queryManager.addQuery( async ( ) => {
+
+		await comm.lease;
+		
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
+			
+			comm.removeAllListeners( "data" );
+			
+			let count = 0;
+			comm.on( "data", async ( d ) => {
+
+				data += d.toString('ascii'); // SAMD sends ASCII data
+
+				while( data.indexOf("\r\n") > -1 ) {
+					
+					count++;
+					
+					if( count == 1 ) {
+						data2 = parseInt( data.substr( 0, data.indexOf("\r\n") ) );
+						data = data.substr( data.indexOf("\r\n") + 2 );
+					}
+
+					if( count >= 2 ) {
+						comm.removeAllListeners( "data" );
+						comm.flush();
+						await delay( 100 );
+
+						resolver( data2 );
+						data = "";
+						break;
+					}
+				}
+			} );
+			
+			comm.write( matahariconfig.specialcommands.getIVStatus + ":CH" + channelId + "\n" );
+			comm.drain();
+		});
+	});
+}
+
+
+function requestIVCurveData( instrumentId, chanId, status ) {
+
+	return comm.queryManager.addQuery( async ( ) => {
+
+		await comm.lease;
+		
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
+			
+			comm.removeAllListeners( "data" );
+			
+			let count = 0;
+			comm.on( "data", async ( d ) => {
+
+				data += d.toString('ascii'); // SAMD sends ASCII data
+
+				while( data.indexOf("\r\n") > -1 ) {
+					
+					count++;
+					
+					if( count == 1 ) {
+						data2 = data.substr( 0, data.indexOf("\r\n") );
+						data2 = data2.split(',');
+						data = data.substr( data.indexOf("\r\n") + 2 );
+					}
+
+					if( count >= 2 ) {
+						comm.removeAllListeners( "data" );
+						comm.flush();
+						await delay( 100 );
+
+						resolver( data2 );
+						data = "";
+						break;
+					}
+				}
+			} );
+			
+			comm.write( matahariconfig.specialcommands.getIVData + "\n" );
+			comm.drain();
+		});
+	});
+}
+
+
 async function requestTrackingData( instrumentId, channelId ) {
 
 	let comm = connections[ instrumentId ],
@@ -213,6 +330,7 @@ async function requestTrackingData( instrumentId, channelId ) {
 	});
 
 }
+
 
 function _requestTrackingData( comm, channelId ) {
 
@@ -361,41 +479,6 @@ async function requestJsc( instrumentId, channelId, status, onStart, equilibrati
 }
 
 
-
-
-async function requestIVData( instrumentId, channelId ) {
-
-	let comm = connections[ instrumentId ],
-		data = "";
-	
-	if( ! comm ) {
-		rejecter("Cannot find communication stream with the instrument based on the instrument id");
-	}
-
-	await comm.lease;
-	return comm.lease = new Promise( async ( resolver, rejecter ) => {
-
-
-		comm.removeAllListeners( "data" );
-		comm.on( "data", async ( data ) => {
-
-			data = data.toString('ascii'); // SAMD sends ASCII data
-			if( data.indexOf("\n") > -1 ) {
-				
-				comm.removeAllListeners( "data" );
-				await delay( 100 );
-				resolver( data );
-			}
-		} );
-
-		
-		comm.write( matahariconfig.specialcommands.executeIV + ":CH" + channelId + "\n" );
-	} );
-
-
-}
-
-
 function getChanIdFromName( instrumentId, channelName ) {
 
 	if( matahariconfig.instruments[ instrumentId ] && Array.isArray( matahariconfig.instruments[ instrumentId ] ) ) {
@@ -428,9 +511,9 @@ function _hasChanged( objectCollection, ...states ) {
 			if( index == 0 ) {
 
 				stateRef = state[ el ];
-			console.log( stateRef );
+
 			} else {
-console.log('other' + state[ el ] );
+
 				if(stateRef === undefined || state[ el ] === undefined ||  stateRef !== state[el] ) {
 					changed = true;
 				}
@@ -513,8 +596,10 @@ console.log( command );
 		}
 
 		// Handle IV scheduling
-		if( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) {
-			//MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
+
+		chanStatus.iv_interval = 120000;
+		if( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) {
+			MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
 
@@ -659,7 +744,7 @@ function scheduleIVCurve( instrumentId, chanId, interval ) {
 	//setStatus( instrumentId, chanId, "iv_interval", parseInt( interval ) );
 }
 
-MataHariIVScheduler.setCommand( requestIVData );
+MataHariIVScheduler.setCommand( requestIVCurve, requestIVCurveStatus, requestIVCurveData );
 MataHariTrackScheduler.setCommands( requestTrackingData, updateInstrumentStatusChanId, requestVoc, requestJsc );
 
 module.exports = {

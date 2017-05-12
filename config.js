@@ -13,7 +13,9 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
-			executeIV: "IV:EXECUTE"
+			executeIV: "IV:EXECUTE",
+			getIVData: "DATA:IV",
+			getIVStatus: "IV:STATUS"
 		},
 
 		statuscommands: [
