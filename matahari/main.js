@@ -218,7 +218,7 @@ function requestIVCurve( instrumentId, chanId, status ) {
 					comm.removeAllListeners( "data" );
 					comm.flush();
 					await delay( 100 );
-					resolver( data2 );
+					resolver( "ok" );
 				}
 			} );	
 			
