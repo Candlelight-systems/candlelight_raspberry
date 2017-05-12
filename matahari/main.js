@@ -381,7 +381,7 @@ async function requestIVData( instrumentId, channelId ) {
 
 			data = data.toString('ascii'); // SAMD sends ASCII data
 			if( data.indexOf("\n") > -1 ) {
-
+				
 				comm.removeAllListeners( "data" );
 				await delay( 100 );
 				resolver( data );
@@ -524,14 +524,11 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 
 		// Scheduling Voc. Checks for applicability are done later
 		if( ! MataHariTrackScheduler.hasTimeout( "voc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_voc", "tracking_measure_voc_interval"], chanStatus, previousStatus ) ) {
-
-			console.log('reschedule voc');
 			MataHariTrackScheduler.scheduleVoc( instrumentId, chanId, chanStatus );
 		}
 
 		// Scheduling Jsc. Checks for applicability are done later
 		if( ! MataHariTrackScheduler.hasTimeout( "jsc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], chanStatus, previousStatus ) ) {
-			console.log('reschedule jsc');
 			MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
 		}
 
