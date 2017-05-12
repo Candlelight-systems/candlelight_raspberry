@@ -283,7 +283,7 @@ function requestIVCurveData( instrumentId, chanId, status ) {
 		data = "",
 		data2;
 
-
+console.log('hanging here');
 	return comm.queryManager.addQuery( async ( ) => {
 
 		await comm.lease;
@@ -335,10 +335,11 @@ async function requestTrackingData( instrumentId, channelId ) {
 	if( ! comm ) {
 		rejecter("Cannot find communication stream with the instrument based on the instrument id");
 	}
-
+console.log('requesting data');
 	return comm.queryManager.addQuery( async ( ) => {
-		
+		console.log('requesting data process');
 		await comm.lease;
+		console.log('requesting data process leased');
 		return comm.lease = _requestTrackingData( comm, channelId );
 	});
 
