@@ -62,7 +62,7 @@ async function normalizeStatus() {
 
 
 	for( let i = 0; i < status.length; i++ ) {
-		await updateInstrumentStatusChanId( status[ i ].instrumentId, status[ i ].chanId );
+		await updateInstrumentStatusChanId( status[ i ].instrumentId, status[ i ].chanId, [], true );
 	}
 }
 
@@ -427,11 +427,11 @@ function _hasChanged( objectCollection, ...states ) {
 
 			if( index == 0 ) {
 
-				stateRef = state;
-			
+				stateRef = state[ el ];
+			console.log( stateRef );
 			} else {
-
-				if( stateRef !== state ) {
+console.log('other' + state[ el ] );
+				if(stateRef === undefined || state[ el ] === undefined ||  stateRef !== state[el] ) {
 					changed = true;
 				}
 			}
@@ -445,7 +445,7 @@ function _hasChanged( objectCollection, ...states ) {
 	return false;
 }
 
-async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatus ) {
+async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatus = [], force = false ) {
 
 	if( ! chanId ) {
 		throw "Could not find channel id in config file based on the channel name";
@@ -480,13 +480,13 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			
 			await new Promise( async ( resolver ) => {
 
-				if( previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus ) ) {
+				if( !force && (previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus) ) ) {
 					return resolver();
 				}
 
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
 					data = "";
-
+console.log( command );
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data
