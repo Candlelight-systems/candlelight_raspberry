@@ -203,9 +203,9 @@ function requestIVCurve( instrumentId, chanId, status ) {
 		data2;
 
 	return comm.queryManager.addQuery( async ( ) => {
-		console.log('wait for lease ');
+		
 		await comm.lease;
-		console.log('leased');
+		
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
 
 			comm.removeAllListeners( "data" );
@@ -217,7 +217,7 @@ function requestIVCurve( instrumentId, chanId, status ) {
 					comm.removeAllListeners( "data" );
 					comm.flush();
 					await delay( 100 );
-					console.log('released iv');
+					
 					resolver( "ok" );
 					return;
 				}
@@ -236,11 +236,11 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 	let comm = connections[ instrumentId ],
 		data = "",
 		data2;
-console.log('re');
+
 	return comm.queryManager.addQuery( async ( ) => {
-console.log('lease');
+
 		await comm.lease;
-		console.log('lease ok');
+
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
 			
 			comm.removeAllListeners( "data" );
@@ -249,7 +249,7 @@ console.log('lease');
 			comm.on( "data", async ( d ) => {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
-console.log( data );
+
 				while( data.indexOf("\r\n") > -1 ) {
 					
 					count++;
@@ -284,7 +284,6 @@ function requestIVCurveData( instrumentId, chanId, status ) {
 		data = "",
 		data2;
 
-console.log('hanging here');
 	return comm.queryManager.addQuery( async ( ) => {
 
 		await comm.lease;
@@ -336,11 +335,11 @@ async function requestTrackingData( instrumentId, channelId ) {
 	if( ! comm ) {
 		rejecter("Cannot find communication stream with the instrument based on the instrument id");
 	}
-console.log('requesting data');
+
 	return comm.queryManager.addQuery( async ( ) => {
-		console.log('requesting data process');
+
 		await comm.lease;
-		console.log('requesting data process leased');
+
 		return comm.lease = _requestTrackingData( comm, channelId );
 	});
 
@@ -584,7 +583,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 
 				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
 					data = "";
-console.log( command );
+				console.log( command );
 				comm.on( "data", async ( d ) => {
 
 					data += d.toString('ascii'); // SAMD sends ASCII data

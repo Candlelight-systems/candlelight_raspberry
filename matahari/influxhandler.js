@@ -13,8 +13,22 @@ module.exports = {};
 
 module.exports.storeIV = function( measurementName, ivData ) {
 	// Use SQLite ?
+  return influxClient.writePoints([
+      {
+        measurement: measurementName + "_iv",
+        fields: { 
+          iv: ivData
+        }
+      }
 
+    ]).then( ( result ) => {
+      
+      return result; 
 
+    }).catch(err => {
+
+      console.error( `Error saving data to InfluxDB! ${err.stack}` );
+    });
 }
 
 module.exports.storeTrack = function( measurementName, trackData ) {

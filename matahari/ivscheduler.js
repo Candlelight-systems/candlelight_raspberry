@@ -44,14 +44,12 @@ function makeIV( instrumentId, chanId, status ) {
 	queryManagers[ instrumentId ].addQuery( async () => {
 
 		await requestIVCurve( instrumentId, chanId );
-		console.log("Requesting IV" );
-
 		var i = 0;
 		while( true ) {
 			i++;
-			console.log('waiting');
+			
 			var status = await requestIVCurveStatus( instrumentId, chanId );
-			console.log("Status: " + status );
+			console.log("Status: " + status + " " + chanId );
 			if( !status ) { // Once the curve is done, let's validate it
 				break;
 			}
@@ -63,7 +61,7 @@ function makeIV( instrumentId, chanId, status ) {
 		}
 
 		var ivCurveData = await requestIVCurveData( instrumentId, chanId );
-		console.log( ivCurveData );
+		
 		influx.storeIV( status.measurementName, ivCurveData );
 
 		setTimer( instrumentId, chanId, status );
