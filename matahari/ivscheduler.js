@@ -4,7 +4,7 @@ const influx = require("./influxhandler")
 const queryManager = require("./queryhandler");
 
 let intervals = {};
-let ivQueryManagers = {};
+let queryManagers = {};
 
 let requestIVCurve,
 	requestIVCurveStatus,
@@ -75,7 +75,7 @@ function setTimer( instrumentId, chanId, status ) {
 
 	intervals[ intervalId ] = setTimeout( () => {
 		makeIV( instrumentId, chanId, status );
-	}, status.iv_request_interval );
+	}, status.iv_interval );
 }
 
 
