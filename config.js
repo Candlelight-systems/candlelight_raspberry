@@ -15,7 +15,7 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			getIVData: "DATA:IV",
-			getIVStatus: "IV:STATUS"
+			getIVStatus: "IV:STATUS?"
 		},
 
 		statuscommands: [

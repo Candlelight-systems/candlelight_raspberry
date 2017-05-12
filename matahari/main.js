@@ -248,7 +248,7 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 			comm.on( "data", async ( d ) => {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
-
+console.log( data );
 				while( data.indexOf("\r\n") > -1 ) {
 					
 					count++;
@@ -269,7 +269,7 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 					}
 				}
 			} );
-			
+			console.log( matahariconfig.specialcommands.getIVStatus + ":CH" + chanId + "\n" );
 			comm.write( matahariconfig.specialcommands.getIVStatus + ":CH" + chanId + "\n" );
 			comm.drain();
 		});

@@ -43,6 +43,7 @@ function makeIV( instrumentId, chanId, status ) {
 		var i = 0;
 		while( true ) {
 			i++;
+			console.log('waiting');
 			var status = await requestIVCurveStatus( instrumentId, chanId );
 			console.log("Status: " + status );
 			if( status ) { // Once the curve is done, let's validate it
