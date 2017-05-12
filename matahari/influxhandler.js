@@ -17,7 +17,7 @@ module.exports.storeIV = function( measurementName, ivData ) {
       {
         measurement: measurementName + "_iv",
         fields: { 
-          iv: ivData
+          iv: '"' + ivData + '"'
         }
       }
 

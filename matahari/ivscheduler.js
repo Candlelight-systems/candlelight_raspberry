@@ -48,9 +48,9 @@ function makeIV( instrumentId, chanId, status ) {
 		while( true ) {
 			i++;
 			
-			var status = await requestIVCurveStatus( instrumentId, chanId );
-			console.log("Status: " + status + " " + chanId );
-			if( !status ) { // Once the curve is done, let's validate it
+			var ivstatus = await requestIVCurveStatus( instrumentId, chanId );
+			console.log("Status: " + ivstatus + " " + chanId );
+			if( !ivstatus ) { // Once the curve is done, let's validate it
 				break;
 			}
 			if( i > 100 ) { // Problem. 
@@ -62,6 +62,7 @@ function makeIV( instrumentId, chanId, status ) {
 
 		var ivCurveData = await requestIVCurveData( instrumentId, chanId );
 		
+
 		influx.storeIV( status.measurementName, ivCurveData );
 
 		setTimer( instrumentId, chanId, status );
