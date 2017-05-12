@@ -203,9 +203,9 @@ function requestIVCurve( instrumentId, chanId, status ) {
 		data2;
 
 	return comm.queryManager.addQuery( async ( ) => {
-
+		console.log('wait for lease ');
 		await comm.lease;
-		
+		console.log('leased');
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
 
 			comm.removeAllListeners( "data" );
@@ -214,10 +214,11 @@ function requestIVCurve( instrumentId, chanId, status ) {
 				data += d.toString('ascii'); // SAMD sends ASCII data
 
 				while( data.indexOf("\r\n") > -1 ) {
-					
+					console.log( data );
 					comm.removeAllListeners( "data" );
 					comm.flush();
 					await delay( 100 );
+					console.log('released iv');
 					resolver( "ok" );
 				}
 			} );	
