@@ -112,7 +112,7 @@ function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 			// Voc tracking
 			track = status.tracking_measure_voc;
 			trackInterval = status.tracking_measure_voc_interval;
-			trackTime = status.tracking_measure_voc_time;
+			trackTime = status.tracking_voc_time;
 
 		break;
 
@@ -121,7 +121,7 @@ function setupTimeout( mode, instrumentId, chanId, callback, status ) {
 			// Jsc tracking
 			track = status.tracking_measure_jsc;
 			trackInterval = status.tracking_measure_jsc_interval;
-			trackTime = status.tracking_measure_jsc_time;
+			trackTime = status.tracking_jsc_time;
 		break;
 	}
 	console.log( track );
@@ -170,7 +170,7 @@ function getData( instrumentId, chanId, status ) {
 			powerMax = results[ 8 ],
 			sun = results[ 9 ],
 			nb = results[ 10 ];
-
+console.log( results );
 		if( parseInt( nb ) == 0 ) {
 			return;
 		}
