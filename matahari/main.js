@@ -197,6 +197,10 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 
 
 function requestIVCurve( instrumentId, chanId, status ) {
+	
+	let comm = connections[ instrumentId ],
+		data = "",
+		data2;
 
 	return comm.queryManager.addQuery( async ( ) => {
 
@@ -227,6 +231,10 @@ function requestIVCurve( instrumentId, chanId, status ) {
 
 
 function requestIVCurveStatus( instrumentId, chanId, status ) {
+
+	let comm = connections[ instrumentId ],
+		data = "",
+		data2;
 
 	return comm.queryManager.addQuery( async ( ) => {
 
@@ -270,6 +278,11 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 
 
 function requestIVCurveData( instrumentId, chanId, status ) {
+
+	let comm = connections[ instrumentId ],
+		data = "",
+		data2;
+
 
 	return comm.queryManager.addQuery( async ( ) => {
 
