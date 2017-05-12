@@ -28,6 +28,12 @@ function hasTimeout( instrumentId, chanId ) {
 
 }
 
+
+function delay( time ) {
+	return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, time ) );
+}
+
+
 function makeIV( instrumentId, chanId, status ) {
 
 	

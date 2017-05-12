@@ -235,11 +235,11 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 	let comm = connections[ instrumentId ],
 		data = "",
 		data2;
-
+console.log('re');
 	return comm.queryManager.addQuery( async ( ) => {
-
+console.log('lease');
 		await comm.lease;
-		
+		console.log('lease ok');
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
 			
 			comm.removeAllListeners( "data" );
