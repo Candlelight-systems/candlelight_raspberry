@@ -1,10 +1,9 @@
 
 class queryManager {
 
-	constructor( stream ) {
+	constructor( ) {
 		this.queue = [];
 		this.processing = false;
-		this.stream = stream;
 	}
 
 	addQuery( q ) {
@@ -37,9 +36,6 @@ class queryManager {
 	}
 
 	doQuery( query ) {
-		if( ! this.stream ) {
-			throw "Stream does not exist";
-		}
 
 		query.query().then( ( results ) => {
 			
