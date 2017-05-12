@@ -222,7 +222,7 @@ function requestIVCurve( instrumentId, chanId, status ) {
 				}
 			} );	
 			
-			comm.write( matahariconfig.specialcommands.executeIV + ":CH" + channelId + "\n" );
+			comm.write( matahariconfig.specialcommands.executeIV + ":CH" + chanId + "\n" );
 			comm.drain();
 		});
 	});
@@ -270,7 +270,7 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 				}
 			} );
 			
-			comm.write( matahariconfig.specialcommands.getIVStatus + ":CH" + channelId + "\n" );
+			comm.write( matahariconfig.specialcommands.getIVStatus + ":CH" + chanId + "\n" );
 			comm.drain();
 		});
 	});
