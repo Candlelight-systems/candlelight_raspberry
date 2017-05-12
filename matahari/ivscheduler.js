@@ -31,7 +31,7 @@ function hasTimeout( instrumentId, chanId ) {
 function makeIV( instrumentId, chanId, status ) {
 
 	
-	if( ! command ) {
+	if( ! requestIVCurve ) {
 		throw "No launch command associated to the scheduler";
 	}
 
