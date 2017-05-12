@@ -213,13 +213,13 @@ function requestIVCurve( instrumentId, chanId, status ) {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
 
-				while( data.indexOf("\r\n") > -1 ) {
-					console.log( data );
+				if( data.indexOf("\r\n") > -1 ) {
 					comm.removeAllListeners( "data" );
 					comm.flush();
 					await delay( 100 );
 					console.log('released iv');
 					resolver( "ok" );
+					return;
 				}
 			} );	
 			
