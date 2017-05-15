@@ -30,7 +30,8 @@
 			"tracking_jsc_time": 10000,
 			"tracking_voc_time": 10000,
 			"tracking_voc_interval": 600000,
-			"tracking_jsc_interval": 86400000
+			"tracking_jsc_interval": 86400000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -60,7 +61,8 @@
 			"tracking_measure_voc": 1,
 			"tracking_measure_jsc": 1,
 			"tracking_measure_voc_interval": 600000,
-			"tracking_measure_jsc_interval": 43200000
+			"tracking_measure_jsc_interval": 43200000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -90,7 +92,8 @@
 			"tracking_measure_voc": 1,
 			"tracking_measure_jsc": 1,
 			"tracking_measure_voc_interval": 600000,
-			"tracking_measure_jsc_interval": 600000
+			"tracking_measure_jsc_interval": 600000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 60000,
@@ -120,7 +123,8 @@
 			"tracking_measure_voc": 1,
 			"tracking_measure_jsc": 1,
 			"tracking_measure_voc_interval": 86400000,
-			"tracking_measure_jsc_interval": 86400000
+			"tracking_measure_jsc_interval": 86400000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -150,7 +154,8 @@
 			"tracking_measure_voc": 1,
 			"tracking_measure_jsc": 1,
 			"tracking_measure_voc_interval": 43200000,
-			"tracking_measure_jsc_interval": 43200000
+			"tracking_measure_jsc_interval": 43200000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -180,7 +185,8 @@
 			"tracking_measure_voc": 1,
 			"tracking_measure_jsc": 1,
 			"tracking_measure_voc_interval": 43200000,
-			"tracking_measure_jsc_interval": 43200000
+			"tracking_measure_jsc_interval": 43200000,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -206,7 +212,8 @@
 			"tracking_fw": null,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test7_1494506616305"
+			"measurementName": "test7_1494506616305",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -232,7 +239,8 @@
 			"tracking_fw": null,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test8_1494506645314"
+			"measurementName": "test8_1494506645314",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -258,7 +266,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test9_1494506556190"
+			"measurementName": "test9_1494506556190",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -284,7 +293,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test10_1494506671810"
+			"measurementName": "test10_1494506671810",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -310,7 +320,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test11_1494506673757"
+			"measurementName": "test11_1494506673757",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -336,7 +347,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test12_1494506734430"
+			"measurementName": "test12_1494506734430",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 60000,
@@ -362,7 +374,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test13_1494506731475"
+			"measurementName": "test13_1494506731475",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -375,20 +388,21 @@
 			"iv_stop": null,
 			"iv_hysteresis": 0,
 			"iv_rate": null,
-			"enable": 1,
+			"enable": 0,
 			"tracking_jsc": 0,
 			"tracking_voc": 0,
 			"tracking_jsc_time": 10000,
 			"tracking_voc_time": 10000,
-			"tracking_mode": 1,
-			"cellArea": "0.57",
+			"tracking_mode": 0,
+			"cellArea": 0,
 			"chanId": 14,
 			"instrumentId": "matahari1000",
-			"cellName": "test14",
+			"cellName": "",
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test14_1494506732757"
+			"measurementName": false,
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -414,7 +428,8 @@
 			"tracking_fw": 1,
 			"tracking_voc_interval": null,
 			"tracking_jsc_interval": null,
-			"measurementName": "test15_1494506736253"
+			"measurementName": "test15_1494506736253",
+			"iv_interval": 120000
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -432,7 +447,7 @@
 			"tracking_voc": 0,
 			"tracking_jsc_time": 10000,
 			"tracking_voc_time": 10000,
-			"tracking_mode": 1,
+			"tracking_mode": 0,
 			"cellArea": 0,
 			"chanId": 16,
 			"instrumentId": "matahari1000",
@@ -444,7 +459,8 @@
 			"tracking_measure_voc_interval": null,
 			"tracking_measure_jsc_interval": null,
 			"tracking_measure_voc": 0,
-			"tracking_measure_jsc": 0
+			"tracking_measure_jsc": 0,
+			"iv_interval": 120000
 		}
 	]
 }
