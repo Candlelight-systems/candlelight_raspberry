@@ -161,10 +161,10 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 	setTrackingStepSize( instrumentId, chanId, chanStatus.tracking_stepsize );
 	setTrackingSwitchDelay( instrumentId, chanId, chanStatus.tracking_switchdelay );
 
-	setIVStart( instrumentId, chanId, chanStatus.tracking_ivstart );
-	setIVStop( instrumentId, chanId, chanStatus.tracking_ivstop );
-	setIVHysteresis( instrumentId, chanId, chanStatus.tracking_ivhysteresis );
-	setIVRate( instrumentId, chanId, chanStatus.tracking_ivrate );
+	setIVStart( instrumentId, chanId, chanStatus.iv_start );
+	setIVStop( instrumentId, chanId, chanStatus.iv_stop );
+	setIVHysteresis( instrumentId, chanId, chanStatus.iv_hysteresis );
+	setIVRate( instrumentId, chanId, chanStatus.iv_rate );
 
 	if( chanStatus.enable ) {
 		enableChannel( instrumentId, chanId );
