@@ -147,7 +147,7 @@ function isBusy( instrumentId, chanId ) {
 		return false;
 	}
 
-	return status.tracking_mode > 1 && status.enable == 1;
+	return status.tracking_mode > 0 && status.enable == 1;
 }
 
 async function saveStatus( instrumentId, chanId, chanStatus ) {
