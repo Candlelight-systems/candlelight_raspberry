@@ -119,7 +119,7 @@ function getChannels() {
 
 		chans = chans.concat( 
 			matahariconfig.instruments[ i ].channels.map( 
-				( el ) => { el.instrumentId = matahariconfig.instruments[ i ].instrumentId; return el; }
+				( el ) => { el.instrumentId = matahariconfig.instruments[ i ].instrumentId; el.busy = isBusy( el.instrumentId, el.chanId ); return el; }
 			)
 		);
 	}
@@ -138,6 +138,16 @@ function getStatus( instrumentId, chanId ) {
 	}
 
 	return false;
+}
+
+function isBusy( instrumentId, chanId ) {
+	let status =  getStatus( instrumentId, chanId );
+
+	if( ! status ) {
+		return false;
+	}
+
+	return status.tracking_mode > 1 && status.enable == 1;
 }
 
 async function saveStatus( instrumentId, chanId, chanStatus ) {
