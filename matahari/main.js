@@ -610,13 +610,10 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		}
 
 		// Handle IV scheduling
-
-		chanStatus.iv_interval = 120000;
 		if( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) {
 			MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
-
 		if( ! MataHariTrackScheduler.hasTimeout( "mpp", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
 			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
