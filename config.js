@@ -20,8 +20,8 @@ module.exports = {
 
 		statuscommands: [
 
-			[ "IV:START", function( status ) { return status.iv_start_voltage || 1; } ],
-			[ "IV:STOP", function( status ) { return status.iv_stop_voltage || "0"; } ],
+			[ "IV:START", function( status ) { return status.iv_start || 1; } ],
+			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
 

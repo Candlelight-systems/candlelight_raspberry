@@ -742,8 +742,8 @@ function setIVStop( instrumentId, chanId, voltage ) {
 	setStatus( instrumentId, chanId, "iv_stop", Math.max( 0, parseFloat( voltage ) ) );	
 }
 
-function setIVHysteresis( instrumentId, chanId, voltage ) {
-	setStatus( instrumentId, chanId, "iv_hysteresis", !! parseInt( voltage ));	
+function setIVHysteresis( instrumentId, chanId, hysteresis ) {
+	setStatus( instrumentId, chanId, "iv_hysteresis", !! hysteresis );	
 }
 
 function setIVRate( instrumentId, chanId, rate ) {
