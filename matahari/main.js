@@ -152,9 +152,9 @@ async function saveStatus( instrumentId, chanId, chanStatus ) {
 	Object.assign( originalStatus, chanStatus );
 	chanStatus = originalStatus;
 
-	scheduleIVCurve( instrumentId, chanId, chanStatus.tracking_record_interval );
+	scheduleIVCurve( instrumentId, chanId, chanStatus.iv_interval );
 	scheduleTracking( instrumentId, chanId, chanStatus.tracking_record_interval );
-	setTrackingInterval(  instrumentId, chanId, chanStatus.tracking_interval );
+
 	setTrackingInterval(  instrumentId, chanId, chanStatus.tracking_interval );
 	setTrackingBWFWThreshold( instrumentId, chanId, chanStatus.tracking_bwfwthreshold );
 	setTrackingFWBWThreshold( instrumentId, chanId, chanStatus.tracking_fwbwthresholds );
@@ -610,7 +610,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		}
 
 		// Handle IV scheduling
-		if( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) {
+		if( ( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) || _hasChanged( [ "iv_interval" ], chanStatus, previousStatus ) ) {
 			MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 		}
 		
@@ -752,7 +752,7 @@ function setIVRate( instrumentId, chanId, rate ) {
 	
 // Interval should be in seconds
 function scheduleIVCurve( instrumentId, chanId, interval ) {
-	//setStatus( instrumentId, chanId, "iv_interval", parseInt( interval ) );
+	setStatus( instrumentId, chanId, "iv_interval", parseInt( interval ) );
 }
 
 MataHariIVScheduler.setCommand( requestIVCurve, requestIVCurveStatus, requestIVCurveData );
