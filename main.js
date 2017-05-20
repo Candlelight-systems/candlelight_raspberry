@@ -57,7 +57,7 @@ app.get("/executeIV", function( req, res ) {
 
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
-	
+console.log( chanId, instrumentId, req.query );	
 	matahari.executeIV( instrumentId, chanId ).then( () => {
 		res.send( "Ok" );	
 	}).catch( ( error ) => {
