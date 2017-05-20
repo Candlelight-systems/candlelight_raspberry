@@ -630,7 +630,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	comm.queue.addQuery( async () => {
+	comm.queryManager.addQuery( async () => {
 
 
 		await comm.lease;
