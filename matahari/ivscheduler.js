@@ -106,5 +106,5 @@ module.exports = {
 	},
 	hasTimeout: hasTimeout,
 	unschedule: unschedule,
-	executeNow: makeIV
+	executeIV: makeIV
 }
