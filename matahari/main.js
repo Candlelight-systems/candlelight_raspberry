@@ -93,7 +93,7 @@ function query( instrumentId, query ) {
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	return comm.queue.addQuery( async () => {
+	return comm.queryManager.addQuery( async () => {
 
 		await comm.lease;
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
