@@ -53,11 +53,10 @@ app.get("/getStatus", function( req, res ) {
 
 app.get("/executeIV", function( req, res ) {
 
-	res.type("application/json");
-
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
-console.log( chanId, instrumentId, req.query );	
+
+
 	matahari.executeIV( instrumentId, chanId ).then( () => {
 		res.send( "Ok" );	
 	}).catch( ( error ) => {

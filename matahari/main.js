@@ -657,6 +657,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 							comm.removeAllListeners( "data" );
 							comm.flush();
 							data = "";	
+							await delay( 100 ); // Allow some buffering time	
 							resolver();
 						}
 					} );
@@ -671,8 +672,6 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 						comm.drain();
 					} );
 				} );
-
-				await delay( 100 ); // Allow some buffering time	
 			}
 
 			// Handle IV scheduling

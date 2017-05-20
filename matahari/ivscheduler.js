@@ -60,7 +60,7 @@ function makeIV( instrumentId, chanId, status ) {
 			i++;
 			
 			var ivstatus = await requestIVCurveStatus( instrumentId, chanId );
-			console.log("Status: " + ivstatus + " " + chanId );
+			
 			if( !ivstatus ) { // Once the curve is done, let's validate it
 				break;
 			}
