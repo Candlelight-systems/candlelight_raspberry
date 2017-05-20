@@ -827,6 +827,11 @@ function scheduleIVCurve( instrumentId, chanId, interval ) {
 	setStatus( instrumentId, chanId, "iv_interval", parseInt( interval ) );
 }
 
+function executeIV( instrumentId, chanId ) {
+
+	return MataHariIVScheduler.executeIV( instrumentId, chanId, getStatus( instrumentId, chanId ) );
+}
+
 MataHariIVScheduler.setCommand( requestIVCurve, requestIVCurveStatus, requestIVCurveData );
 MataHariTrackScheduler.setCommands( requestTrackingData, updateInstrumentStatusChanId, requestVoc, requestJsc );
 
@@ -856,5 +861,7 @@ module.exports = {
 	scheduleIVCurve: scheduleIVCurve,
 
 	updateChannelStatus: updateInstrumentStatusChanId,
-	updateAllStatus: updateAllStatus
+	updateAllStatus: updateAllStatus,
+
+	executeIV: executeIV
 };

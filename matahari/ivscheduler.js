@@ -48,7 +48,11 @@ function makeIV( instrumentId, chanId, status ) {
 		throw "No launch command associated to the scheduler";
 	}
 
-	queryManagers[ instrumentId ].addQuery( async () => {
+	if( ! status.enable ) {
+		throw "Channel not enabled";
+	}
+
+	return queryManagers[ instrumentId ].addQuery( async () => {
 
 		await requestIVCurve( instrumentId, chanId );
 		var i = 0;
@@ -101,5 +105,6 @@ module.exports = {
 		requestIVCurveData = _requestIVCurveData;
 	},
 	hasTimeout: hasTimeout,
-	unschedule: unschedule
+	unschedule: unschedule,
+	executeNow: makeIV
 }

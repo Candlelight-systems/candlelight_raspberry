@@ -48,6 +48,26 @@ app.get("/getStatus", function( req, res ) {
 	res.send( JSON.stringify( matahari.getStatus( instrumentId, chanId ) ) );
 } );
 
+
+
+
+app.get("/executeIV", function( req, res ) {
+
+	res.type("application/json");
+
+	var chanId = req.query.chanId;
+	var instrumentId = req.query.instrumentId;
+	
+	matahari.executeIV( instrumentId, chanId ).then( () => {
+		res.send( "Ok" );	
+	}).catch( ( error ) => {
+		console.error("IV not executed");
+		console.log( error );
+		res.send("Not ok");
+	});
+	
+} );
+
 app.post("/setStatus", function( req, res ) {
 
 	let status = req.body;
