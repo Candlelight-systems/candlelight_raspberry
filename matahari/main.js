@@ -138,6 +138,7 @@ function openConnections() {
 		} );
 
 		connection.on("open", () => {
+console.log("Connection opened", cfg.host );
 			connection.flush();
 			connection.write("RESERVED:REFENABLE\n");
 		} );
