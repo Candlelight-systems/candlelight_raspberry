@@ -98,6 +98,7 @@ function query( instrumentId, query ) {
 		await comm.lease;
 		return comm.lease = new Promise( ( resolver, rejecter ) => {
 
+			let data = "";
 			comm.removeAllListeners( "data" );
 			comm.on( "data", async ( d ) => {
 
