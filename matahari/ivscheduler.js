@@ -28,6 +28,13 @@ function hasTimeout( instrumentId, chanId ) {
 
 }
 
+function unschedule( instrumentId, chanId ) {
+	const intervalId = instrumentId + chanId + "";
+	if( intervals[ intervalId ] ) {
+		clearTimeout( intervals[ intervalId ] );
+	}	
+}
+
 
 function delay( time ) {
 	return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, time ) );
@@ -81,7 +88,7 @@ function setTimer( instrumentId, chanId, status ) {
 
 	intervals[ intervalId ] = setTimeout( () => {
 		makeIV( instrumentId, chanId, status );
-	}, status.iv_interval );
+	}, status.iv_interval || 24 * 1000 * 3600 );
 }
 
 
@@ -93,5 +100,6 @@ module.exports = {
 		requestIVCurveStatus = _requestIVCurveStatus;
 		requestIVCurveData = _requestIVCurveData;
 	},
-	hasTimeout: hasTimeout
+	hasTimeout: hasTimeout,
+	unschedule: unschedule
 }

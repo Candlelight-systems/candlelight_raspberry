@@ -33,15 +33,16 @@ async function normalizeStatus() {
 		"iv_stop": 0,
 		"iv_hysteresis": 0,
 		"iv_rate": 0.1,
+		"iv_interval": 24 * 3600 * 1000,
 		"enable": 0,
 		"tracking_measure_jsc": 0,
 		"tracking_measure_voc": 0,
 		"tracking_measure_jsc_time": 10000,
 		"tracking_measure_voc_time": 10000,
-		"tracking_measure_jsc_interval": 30000,
-		"tracking_measure_voc_interval": 30000,
+		"tracking_measure_jsc_interval": 24 * 3600 * 1000,
+		"tracking_measure_voc_interval": 24 * 3600 * 1000,
 		"tracking_mode": 0,
-		"cellArea": 0.5
+		"cellArea": 0
 	};
 
 	for( var i = 0; i < matahariconfig.instruments.length; i ++ ) {
@@ -633,7 +634,6 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 
 	comm.queryManager.addQuery( async () => {
 
-
 		await comm.lease;
 		return comm.lease = new Promise( async ( resolver ) => {
 			
@@ -676,7 +676,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			}
 
 			// Handle IV scheduling
-			if( ( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) || _hasChanged( [ "iv_interval" ], chanStatus, previousStatus ) ) {
+			if( ( ( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) || _hasChanged( [ "iv_interval" ], chanStatus, previousStatus ) ) && chanStatus.enable > 0 ) {
 				MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
 			}
 			
@@ -692,6 +692,11 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			// Scheduling Jsc. Checks for applicability are done later
 			if( ! MataHariTrackScheduler.hasTimeout( "jsc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], chanStatus, previousStatus ) ) {
 				MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
+			}
+
+			if( chanStatus.enable == 0 ) {
+				MataHariTrackScheduler.unschedule( instrumentId, chanId, chanStatus );
+				MataHariIVScheduler.unschedule( instrumentId, chanId, chanStatus );
 			}
 
 			resolver();
