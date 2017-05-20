@@ -13,7 +13,9 @@ const matahariconfig = config.matahari;
 const fs = require("fs");
 
 let connections = {};
-openConnections();
+Promise.all( openConnections() ).then( () => {
+	normalizeStatus();
+});
 
 
 async function normalizeStatus() {	
@@ -72,8 +74,6 @@ async function normalizeStatus() {
 }
 
 
-normalizeStatus();
-
 
 function pauseHardware( instrumentId ) {
 	return query( instrumentId, matahariconfig.specialcommands.pauseHardware );
@@ -128,36 +128,41 @@ function filesaveStatus() {
 
 function openConnections() {
 
-	matahariconfig.instruments.map( ( instrumentConfig ) => {
+	return matahariconfig.instruments.map( ( instrumentConfig ) => {
 
-		const cfg = instrumentConfig.config;
-		const connection = new serialport( cfg.host, cfg.params );
+		return new Promise( ( resolver, rejecter ) => {
 
-		connection.on("error", ( err ) => {
-			throw "Error thrown by the serial communication: ", err;
-		} );
+	
+			const cfg = instrumentConfig.config;
+			const connection = new serialport( cfg.host, cfg.params );
 
-		connection.on("open", () => {
-console.log("Connection opened", cfg.host );
-			connection.flush();
-			connection.write("RESERVED:REFENABLE\n");
-		} );
+			connection.on("error", ( err ) => {
+				throw "Error thrown by the serial communication: ", err;
+			} );
 
-		connection.on("close", ( ) => {
+			connection.on("open", () => {
+				connection.flush();
+				connection.write("RESERVED:REFENABLE\n");
+				resolver();
+			} );
 
-			setTimeout( () => {
+			connection.on("close", ( ) => {
 
-				connection.open();
+				setTimeout( () => {
 
-				updateAllInstrumentStatus( instrumentConfig.instrumentId );
+					connection.open();
 
-			}, cfg.reconnectTimeout );
-		} );
+					updateAllInstrumentStatus( instrumentConfig.instrumentId );
 
-		connections[ instrumentConfig.instrumentId ] = connection;
-		connections[ instrumentConfig.instrumentId ].lease = Promise.resolve();
-		connections[ instrumentConfig.instrumentId ].queryManager = new queryManager( connection );
+				}, cfg.reconnectTimeout );
+			} );
+
+			connections[ instrumentConfig.instrumentId ] = connection;
+			connections[ instrumentConfig.instrumentId ].lease = Promise.resolve();
+			connections[ instrumentConfig.instrumentId ].queryManager = new queryManager( connection );
+		} );	
 	} );
+		
 }
 
 
@@ -626,7 +631,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	comm.queue.addQuery( async () => {
+	comm.queryManager.addQuery( async () => {
 
 
 		await comm.lease;
