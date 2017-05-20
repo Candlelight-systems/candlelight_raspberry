@@ -61,14 +61,62 @@ async function normalizeStatus() {
 	}
 
 
+
+	await pauseHardware( status[ i ].instrumentId );
+
 	for( let i = 0; i < status.length; i++ ) {
 		await updateInstrumentStatusChanId( status[ i ].instrumentId, status[ i ].chanId, [], true );
 	}
+
+	await resumeHardware( status[ i ].instrumentId );
 }
 
 
 normalizeStatus();
 
+
+function pauseHardware( instrumentId ) {
+	return query( instrumentId, matahariconfig.specialcommands.pauseHardware );
+}
+
+function resumeHardware( instrumentId ) {
+	return query( instrumentId, matahariconfig.specialcommands.resumeHardware );
+}
+
+
+
+function query( instrumentId, query ) {
+
+	let comm = connections[ instrumentId ];
+
+	if( ! comm ) {
+		throw "Could not find communication based on the instrument id";
+	}	
+
+	return comm.queue.addQuery( async () => {
+
+		await comm.lease;
+		return comm.lease = new Promise( ( resolver, rejecter ) => {
+
+			comm.removeAllListeners( "data" );
+			comm.on( "data", async ( d ) => {
+
+				data += d.toString('ascii'); // SAMD sends ASCII data
+
+				if( data.indexOf("\r\n") > -1 ) {
+					comm.removeAllListeners( "data" );
+					comm.flush();
+					await delay( 100 );
+					resolver( "ok" );
+					return;
+				}
+			} );	
+			
+			comm.write( query + "\n" );
+			comm.drain( );
+		});
+	});
+}
 
 function filesaveStatus() {
 	
@@ -576,69 +624,71 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	await comm.lease;
-	
+	comm.queue.addQuery( async () => {
 
-	return comm.lease = new Promise( async ( resolver ) => {
-		
-		await delay( 100 ); // Allow some buffering time	
 
-		for( let cmd of matahariconfig.statuscommands ) {
+		await comm.lease;
+		return comm.lease = new Promise( async ( resolver ) => {
 			
-			await new Promise( async ( resolver ) => {
-
-				if( !force && (previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus) ) ) {
-					return resolver();
-				}
-
-				let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
-					data = "";
-				console.log( command );
-				comm.on( "data", async ( d ) => {
-
-					data += d.toString('ascii'); // SAMD sends ASCII data
-					if( data.indexOf("\n") > -1 ) {
-						comm.removeAllListeners( "data" );
-						comm.flush();
-						data = "";	
-						resolver();
-					}
-				} );
-
-				if( comm.isOpen() ) {
-					comm.write( command );
-					
-				}
-
-				comm.once("open", async () => {
-					comm.write( command );
-					comm.drain();
-				} );
-			} );
-
 			await delay( 100 ); // Allow some buffering time	
-		}
 
-		// Handle IV scheduling
-		if( ( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) || _hasChanged( [ "iv_interval" ], chanStatus, previousStatus ) ) {
-			MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
-		}
-		
-		if( ! MataHariTrackScheduler.hasTimeout( "mpp", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
-			MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
-		}
+			for( let cmd of matahariconfig.statuscommands ) {
+				
+				await new Promise( async ( resolver ) => {
 
-		// Scheduling Voc. Checks for applicability are done later
-		if( ! MataHariTrackScheduler.hasTimeout( "voc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_voc", "tracking_measure_voc_interval"], chanStatus, previousStatus ) ) {
-			MataHariTrackScheduler.scheduleVoc( instrumentId, chanId, chanStatus );
-		}
+					if( !force && (previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus) ) ) {
+						return resolver();
+					}
 
-		// Scheduling Jsc. Checks for applicability are done later
-		if( ! MataHariTrackScheduler.hasTimeout( "jsc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], chanStatus, previousStatus ) ) {
-			MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
-		}
+					let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
+						data = "";
+					
+					comm.on( "data", async ( d ) => {
 
-		resolver();
+						data += d.toString('ascii'); // SAMD sends ASCII data
+						if( data.indexOf("\n") > -1 ) {
+							comm.removeAllListeners( "data" );
+							comm.flush();
+							data = "";	
+							resolver();
+						}
+					} );
+
+					if( comm.isOpen() ) {
+						comm.write( command );
+						
+					}
+
+					comm.once("open", async () => {
+						comm.write( command );
+						comm.drain();
+					} );
+				} );
+
+				await delay( 100 ); // Allow some buffering time	
+			}
+
+			// Handle IV scheduling
+			if( ( ! MataHariIVScheduler.hasTimeout( instrumentId, chanId ) && ( chanStatus.iv_interval > 0 && chanStatus.iv_interval !== null && chanStatus.iv_interval !== undefined ) ) || _hasChanged( [ "iv_interval" ], chanStatus, previousStatus ) ) {
+				MataHariIVScheduler.schedule( instrumentId, chanId, chanStatus );
+			}
+			
+			if( ! MataHariTrackScheduler.hasTimeout( "mpp", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], chanStatus, previousStatus ) && chanStatus.enable > 0 && chanStatus.tracking_mode > 0 && chanStatus.tracking_record_interval > 0 &&  chanStatus.tracking_record_interval !== null && chanStatus.tracking_record_interval !== undefined ) {
+				MataHariTrackScheduler.schedule( instrumentId, chanId, chanStatus );
+			}
+
+			// Scheduling Voc. Checks for applicability are done later
+			if( ! MataHariTrackScheduler.hasTimeout( "voc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_voc", "tracking_measure_voc_interval"], chanStatus, previousStatus ) ) {
+				MataHariTrackScheduler.scheduleVoc( instrumentId, chanId, chanStatus );
+			}
+
+			// Scheduling Jsc. Checks for applicability are done later
+			if( ! MataHariTrackScheduler.hasTimeout( "jsc", instrumentId, chanId ) || _hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], chanStatus, previousStatus ) ) {
+				MataHariTrackScheduler.scheduleJsc( instrumentId, chanId, chanStatus );
+			}
+
+			resolver();
+		} );
 	} );
 }
 
