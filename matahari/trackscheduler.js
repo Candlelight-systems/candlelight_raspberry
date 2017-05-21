@@ -189,17 +189,17 @@ function getData( instrumentId, chanId, status ) {
 	// results should be a waveform (voltage,current)
 	return command( instrumentId, chanId ).then( ( results ) => {
 
-		let voltageMean = results[ 0 ],
-			currentMean = results[ 1 ],
-			powerMean = results[ 2 ],
-			voltageMin = results[ 3 ],
-			currentMin = results[ 4 ],
-			powerMin = results[ 5 ],
-			voltageMax = results[ 6 ],
-			currentMax = results[ 7 ],
-			powerMax = results[ 8 ],
-			sun = results[ 9 ],
-			nb = results[ 10 ];
+		let voltageMean = parseFloat( results[ 0 ] ),
+			currentMean = parseFloat( results[ 1 ] ),
+			powerMean = parseFloat( results[ 2 ] ),
+			voltageMin = parseFloat( results[ 3 ] ),
+			currentMin = parseFloat( results[ 4 ] ),
+			powerMin = parseFloat( results[ 5 ] ),
+			voltageMax = parseFloat( results[ 6 ] ),
+			currentMax = parseFloat( results[ 7 ] ),
+			powerMax = parseFloat( results[ 8 ] ),
+			sun = parseFloat( results[ 9 ] ),
+			nb = parseInt( results[ 10 ] );
 
 		if( parseInt( nb ) == 0 ) {
 			return;
