@@ -4,6 +4,7 @@ const express = require("express");
 const config = require("./config")
 const matahari = require("./matahari/main");
 const bodyParser = require('body-parser')
+const fs = require('fs');
 
 var app = express();
 var server = app.listen( config.express.port, function() {
@@ -50,6 +51,43 @@ app.get("/getStatus", function( req, res ) {
 
 
 
+app.get("/pauseChannels", function( req, res ) {
+
+	res.type("application/json");
+	
+	matahari.pauseChannels( ).then( () => {
+
+		res.send( "Ok" );	
+
+	} ).catch( ( error ) => {
+
+		console.error("Pause not executed");
+		console.log( error );
+		res.send("Not ok");
+
+	} );	
+} );
+
+
+app.get("/resumeChannels", function( req, res ) {
+
+	res.type("application/json");
+	
+	matahari.resumeChannels( ).then( () => {
+
+		res.send( "Ok" );	
+
+	} ).catch( ( error ) => {
+
+		console.error("Pause not executed");
+		console.log( error );
+		res.send("Not ok");
+
+	} );	
+} );
+
+
+
 
 app.get("/executeIV", function( req, res ) {
 
@@ -58,13 +96,15 @@ app.get("/executeIV", function( req, res ) {
 
 
 	matahari.executeIV( instrumentId, chanId ).then( () => {
+		
 		res.send( "Ok" );	
-	}).catch( ( error ) => {
+
+	} ).catch( ( error ) => {
+
 		console.error("IV not executed");
 		console.log( error );
 		res.send("Not ok");
-	});
-	
+	} );
 } );
 
 

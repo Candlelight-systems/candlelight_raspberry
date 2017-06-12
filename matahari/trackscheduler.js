@@ -1,6 +1,7 @@
 'use strict';
 
 const influx = require("./influxhandler")
+const EnvironmentalScheduler = require("./environmentscheduler");
 
 let intervals = {};
 let command, requestVoc, requestJsc, commandUpdateChannelStatus;
@@ -221,7 +222,9 @@ function getData( instrumentId, chanId, status ) {
 			currentMax: currentMax,
 			powerMax: powerMax,
 			sun: sun,
-			efficiency: efficiency
+			efficiency: efficiency,
+			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
+			humidity: EnvironmentalScheduler.getHumidity( status.chanId )
 		} );
 
 	} ).catch( ( error ) => {

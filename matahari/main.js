@@ -7,6 +7,7 @@ let influx = require("influx");
 const config = require("../config");
 const MataHariIVScheduler = require("./ivscheduler");
 const MataHariTrackScheduler = require("./trackscheduler");
+const MataHariEnvironmentScheduler = require("./environmentscheduler");
 const queryManager = require("./queryhandler");
 
 const matahariconfig = config.matahari;
@@ -15,6 +16,10 @@ const fs = require("fs");
 let connections = {};
 Promise.all( openConnections() ).then( () => {
 	normalizeStatus();
+
+	for( var i = 0; i < matahariconfig.instruments.length; i ++ ) {
+		MataHariEnvironmentScheduler.schedule( matahariconfig.instruments[ i ].instrumentId, matahariconfig.instruments[ i ].channels );
+	}
 });
 
 
@@ -349,7 +354,7 @@ function requestIVCurveStatus( instrumentId, chanId, status ) {
 					}
 				}
 			} );
-			console.log( matahariconfig.specialcommands.getIVStatus + ":CH" + chanId + "\n" );
+			
 			comm.write( matahariconfig.specialcommands.getIVStatus + ":CH" + chanId + "\n" );
 			comm.drain();
 		});
@@ -422,6 +427,40 @@ async function requestTrackingData( instrumentId, channelId ) {
 		return comm.lease = _requestTrackingData( comm, channelId );
 	});
 
+}
+
+
+
+async function requestTemperature( instrumentId, channelId ) {
+
+	let comm = connections[ instrumentId ];
+
+	if( ! comm ) {
+		rejecter("Cannot find communication stream with the instrument based on the instrument id");
+	}
+
+	return comm.queryManager.addQuery( async ( ) => {
+
+		await comm.lease;
+		return comm.lease = query( instrumentId, "DATA:TEMPERATURE:CH" + instrumentId );
+	} );
+}
+
+
+
+async function requestHumidity( instrumentId ) {
+
+	let comm = connections[ instrumentId ];
+
+	if( ! comm ) {
+		rejecter("Cannot find communication stream with the instrument based on the instrument id");
+	}
+
+	return comm.queryManager.addQuery( async ( ) => {
+
+		await comm.lease;
+		return comm.lease = query( instrumentId, "DATA:HUMIDITY" );
+	} );
 }
 
 
@@ -844,8 +883,10 @@ function executeIV( instrumentId, chanId ) {
 	return MataHariIVScheduler.executeIV( instrumentId, chanId, getStatus( instrumentId, chanId ) );
 }
 
+
 MataHariIVScheduler.setCommand( requestIVCurve, requestIVCurveStatus, requestIVCurveData );
 MataHariTrackScheduler.setCommands( requestTrackingData, updateInstrumentStatusChanId, requestVoc, requestJsc );
+MataHariEnvironmentScheduler.setCommands( requestTemperature, requestHumidity );
 
 module.exports = {
 	getChannels: getChannels,
@@ -876,7 +917,6 @@ module.exports = {
 	updateAllStatus: updateAllStatus,
 
 	executeIV: executeIV,
-
-	pauseChannels: pauseChannels,
-	resumeChannels: resumeChannels
+	pauseChannels: pauseHardware,
+	resumeChannels: resumeHardware
 };
