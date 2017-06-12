@@ -90,6 +90,19 @@ function resumeHardware( instrumentId ) {
 }
 
 
+async function pauseChannels() {
+	for( var i in connections ) {
+		await pauseHardware( i );
+	}
+}
+
+
+async function resumeChannels() {
+	for( var i in connections ) {
+		await resumeHardware( i );
+	}
+}
+
 
 function query( instrumentId, query ) {
 
@@ -904,7 +917,6 @@ module.exports = {
 	updateAllStatus: updateAllStatus,
 
 	executeIV: executeIV,
-
 	pauseChannels: pauseHardware,
 	resumeChannels: resumeHardware
 };

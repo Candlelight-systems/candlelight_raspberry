@@ -107,6 +107,44 @@ app.get("/executeIV", function( req, res ) {
 	} );
 } );
 
+
+
+app.get("/pauseChannels", function( req, res ) {
+
+	res.type("application/json");
+	
+	matahari.pauseChannels( ).then( () => {
+
+		res.send( "Ok" );	
+
+	} ).catch( ( error ) => {
+
+		console.error("Pause not executed");
+		console.log( error );
+		res.send("Not ok");
+
+	} );	
+} );
+
+
+app.get("/resumeChannels", function( req, res ) {
+
+	res.type("application/json");
+	
+	matahari.resumeChannels( ).then( () => {
+
+		res.send( "Ok" );	
+
+	} ).catch( ( error ) => {
+
+		console.error("Pause not executed");
+		console.log( error );
+		res.send("Not ok");
+
+	} );	
+} );
+
+
 app.post("/setStatus", function( req, res ) {
 
 	let status = req.body;
