@@ -684,7 +684,7 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 		throw "Could not find communication based on the instrument id";
 	}	
 
-	comm.queryManager.addQuery( async () => {
+	return comm.queryManager.addQuery( async () => {
 
 		await comm.lease;
 		return comm.lease = new Promise( async ( resolver ) => {
@@ -694,14 +694,14 @@ async function updateInstrumentStatusChanId( instrumentId, chanId, previousStatu
 			for( let cmd of matahariconfig.statuscommands ) {
 				
 				await new Promise( async ( resolver ) => {
-
+console.log('testing');
 					if( !force && (previousStatus && cmd[ 1 ]( chanStatus ) === cmd[ 1 ]( previousStatus) ) ) {
 						return resolver();
 					}
 
 					let command = cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( chanStatus ) + "\n",
 						data = "";
-					
+					console.log( command );
 					comm.on( "data", async ( d ) => {
 
 						data += d.toString('ascii'); // SAMD sends ASCII data
