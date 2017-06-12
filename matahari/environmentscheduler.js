@@ -62,7 +62,7 @@ function getConditions( instrumentId, allChannels ) {
 
 function setTimer( instrumentId, allChannels ) {
 	// Let's set another time
-	const intervalId = instrumentId + chanId + "";
+	const intervalId = instrumentId + "";
 
 	if( intervals[ intervalId ] ) {
 		clearTimeout( intervals[ intervalId ] );
@@ -70,7 +70,7 @@ function setTimer( instrumentId, allChannels ) {
 
 	intervals[ intervalId ] = setTimeout( () => {
 
-		getConditions( instrumentId, chanId, status );
+		getConditions( instrumentId, allChannels );
 
 	}, 10 * 1000 * 60 );
 }
