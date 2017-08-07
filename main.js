@@ -1,22 +1,20 @@
 'use strict';
 
 const express = require("express");
-const config = require("./config")
-const matahari = require("./matahari/main");
-const bodyParser = require('body-parser')
+const config = require("./config");
+const bodyParser = require('body-parser');
 const fs = require('fs');
+const matahari = require('./matahari/main');
 
 var app = express();
-var server = app.listen( config.express.port, function() {
-	console.log('app started');
-} );
+var server = app.listen( config.express.port, function() { /* callback */ } );
 
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded( {     // to support URL-encoded bodies
   extended: true
 } ) ); 
-//app.use(express.json());  
+
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -24,9 +22,17 @@ app.use(function(req, res, next) {
   next();
 });
 
+app.get("/idn", function( req, res ) {
+
+	res.type("text/plain");
+	res.send( config.instrument.id );
+} );
+
+
 app.get("/getChannels", function( req, res ) {
 
 	res.type("application/json");
+	res.header("Content-Type", "application/json");
 	res.send( JSON.stringify( matahari.getChannels() ) );
 } );
 
@@ -34,6 +40,7 @@ app.post("/setInfluxDB", function( req, res ) {
 
 	let cfg = req.body;
 	config.influx = cfg;
+
 	fs.writeFileSync("influx.json", JSON.stringify( config.influx, undefined, "\t" ) );	
 	res.send( "" );
 } );
@@ -43,50 +50,11 @@ app.get("/getStatus", function( req, res ) {
 
 	res.type("application/json");
 
-	var chanId = req.query.chanId;
-	var instrumentId = req.query.instrumentId;
+	let chanId = req.query.chanId,
+		instrumentId = req.query.instrumentId;
 	
 	res.send( JSON.stringify( matahari.getStatus( instrumentId, chanId ) ) );
 } );
-
-
-
-app.get("/pauseChannels", function( req, res ) {
-
-	res.type("application/json");
-	
-	matahari.pauseChannels( ).then( () => {
-
-		res.send( "Ok" );	
-
-	} ).catch( ( error ) => {
-
-		console.error("Pause not executed");
-		console.log( error );
-		res.send("Not ok");
-
-	} );	
-} );
-
-
-app.get("/resumeChannels", function( req, res ) {
-
-	res.type("application/json");
-	
-	matahari.resumeChannels( ).then( () => {
-
-		res.send( "Ok" );	
-
-	} ).catch( ( error ) => {
-
-		console.error("Pause not executed");
-		console.log( error );
-		res.send("Not ok");
-
-	} );	
-} );
-
-
 
 
 app.get("/executeIV", function( req, res ) {
@@ -94,16 +62,53 @@ app.get("/executeIV", function( req, res ) {
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
 
-
 	matahari.executeIV( instrumentId, chanId ).then( () => {
 		
-		res.send( "Ok" );	
+		res.send( "" );	
 
 	} ).catch( ( error ) => {
 
-		console.error("IV not executed");
 		console.log( error );
-		res.send("Not ok");
+		res.status(500).send("IV could not be executed. Error was " + error );
+
+	} );
+} );
+
+
+
+app.get("/recordVoc", function( req, res ) {
+
+	var chanId = req.query.chanId;
+	var instrumentId = req.query.instrumentId;
+
+	matahari.measureVoc( instrumentId, chanId ).then( () => {
+		
+		res.send( "" );	
+
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		res.status(500).send("Voc measurement failed. Error was " + error );
+
+	} );
+} );
+
+
+
+app.get("/recordJsc", function( req, res ) {
+
+	var chanId = req.query.chanId;
+	var instrumentId = req.query.instrumentId;
+
+	matahari.measureJsc( instrumentId, chanId ).then( () => {
+		
+		res.send( "" );	
+
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		res.status(500).send("Jsc measurement failed. Error was " + error );
+
 	} );
 } );
 
@@ -111,19 +116,16 @@ app.get("/executeIV", function( req, res ) {
 
 app.get("/pauseChannels", function( req, res ) {
 
-	res.type("application/json");
-	
-	matahari.pauseChannels( ).then( () => {
+	matahari.pauseChannels( req.query.instrumentId ).then( () => {
 
-		res.send( "Ok" );	
+		res.send( "" );	
 
 	} ).catch( ( error ) => {
 
-		console.error("Pause not executed");
 		console.log( error );
-		res.send("Not ok");
-
+		res.status( 500 ).send("Could not pause the channels. Error was " + error );
 	} );	
+
 } );
 
 
@@ -131,15 +133,14 @@ app.get("/resumeChannels", function( req, res ) {
 
 	res.type("application/json");
 	
-	matahari.resumeChannels( ).then( () => {
+	matahari.resumeChannels( req.query.instrumentId ).then( () => {
 
-		res.send( "Ok" );	
+		res.send( "" );
 
 	} ).catch( ( error ) => {
 
-		console.error("Pause not executed");
 		console.log( error );
-		res.send("Not ok");
+		res.status( 500 ).send("Could not resume channel operation. Error was " + error );
 
 	} );	
 } );
@@ -153,14 +154,12 @@ app.post("/setStatus", function( req, res ) {
 
 	matahari.saveStatus( instrumentId, chanId, status ).then( () => {
 		
-		res.send("Ok");	
-		console.log("Channel updated");
-
+		res.send("");	
+		
 	}).catch(( error ) => {
 
-		console.error("Channel not updated");
 		console.log( error );
-		res.send("Not ok");
+		res.status( 500 ).send("Channel " + chanId + " could not be updated. Error was " + error );
 	 });
 });
 

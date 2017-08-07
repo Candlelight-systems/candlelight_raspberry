@@ -1,8 +1,12 @@
 'use strict';
-const influx = require("./influx.json");
+const influx = require("./config/influx.json");
+const mux = require("./config/mux.json");
+const instrument = require("./config/instrument.json");
 
 module.exports = {
 	
+	instrument: instrument,
+
 	express: {
 		port: 8080
 	},
@@ -15,7 +19,7 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			getIVData: "DATA:IV",
-			getIVStatus: "IV:STATUS?",
+			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME"
 		},
@@ -37,36 +41,43 @@ module.exports = {
 			[ "OUTPUT:ENABLE", function( status ) { return status.enable || 0; } ]
 		],
 
+		defaults: {
+			"tracking_record_interval": 1000,
+			"tracking_interval": 100,
+			"tracking_bwfwthreshold": 1,
+			"tracking_fwbwthreshold": 1,
+			"tracking_step": 1,
+			"tracking_switchdelay": 1,
+			"iv_start": 1,
+			"iv_stop": 0,
+			"iv_hysteresis": 0,
+			"iv_rate": 0.1,
+			"iv_interval": 24 * 3600 * 1000,
+			"enable": 0,
+			"tracking_measure_jsc": 0,
+			"tracking_measure_voc": 0,
+			"tracking_measure_jsc_time": 10000,
+			"tracking_measure_voc_time": 10000,
+			"tracking_measure_jsc_interval": 24 * 3600 * 1000,
+			"tracking_measure_voc_interval": 24 * 3600 * 1000,
+			"tracking_mode": 0,
+			"cellArea": 0
+		},
+		
 		instruments: [ 
 			{
 				instrumentId: "matahari1000",
 
 				config: {
-					host: "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Zero-if00",
+					//host: "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Zero-if00",
+					host: "/dev/tty.usbmodem1411",
 					params: {
 						baudrate: 115200
 					},
 					reconnectTimeout: 1000
 				},
 
-				channels: [
-					{ chanId: 1, chanName: "Channel 1" },
-					{ chanId: 2, chanName: "Channel 2" },
-					{ chanId: 3, chanName: "Channel 3" },
-					{ chanId: 4, chanName: "Channel 4" },
-					{ chanId: 5, chanName: "Channel 5" },
-					{ chanId: 6, chanName: "Channel 6" },
-					{ chanId: 7, chanName: "Channel 7" },
-					{ chanId: 8, chanName: "Channel 8" },
-					{ chanId: 9, chanName: "Channel 9" },
-					{ chanId: 10, chanName: "Channel 10" },
-					{ chanId: 11, chanName: "Channel 11" },
-					{ chanId: 12, chanName: "Channel 12" },
-					{ chanId: 13, chanName: "Channel 13" },
-					{ chanId: 14, chanName: "Channel 14" },
-					{ chanId: 15, chanName: "Channel 15" },
-					{ chanId: 16, chanName: "Channel 16" }
-				]
+				channels: mux
 			}
 		]
 	}

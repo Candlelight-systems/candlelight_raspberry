@@ -81,7 +81,7 @@ module.exports.storeVoc = function( measurementName, voc ) {
 
 module.exports.storeJsc = function( measurementName, jsc ) {
 
-    return influxClient.writePoints([
+    return influxClient.writePoints( [
       {
         measurement: measurementName + "_jsc",
         fields: { 
@@ -89,7 +89,7 @@ module.exports.storeJsc = function( measurementName, jsc ) {
         },
       }
 
-    ]).catch(err => {
+    ] ).catch( ( err ) => {
 
       console.error( `Error saving data to InfluxDB! ${err.stack}` );
     });
