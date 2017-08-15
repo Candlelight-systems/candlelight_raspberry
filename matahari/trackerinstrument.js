@@ -349,6 +349,18 @@ class TrackerInstrument {
 		// Tracking sampling interval
 		this._setStatus( chanId, "tracking_interval", parseFloat( newStatus.tracking_interval ), newStatus );
 		
+
+		this._setStatus( chanId, "tracking_measure_voc_interval", Math.min( 60000, parseInt( newStatus.tracking_measure_voc_interval ) ), newStatus );
+		this._setStatus( chanId, "tracking_measure_jsc_interval", Math.min( 60000, parseInt( newStatus.tracking_measure_jsc_interval ) ), newStatus );
+
+		this._setStatus( chanId, "tracking_measure_voc", !! newStatus.tracking_measure_voc, newStatus );
+		this._setStatus( chanId, "tracking_measure_jsc", !! newStatus.tracking_measure_jsc, newStatus );
+
+
+		
+
+
+
 		// Forward - backward threshold
 		this._setStatus( chanId, "tracking_fwbwthreshold", Math.min( 1, Math.max( 0, parseFloat( newStatus.tracking_fwbwthreshold ) ) ), newStatus );	
 
@@ -376,6 +388,7 @@ class TrackerInstrument {
 		this._setStatus( chanId, "enable", newStatus.enable ? 1 : 0, newStatus );
 
 
+		
 		// Updates the stuff unrelated to the tracking
 
 		this._setStatus( chanId, "measurementName", newStatus.measurementName, newStatus );
@@ -413,11 +426,11 @@ class TrackerInstrument {
 	}
 
 
-	_setStatus( chanId, paramName, paramValue, newStatus ) {
+	_setStatus( chanId, paramName, paramValue, newStatus, save ) {
 
 		let instrumentId = this.getInstrumentId();
 
-		if( ! newStatus.hasOwnProperty( paramName ) ) {
+		if( newStatus && ! newStatus.hasOwnProperty( paramName ) ) {
 			return;
 		}
 
@@ -428,7 +441,12 @@ class TrackerInstrument {
 				status[ i ][ paramName ] = paramValue;
 			}
 		}
+
+		if( save ) {
+			saveStatus();
+		}
 	}
+
 
 	async updateInstrumentStatusChanId( chanId, previousState = {}, force = false ) {
 
@@ -579,7 +597,8 @@ class TrackerInstrument {
 
 	async makeIV( chanId ) {
 		
-		console.log('Make an IV please');
+		this.setStatus( chanId, 'iv_booked', true, undefined, true );
+
 		return this
 				.getStateManager()
 				.addQuery( async () => {
@@ -617,6 +636,8 @@ class TrackerInstrument {
 					await delay( 5000 ); // Re equilibration
 
 					this.preventMPPT[ chanId ] = false;
+					this.setStatus( chanId, 'iv_booked', false, undefined, true );
+
 				} );
 	}
 
@@ -712,6 +733,8 @@ class TrackerInstrument {
 
 	async measureVoc( chanId ) {
 
+		this.setStatus( chanId, 'voc_booked', true, undefined, true );
+
 		this
 			.getStateManager()
 			.addQuery( async () => {
@@ -742,6 +765,7 @@ class TrackerInstrument {
 
 				await delay( 5000 ); // Re equilibration
 
+				this.setStatus( chanId, 'voc_booked', false, undefined, true );
 				this.preventMPPT[ chanId ] = false;
 			} );
 	}
@@ -750,7 +774,8 @@ class TrackerInstrument {
 
 	async measureJsc( chanId ) {
 
-		
+		this.setStatus( chanId, 'jsc_booked', true, undefined, true );
+
 		this
 			.getStateManager()
 			.addQuery( async () => {
@@ -780,6 +805,7 @@ class TrackerInstrument {
 
 				await delay( 5000 ); // Re equilibration
 
+				this.setStatus( chanId, 'jsc_booked', false, undefined, true );
 				this.preventMPPT[ chanId ] = false;
 			} );
 	}

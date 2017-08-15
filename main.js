@@ -50,10 +50,9 @@ app.get("/getStatus", function( req, res ) {
 
 	res.type("application/json");
 
-	let chanId = req.query.chanId,
-		instrumentId = req.query.instrumentId;
+	let instrumentId = req.query.instrumentId;
 	
-	res.send( JSON.stringify( matahari.getStatus( instrumentId, chanId ) ) );
+	res.send( JSON.stringify( matahari.getStatus( instrumentId ) ) );
 } );
 
 

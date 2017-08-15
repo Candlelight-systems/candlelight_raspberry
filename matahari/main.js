@@ -31,7 +31,14 @@ module.exports = {
 	},
 
 	getStatus: function( instrumentId, chanId ) {
-		return getInstrument( instrumentId ).getStatus( chanId );
+
+		let instrument = getInstrument( instrumentId ),
+			channels = instrument.getChannels(),
+			returnObject = {};
+
+		channels.forEach( ( channel ) => {
+			returnObject[ channel.chanId ] = instrument.getStatus( channel.chanId );
+		});
 	},
 
 	executeIV: function( instrumentId, chanId ) {
