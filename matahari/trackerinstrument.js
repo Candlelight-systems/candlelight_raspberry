@@ -597,7 +597,7 @@ class TrackerInstrument {
 
 	async makeIV( chanId ) {
 		
-		this.setStatus( chanId, 'iv_booked', true, undefined, true );
+		this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
 		return this
 				.getStateManager()
@@ -636,7 +636,7 @@ class TrackerInstrument {
 					await delay( 5000 ); // Re equilibration
 
 					this.preventMPPT[ chanId ] = false;
-					this.setStatus( chanId, 'iv_booked', false, undefined, true );
+					this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
 				} );
 	}
@@ -733,7 +733,7 @@ class TrackerInstrument {
 
 	async measureVoc( chanId ) {
 
-		this.setStatus( chanId, 'voc_booked', true, undefined, true );
+		this._setStatus( chanId, 'voc_booked', true, undefined, true );
 
 		this
 			.getStateManager()
@@ -765,7 +765,7 @@ class TrackerInstrument {
 
 				await delay( 5000 ); // Re equilibration
 
-				this.setStatus( chanId, 'voc_booked', false, undefined, true );
+				this._setStatus( chanId, 'voc_booked', false, undefined, true );
 				this.preventMPPT[ chanId ] = false;
 			} );
 	}
@@ -774,7 +774,7 @@ class TrackerInstrument {
 
 	async measureJsc( chanId ) {
 
-		this.setStatus( chanId, 'jsc_booked', true, undefined, true );
+		this._setStatus( chanId, 'jsc_booked', true, undefined, true );
 
 		this
 			.getStateManager()
@@ -805,7 +805,7 @@ class TrackerInstrument {
 
 				await delay( 5000 ); // Re equilibration
 
-				this.setStatus( chanId, 'jsc_booked', false, undefined, true );
+				this._setStatus( chanId, 'jsc_booked', false, undefined, true );
 				this.preventMPPT[ chanId ] = false;
 			} );
 	}
