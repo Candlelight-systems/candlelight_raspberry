@@ -358,8 +358,8 @@ class TrackerInstrument {
 		this._setStatus( chanId, "tracking_interval", parseFloat( newStatus.tracking_interval ), newStatus );
 		
 
-		this._setStatus( chanId, "tracking_measure_voc_interval", Math.min( 60000, parseInt( newStatus.tracking_measure_voc_interval ) ), newStatus );
-		this._setStatus( chanId, "tracking_measure_jsc_interval", Math.min( 60000, parseInt( newStatus.tracking_measure_jsc_interval ) ), newStatus );
+		this._setStatus( chanId, "tracking_measure_voc_interval", Math.max( 60000, parseInt( newStatus.tracking_measure_voc_interval ) ), newStatus );
+		this._setStatus( chanId, "tracking_measure_jsc_interval", Math.max( 60000, parseInt( newStatus.tracking_measure_jsc_interval ) ), newStatus );
 
 		this._setStatus( chanId, "tracking_measure_voc", !! newStatus.tracking_measure_voc, newStatus );
 		this._setStatus( chanId, "tracking_measure_jsc", !! newStatus.tracking_measure_jsc, newStatus );
@@ -521,23 +521,34 @@ class TrackerInstrument {
 
 			// Scheduling Voc. Checks for applicability are done later
 			if( 
-				! this.timerExists( "voc", chanId ) 
-				|| _hasChanged( [ "enabled", "tracking_measure_voc", "tracking_measure_voc_interval"], status, previousState ) 
+
+				status.tracking_measure_voc && (
+					! this.timerExists( "voc", chanId ) 
+					|| _hasChanged( [ "enabled", "tracking_measure_voc", "tracking_measure_voc_interval"], status, previousState ) 
+				)
 
 				) {
 
-				this.setTimer("voc", chanId, this.measureVoc, status.tracking_measure_voc_interval );
-				
+				this.setTimer("voc", chanId, this.measureVoc, status.tracking_measure_voc_interval );				
+			} else {
+				this.removeTimer("voc", chanId );
 			}
 
 			// Scheduling Jsc. Checks for applicability are done later
-			if( ! this.timerExists( "jsc", chanId ) 
-				|| 
-				_hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], status, previousState ) ) 
-			{
+			if( status.tracking_measure_jsc
+				&& (
+					! this.timerExists( "jsc", chanId ) 
+						|| 
+					_hasChanged( [ "enabled", "tracking_measure_jsc", "tracking_measure_jsc_interval"], status, previousState ) 
+					)
+			) {
 
 				this.setTimer("jsc", chanId, this.measureJsc, status.tracking_measure_jsc_interval );
+
+			} else {
+				this.removeTimer( "jsc", chanId );
 			}
+
 		}
 	}
 
@@ -593,8 +604,12 @@ console.log( lightRef, lightRefValue );
 
 	setTimer( timerName, chanId, callback, interval ) {
 
+		
+
 		// Let's set another time
 		const intervalId = this.getIntervalName( timerName, chanId );
+
+		this.cancelTimer[ intervalId ] = false;
 
 		callback = callback.bind( this );
 
@@ -615,9 +630,9 @@ console.log( lightRef, lightRefValue );
 
 			} finally { // If it does, restart the timer anyway
 
-				if( this.cancelTimer[ timerName ] ) {
+				if( this.cancelTimer[ intervalId ] ) {
 
-					this.cancelTimer[ timerName ] = false;
+					this.cancelTimer[ intervalId ] = false;
 					return;
 				}
 
@@ -657,7 +672,7 @@ console.log( lightRef, lightRefValue );
 		}
 
 		clearTimeout( this.getTimer( timerName, chanId ) );
-		this.cancelTimer[ timerName ] = true;
+		this.cancelTimer[ this.getIntervalName( timerName, chanId ) ] = true;
 	}
 
 
