@@ -393,7 +393,7 @@ class TrackerInstrument {
 		this._setStatus( chanId, "cellName", newStatus.cellName, newStatus );
 		this._setStatus( chanId, "cellArea", newStatus.cellArea, newStatus );
 		this._setStatus( chanId, "lightRef", newStatus.lightRef, newStatus );
-		this._setStatus( chanId, "lightRefValue", newStatus.lightRefValue, newStatus );
+		this._setStatus( chanId, "lightRefValue", parseFloat( newStatus.lightRefValue ), newStatus );
 
 
 		let newMode;
@@ -455,6 +455,14 @@ class TrackerInstrument {
 			comm = this.getConnection();
 
 
+		if( status.enable == 0 ) {
+			
+			this.removeTimer( "track", chanId );
+			this.removeTimer( "voc", chanId );
+			this.removeTimer( "jsc", chanId );
+			this.removeTimer( "iv", chanId );
+		}
+
 		await this.pauseChannels();
 
 		for( let cmd of matahariconfig.statuscommands ) {
@@ -468,15 +476,8 @@ class TrackerInstrument {
 
 		await this.resumeChannels();
 
-		if( status.enable == 0 ) {
-			
-				this.removeTimer( "track", chanId );
-				this.removeTimer( "voc", chanId );
-				this.removeTimer( "jsc", chanId );
-				this.removeTimer( "iv", chanId );
-
-		} else {
-
+		if( status.enable !== 0 ) {
+		 
 			// Handle IV scheduling
 			if( 
 				( // If there is no timeout yet and there should be one...
@@ -765,11 +766,10 @@ class TrackerInstrument {
 		// W cm-2
 
 		const lightRef = this.getLightFromChannel( chanId ); // In sun
-
 		let efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
-		if( isNaN( efficiency ) ) {
-			efficiency = 0;
+		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
+			return;
 		}
 
 		await influx.storeTrack( status.measurementName, {
