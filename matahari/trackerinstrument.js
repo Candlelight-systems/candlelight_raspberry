@@ -16,7 +16,7 @@ let connections = {};
 let intervals = {};
 
 
-function query( communication, query, linesExpected = 1 ) {
+function query( communication, query, linesExpected = 1, executeBefore = () => { return true; } ) {
 
 
 	if( ! communication ) {
@@ -25,7 +25,15 @@ function query( communication, query, linesExpected = 1 ) {
 
 	return communication.queryManager.addQuery( async () => {
 
+
 		await communication.lease;
+
+		if( executeBefore ) {
+			if( ! executeBefore() ) {
+				rejecter();
+			}
+		}
+
 		return communication.lease = new Promise( ( resolver, rejecter ) => {
 
 			let data = "", 
@@ -36,7 +44,7 @@ function query( communication, query, linesExpected = 1 ) {
 			communication.on( "data", async ( d ) => {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
-console.log( data );
+
 				while( data.indexOf("\r\n") > -1 ) {
 					
 					lineCount++;
@@ -731,7 +739,11 @@ class TrackerInstrument {
 
 	async _getTrackData( chanId ) {
 
-		let data = await query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2 );
+		let data = await query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
+
+			return this.getStatus( chanId ).enabled && this.getStatus( chanId ).tracking_mode > 0
+		} );
+
 		return data.split(",");
 	}
 

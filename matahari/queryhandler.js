@@ -45,6 +45,10 @@ class queryManager {
 			query.resolver( results );
 		} ).catch( ( error ) => {
 			query.rejecter( error );
+
+			this.processing = false;
+			this.processQueue();
+
 		} );
 	}
 }
