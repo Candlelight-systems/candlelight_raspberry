@@ -752,7 +752,9 @@ console.log( lightRef, lightRefValue );
 
 			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode > 0
 
-		} ).then( ( data ) => data.split(",") );;
+		} );
+
+		return data.split(",");
 	}
 
 	async getTrackDataInterval( chanId ) {
