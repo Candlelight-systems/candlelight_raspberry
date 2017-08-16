@@ -615,7 +615,7 @@ console.log( lightRef, lightRefValue );
 
 			} finally { // If it does, restart the timer anyway
 
-				if( ! this.cancelTimer[ timerName ] ) {
+				if( this.cancelTimer[ timerName ] ) {
 
 					this.cancelTimer[ timerName ] = false;
 					return;
