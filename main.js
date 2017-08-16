@@ -29,11 +29,24 @@ app.get("/idn", function( req, res ) {
 } );
 
 
+app.get("/getInstruments", function( req, res ) {
+
+	res.type("application/json");
+	res.header("Content-Type", "application/json");
+	
+	res.send( JSON.stringify( matahari.getInstruments( ) ) );
+} );
+
+
+
 app.get("/getChannels", function( req, res ) {
 
 	res.type("application/json");
 	res.header("Content-Type", "application/json");
-	res.send( JSON.stringify( matahari.getChannels() ) );
+
+	const instrumentId = req.query.instrumentId;
+
+	res.send( JSON.stringify( matahari.getChannels( instrumentId ) ) );
 } );
 
 app.post("/setInfluxDB", function( req, res ) {

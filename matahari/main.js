@@ -20,14 +20,15 @@ function getInstrument( instrumentId ) {
 
 module.exports = {
 
-	getChannels: function() {
+	getInstruments() {
+		return matahari.trackers.map( ( tracker ) => {
+			return tracker;
+		});
+	}
+	
+	getChannels: ( instrumentId ) => {
 
-		let channels = [];
-		for( let key in instrumentInstances ) {
-			channels = channels.concat( instrumentInstances[ key ].getChannels() );
-		}
-
-		return channels;
+		return getInstrument( instrumentId ).getChannels();
 	},
 
 	getStatus: ( instrumentId, chanId ) => {
