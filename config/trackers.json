@@ -31,7 +31,7 @@
 		],
 
 		"pdRefs": [
-			{ "name": "Photodiode 1", "ref": "pd1" }
+			{ "name": "Photodiode 1", "ref": "pd1" },
 			{ "name": "Photodiode 2", "ref": "pd2" }
 		]
 	}
