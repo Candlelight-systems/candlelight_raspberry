@@ -746,15 +746,13 @@ console.log( lightRef, lightRefValue );
 	//////////////////////////////////////
 
 
-	async _getTrackData( chanId ) {
+	_getTrackData( chanId ) {
 
-		let data = await query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
+		return query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
 
 			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode > 0
 
-		} );
-
-		return data.split(",");
+		} ).then( ( data ) => { return data.split(",") } );
 	}
 
 	async getTrackDataInterval( chanId ) {
