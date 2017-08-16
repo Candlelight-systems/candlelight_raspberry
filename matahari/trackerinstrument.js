@@ -43,7 +43,7 @@ function query( communication, query, linesExpected = 1 ) {
 			communication.on( "data", async ( d ) => {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
-
+console.log( data );
 				while( data.indexOf("\r\n") > -1 ) {
 					
 					lineCount++;
