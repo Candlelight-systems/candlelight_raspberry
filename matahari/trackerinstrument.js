@@ -771,6 +771,10 @@ class TrackerInstrument {
 
 		const efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
+		if( isNaN( efficiency ) ) {
+			efficiency = null;
+		}
+		
 		await influx.storeTrack( status.measurementName, {
 
 			voltageMean: voltageMean,
