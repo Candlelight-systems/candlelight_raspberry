@@ -91,6 +91,8 @@ class TrackerInstrument {
 		this.preventMPPT = {};
 		this.pdIntensity = {};
 
+		this.cancelTimer = {};
+
 		this.openConnection().then( () => {
 			
 			this.normalizeStatus();
@@ -554,7 +556,7 @@ class TrackerInstrument {
 	getLightFromChannel( chanId ) {
 
 		const { lightRef, lightRefValue } = this.getStatus( chanId );
-
+console.log( lightRef, lightRefValue );
 		switch( lightRef ) {
 			
 			case 'pd1':
@@ -613,6 +615,12 @@ class TrackerInstrument {
 
 			} finally { // If it does, restart the timer anyway
 
+				if( ! this.cancelTimer[ timerName ] ) {
+
+					this.cancelTimer[ timerName ] = false;
+					return;
+				}
+
 				this.setTimer( timerName, chanId, callback, interval );	
 			}
 
@@ -649,6 +657,7 @@ class TrackerInstrument {
 		}
 
 		clearTimeout( this.getTimer( timerName, chanId ) );
+		this.cancelTimer[ timerName ] = true;
 	}
 
 
@@ -781,6 +790,7 @@ class TrackerInstrument {
 		let efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
 		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
+			console.error("Efficiency has the wrong format. Check lightRef value: " + lightRef );
 			return;
 		}
 
