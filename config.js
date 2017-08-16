@@ -20,7 +20,7 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			readPD1: "MEASURE:PHOTODIODE1",
-			readPD2: "MEASURE:PHOTODIODE2"
+			readPD2: "MEASURE:PHOTODIODE2",
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
