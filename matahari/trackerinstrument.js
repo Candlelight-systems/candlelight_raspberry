@@ -15,13 +15,6 @@ const defaultProps = matahariconfig.defaults;
 let connections = {};
 let intervals = {};
 
-function pauseHardware( instrumentId ) {
-	return query( instrumentId, matahariconfig.specialcommands.pauseHardware );
-}
-
-function resumeHardware( instrumentId ) {
-	return query( instrumentId, matahariconfig.specialcommands.resumeHardware );
-}
 
 function query( communication, query, linesExpected = 1 ) {
 
@@ -284,14 +277,13 @@ class TrackerInstrument {
 
 
 	async pauseChannels() {
-		
-		await pauseHardware( this.getInstrumentId() );
+		return this.query( matahariconfig.specialcommands.pauseHardware );
 	}
 
 
 	async resumeChannels() {
 		
-		await resumeHardware( this.getInstrumentId() );
+		return this.query( matahariconfig.specialcommands.resumeHardware );
 	}
 
 
