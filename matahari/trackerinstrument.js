@@ -404,6 +404,7 @@ class TrackerInstrument {
 		this._setStatus( chanId, "cellName", newStatus.cellName, newStatus );
 		this._setStatus( chanId, "cellArea", newStatus.cellArea, newStatus );
 		this._setStatus( chanId, "lightRef", newStatus.lightRef, newStatus );
+		this._setStatus( chanId, "lightRefValue", newStatus.lightRefValue, newStatus );
 
 
 		let newMode;
