@@ -45,6 +45,8 @@ module.exports = {
 
 			returnObject[ channel.chanId ] = instrument.getStatus( channel.chanId );
 		});
+
+		return returnObject;
 	},
 
 	getPDOptions: ( instrumentId ) => {
