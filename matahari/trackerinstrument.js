@@ -88,7 +88,8 @@ class TrackerInstrument {
 
 		this.config = config;
 		this.preventMPPT = {};
-
+		this.pdIntensity = {};
+		
 		this.openConnection().then( () => {
 			
 			this.normalizeStatus();
@@ -769,12 +770,12 @@ class TrackerInstrument {
 
 		const lightRef = this.getLightFromChannel( chanId ); // In sun
 
-		const efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
+		let efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
 		if( isNaN( efficiency ) ) {
 			efficiency = null;
 		}
-		
+
 		await influx.storeTrack( status.measurementName, {
 
 			voltageMean: voltageMean,
