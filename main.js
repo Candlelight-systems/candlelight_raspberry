@@ -33,7 +33,7 @@ app.get("/getInstruments", function( req, res ) {
 
 	res.type("application/json");
 	res.header("Content-Type", "application/json");
-	
+
 	res.send( JSON.stringify( matahari.getInstruments( ) ) );
 } );
 
@@ -189,7 +189,7 @@ app.post("/setStatus", function( req, res ) {
 	 });
 });
 
-app.post("/resetStatus", function( req, res ) {
+app.get("/resetStatus", function( req, res ) {
 
 	let status = req.body;
 	let instrumentId = status.instrumentId,
