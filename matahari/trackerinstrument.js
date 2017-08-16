@@ -329,10 +329,7 @@ class TrackerInstrument {
 
 
 	async resetStatus( chanId ) {
-
-		Object.assign( this.getStatus( chanId ), defaultProps );
-		this.updateInstrumentStatusChanId( chanId, {}, true );
-		return saveStatus();
+		this.saveStatus( chanId, defaultProps );
 	}
 
 
@@ -465,6 +462,9 @@ class TrackerInstrument {
 			status = this.getStatus( chanId ),
 			comm = this.getConnection();
 
+
+		await this.pauseChannels();
+
 		for( let cmd of matahariconfig.statuscommands ) {
 
 			if( !force && ( cmd[ 1 ]( status ) === cmd[ 1 ]( previousState ) ) ) {
@@ -473,6 +473,8 @@ class TrackerInstrument {
 
 			await this.query( cmd[ 0 ] + ":CH" + chanId + " " + cmd[ 1 ]( status ) );
 		}
+
+		await this.resumeChannels();
 
 		if( status.enable == 0 ) {
 			
