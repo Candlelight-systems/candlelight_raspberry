@@ -59,7 +59,6 @@ function query( communication, query, linesExpected = 1 ) {
 						communication.removeAllListeners( "data" );
 						communication.flush();
 						await delay( 10 );
-						console.log('end');
 						resolver( dataThatMatters );
 						return;
 					}
@@ -93,6 +92,7 @@ class TrackerInstrument {
 		this.openConnection().then( () => {
 			
 			this.normalizeStatus();
+			this.scheduleLightReading( 10000 );
 
 		} ).catch( ( e ) => {
 			
@@ -327,6 +327,14 @@ class TrackerInstrument {
 	}
 
 
+	resetStatus( chanId ) {
+
+		Object.assign( this.getStatus( chanId ), defaultProps );
+		this.updateInstrumentStatusChanId( chanId, {}, true );
+		saveStatus();
+	}
+
+
 	/**
 	 *	Updates the status of a channel. Uploads it to the instrument and saves it
 	 *	@param {Number} chanId - The channel ID
@@ -522,11 +530,58 @@ class TrackerInstrument {
 
 				this.setTimer("jsc", chanId, this.measureJsc, status.tracking_measure_jsc_interval );
 			}
-
 		}
+	}
 
+
+
+
+	//////////////////////////////////////
+	// LIGHT MANAGEMENT
+	//////////////////////////////////////
+
+	getLightIntensity( lightRef ) {
+
+		return this.pdIntensity[ lightRef ];
 	}
 	
+	getLightFromChannel( chanId ) {
+
+		const { lightRef, lightRefValue } = this.getStatus( chanId );
+
+		switch( lightRef ) {
+			
+			case 'pd1':
+			case 'pd2':
+				return this.getLightIntensity( lightRef );
+			break;
+
+			default:
+				return lightRefValue;
+			break;
+		}
+	}
+
+	scheduleLightReading( interval ) {
+
+		//if( this.timerExists( "pd" ) ) {
+			this.setTimer("pd", undefined, this.measurePD, interval );
+		//} 
+	}
+
+	async measurePD() {
+
+		this.pdIntensity[ 'pd1' ] = await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 );
+		this.pdIntensity[ 'pd2' ] = await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 );
+	}
+
+	getPDOptions() {
+		return this.config.pdRefs;
+	}
+
+	//////////////////////////////////////
+	// IV CURVES
+	//////////////////////////////////////
 
 	setTimer( timerName, chanId, callback, interval ) {
 
@@ -678,7 +733,7 @@ class TrackerInstrument {
 
 	async _getTrackData( chanId ) {
 
-		let data = await query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId + "\n", 2 );
+		let data = await query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2 );
 		return data.split(",");
 	}
 
@@ -711,7 +766,10 @@ class TrackerInstrument {
 
 		//results[9] in sun
 		// W cm-2
-		const efficiency = ( powerMean / ( status.cellArea ) ) / ( data[ 9 ] * 0.1 ) * 100;
+
+		const lightRef = this.getLightFromChannel( chanId ); // In sun
+
+		const efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
 		await influx.storeTrack( status.measurementName, {
 

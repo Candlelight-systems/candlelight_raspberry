@@ -2,6 +2,7 @@
 const influx = require("./config/influx.json");
 const mux = require("./config/mux.json");
 const instrument = require("./config/instrument.json");
+const trackers = require("./config/trackers.json");
 
 module.exports = {
 	
@@ -18,6 +19,8 @@ module.exports = {
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
+			readPD1: "MEASURE:PHOTODIODE1",
+			readPD2: "MEASURE:PHOTODIODE2"
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
@@ -61,24 +64,13 @@ module.exports = {
 			"tracking_measure_jsc_interval": 24 * 3600 * 1000,
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
-			"cellArea": 0
+			"cellArea": 0,
+			"lightRef": "pd1",
+			"lightRefValue": null,
+			"measurementName": null,
+			"cellName": null
 		},
 		
-		instruments: [ 
-			{
-				instrumentId: "matahari1000",
-
-				config: {
-					host: "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Zero-if00",
-					//host: "/dev/tty.usbmodem1411",
-					params: {
-						baudrate: 115200
-					},
-					reconnectTimeout: 1000
-				},
-
-				channels: mux
-			}
-		]
+		trackers: trackers
 	}
 };

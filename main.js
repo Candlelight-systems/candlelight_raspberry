@@ -50,10 +50,24 @@ app.get("/getStatus", function( req, res ) {
 
 	res.type("application/json");
 
-	let instrumentId = req.query.instrumentId;
+	const instrumentId = req.query.instrumentId;
+	const chanId = req.query.chanId;
 	
-	res.send( JSON.stringify( matahari.getStatus( instrumentId ) ) );
+	res.send( JSON.stringify( matahari.getStatus( instrumentId, chanId ) ) );
 } );
+
+
+app.get("/getPDOptions", function( req, res ) {
+
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;
+	
+	res.send( JSON.stringify( matahari.getPDOptions( instrumentId ) ) );
+} );
+
+
+
 
 
 app.get("/executeIV", function( req, res ) {
@@ -159,6 +173,23 @@ app.post("/setStatus", function( req, res ) {
 
 		console.log( error );
 		res.status( 500 ).send("Channel " + chanId + " could not be updated. Error was " + error );
+	 });
+});
+
+app.post("/resetStatus", function( req, res ) {
+
+	let status = req.body;
+	let instrumentId = status.instrumentId,
+		chanId = status.chanId;
+
+	matahari.resetStatus( instrumentId, chanId, status ).then( () => {
+		
+		res.send("");	
+		
+	}).catch(( error ) => {
+
+		console.log( error );
+		res.status( 500 ).send("Channel " + chanId + " could not be reset. Error was " + error );
 	 });
 });
 
