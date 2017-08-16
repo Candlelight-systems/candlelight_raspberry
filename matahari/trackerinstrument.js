@@ -328,11 +328,11 @@ class TrackerInstrument {
 	}
 
 
-	resetStatus( chanId ) {
+	async resetStatus( chanId ) {
 
 		Object.assign( this.getStatus( chanId ), defaultProps );
 		this.updateInstrumentStatusChanId( chanId, {}, true );
-		saveStatus();
+		return saveStatus();
 	}
 
 
