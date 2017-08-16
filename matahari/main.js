@@ -72,7 +72,7 @@ module.exports = {
 
 	saveStatus: ( instrumentId, chanId, status ) => {
 		return getInstrument( instrumentId ).saveStatus( chanId, status );
-	}
+	},
 
 	resetStatus: ( instrumentId, chanId, status ) => {
 		return getInstrument( instrumentId ).resetStatus( chanId, status );
