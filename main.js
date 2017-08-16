@@ -191,7 +191,7 @@ app.post("/setStatus", function( req, res ) {
 
 app.get("/resetStatus", function( req, res ) {
 
-	let status = req.body;
+	let status = req.query;
 	let instrumentId = status.instrumentId,
 		chanId = status.chanId;
 
