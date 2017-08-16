@@ -24,8 +24,8 @@ module.exports = {
 		return matahari.trackers.map( ( tracker ) => {
 			return tracker;
 		});
-	}
-	
+	},
+
 	getChannels: ( instrumentId ) => {
 
 		return getInstrument( instrumentId ).getChannels();
