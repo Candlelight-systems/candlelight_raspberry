@@ -30,7 +30,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 
 		if( executeBefore ) {
 			if( ! executeBefore() ) {
-				rejecter();
+				throw "Cannot execute method. Forbidden";
 			}
 		}
 
