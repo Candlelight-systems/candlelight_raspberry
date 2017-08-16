@@ -33,6 +33,8 @@ module.exports = {
 
 	getStatus: ( instrumentId, chanId ) => {
 
+		chanId = parseInt( chanId );
+		
 		let instrument = getInstrument( instrumentId ),
 			channels = instrument.getChannels(),
 			returnObject = {};
