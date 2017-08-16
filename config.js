@@ -1,6 +1,6 @@
 'use strict';
 const influx = require("./config/influx.json");
-const mux = require("./config/mux.json");
+
 const instrument = require("./config/instrument.json");
 const trackers = require("./config/trackers.json");
 
