@@ -200,7 +200,7 @@ app.post("/setStatuses", ( req, res ) => {
 
 	new Promise( async ( resolver, rejecter ) => {
 
-		for( chanId of chanIds ) {
+		for( let chanId of chanIds ) {
 			await matahari.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
 		}
 
