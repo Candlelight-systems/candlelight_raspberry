@@ -772,7 +772,7 @@ class TrackerInstrument {
 	requestIVCurveData( chanId ) {
 
 		return query( this.getConnection(), matahariconfig.specialcommands.getIVData, 2 ).then( ( data ) => {
-
+console.log( data );
 			return data
 				.split(',')
 				.map( ( value ) => parseFloat( value ) );
