@@ -747,7 +747,7 @@ class TrackerInstrument {
 				const wave = new waveform();
 
 				for( i = 0; i < ivcurveData.length; i += 2 ) {
-					wave.push( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
+					wave.append( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
 				}
 				
 				console.log( wave );
