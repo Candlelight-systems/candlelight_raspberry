@@ -6,6 +6,8 @@ let influx 							= require("./influxhandler");
 
 const globalConfig					= require("../config");
 const queryManager 					= require("./queryhandler");
+	
+const waveform						= require("jsgraph-waveform");
 
 const matahariconfig = globalConfig.matahari;
 const fs = require("fs");
@@ -551,6 +553,21 @@ class TrackerInstrument {
 				this.removeTimer( "jsc", chanId );
 			}
 
+
+			( async () => {
+
+				if( previousState.enable == 0 && status.enable == 1 ) { // Off to tracking
+
+					let iv = await this.makeIV( chanId ),
+						pow = iv.math( ( y, x ) => { return x * y } );
+						maxEff = pow.getMaxY(),
+						maxEffLoc = pow.findLevel( maxEff ),
+						maxEffVoltage = pow.getX( maxEffLoc );
+
+					console.log( maxEff, maxEffLoc, maxEffVoltage );
+				}
+
+			} ) ();
 		}
 	}
 
@@ -687,45 +704,57 @@ class TrackerInstrument {
 		this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
 		return this
-				.getStateManager()
-				.addQuery( async () => {
+			.getStateManager()
+			.addQuery( async () => {
 
-					var status = this.getStatus( chanId );
+				var status = this.getStatus( chanId );
 
-					this.preventMPPT[ chanId ] = true;
+				this.preventMPPT[ chanId ] = true;
 
-					if( ! status.enable ) {
-						throw "Channel not enabled";
+				if( ! status.enable ) {
+					throw "Channel not enabled";
+				}
+
+				await this.requestIVCurve( chanId );
+				let i = 0;
+
+				while( true ) {
+					i++;
+					
+					var ivstatus = parseInt( await this.requestIVCurveStatus( chanId ) );
+					
+					if( ivstatus == 0 ) { // Once the curve is done, let's validate it
+						break;
 					}
-
-					await this.requestIVCurve( chanId );
-					let i = 0;
-		
-					while( true ) {
-						i++;
-						
-						var ivstatus = parseInt( await this.requestIVCurveStatus( chanId ) );
-						
-						if( ivstatus == 0 ) { // Once the curve is done, let's validate it
-							break;
-						}
-						if( i > 100 ) { // Problem. 
-							console.error("There has been a problem with getting the iv curve");
-							break;
-						}
-						await delay( 1000 ); // Poling every second to see if IV curve is done
+					if( i > 100 ) { // Problem. 
+						console.error("There has been a problem with getting the iv curve");
+						break;
 					}
+					await delay( 1000 ); // Poling every second to see if IV curve is done
+				}
 
-	
-					influx.storeIV( status.measurementName, await this.requestIVCurveData( chanId ) );					
-					//this.setTimer( timerName, chanId, callback, interval );
 
-					await delay( 5000 ); // Re equilibration
+				let ivcurveData = await this.requestIVCurveData( chanId );
+				influx.storeIV( status.measurementName, ivcurveData );					
+				//this.setTimer( timerName, chanId, callback, interval );
 
-					this.preventMPPT[ chanId ] = false;
-					this._setStatus( chanId, 'iv_booked', false, undefined, true );
+				await delay( 5000 ); // Re equilibration
 
-				} );
+				this.preventMPPT[ chanId ] = false;
+				this._setStatus( chanId, 'iv_booked', false, undefined, true );
+
+
+				const wave = new waveform();
+
+				for( i = 0; i < ivcurveData.length; i += 2 ) {
+					wave.push( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
+				}
+				
+				console.log( wave );
+
+				return wave;
+
+			} );
 	}
 
 
