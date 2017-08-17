@@ -513,6 +513,7 @@ class TrackerInstrument {
 				! this.timerExists( "track", chanId )  
 				|| _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], status, previousState ) 
 				&& status.tracking_record_interval > 0 
+				&& status.tracking_mode > 0 
 				&& status.tracking_record_interval !== null 
 				&& status.tracking_record_interval !== undefined ) {
 
