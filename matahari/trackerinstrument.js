@@ -570,7 +570,7 @@ class TrackerInstrument {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 
-						console.log( maxEff, maxEffLoc, maxEffVoltage );
+						console.log( maxEff, maxEffLoc, maxEffVoltage, pow );
 					if( ! isNaN( maxEffVoltage ) ) {
 						this.setVoltage( chanId, maxEffVoltage );
 					}
