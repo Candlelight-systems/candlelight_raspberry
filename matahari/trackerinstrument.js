@@ -545,7 +545,7 @@ class TrackerInstrument {
 			}
 
 
-			function setTrackTimer() {
+			var setTrackTimer = () => {
 				if( status.tracking_mode == 0 ) {
 
 					this.removeTimer( "track", chanId );
