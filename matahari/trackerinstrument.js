@@ -576,13 +576,13 @@ class TrackerInstrument {
 						
 					if( ! isNaN( maxEffVoltage ) ) {
 						await this.setVoltage( chanId, maxEffVoltage );
-						this.setTrackTimer();
+						setTrackTimer();
 					} else {
-							this.setTrackTimer();
+						setTrackTimer();
 					}
 
 				} else {
-						this.setTrackTimer();
+					setTrackTimer();
 				}
 
 			} ) ();
