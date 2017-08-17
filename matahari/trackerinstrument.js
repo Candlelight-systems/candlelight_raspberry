@@ -559,8 +559,8 @@ class TrackerInstrument {
 				if( previousState.enable == 0 && status.enable == 1 ) { // Off to tracking
 
 					let iv = await this.makeIV( chanId ),
-						pow = iv.math( ( y, x ) => { return x * y } );
-						maxEff = pow.getMaxY(),
+						pow = iv.math( ( y, x ) => { return x * y } ),
+						maxEff = pow.getMax(),
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 
@@ -772,9 +772,10 @@ class TrackerInstrument {
 	requestIVCurveData( chanId ) {
 
 		return query( this.getConnection(), matahariconfig.specialcommands.getIVData, 2 ).then( ( data ) => {
-console.log( data );
+
 			return data
 				.split(',')
+				.pop()
 				.map( ( value ) => parseFloat( value ) );
 		});
 	}
