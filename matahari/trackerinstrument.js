@@ -513,21 +513,6 @@ class TrackerInstrument {
 			}
 			
 
-			if( status.tracking_mode == 0 ) {
-
-				this.removeTimer( "track", chanId );
-				
-			} else if( 
-				! this.timerExists( "track", chanId )  
-				|| _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], status, previousState ) 
-				&& status.tracking_record_interval > 0 
-				&& status.tracking_mode > 0 
-				&& status.tracking_record_interval !== null 
-				&& status.tracking_record_interval !== undefined ) {
-
-				this.setTimer( "track", chanId, this.getTrackDataInterval, status.tracking_record_interval ); // Setup the timer
-
-			}
 
 			// Scheduling Voc. Checks for applicability are done later
 			if( 
@@ -560,6 +545,24 @@ class TrackerInstrument {
 			}
 
 
+			function setTrackTimer() {
+				if( status.tracking_mode == 0 ) {
+
+					this.removeTimer( "track", chanId );
+					
+				} else if( 
+					! this.timerExists( "track", chanId )  
+					|| _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], status, previousState ) 
+					&& status.tracking_record_interval > 0 
+					&& status.tracking_mode > 0 
+					&& status.tracking_record_interval !== null 
+					&& status.tracking_record_interval !== undefined ) {
+
+					this.setTimer( "track", chanId, this.getTrackDataInterval, status.tracking_record_interval ); // Setup the timer
+
+				}
+			}
+
 			( async () => {
 
 				if( previousState.enable == 0 && status.enable == 1 ) { // Off to tracking
@@ -570,10 +573,16 @@ class TrackerInstrument {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 
-						console.log( maxEff, maxEffLoc, maxEffVoltage, pow );
+						
 					if( ! isNaN( maxEffVoltage ) ) {
-						this.setVoltage( chanId, maxEffVoltage );
+						await this.setVoltage( chanId, maxEffVoltage );
+						this.setTrackTimer();
+					} else {
+							this.setTrackTimer();
 					}
+
+				} else {
+						this.setTrackTimer();
 				}
 
 			} ) ();
