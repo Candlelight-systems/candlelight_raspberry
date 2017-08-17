@@ -567,7 +567,7 @@ class TrackerInstrument {
 	getLightFromChannel( chanId ) {
 
 		const { lightRef, lightRefValue } = this.getStatus( chanId );
-console.log( lightRef, lightRefValue, this.getLightIntensity( lightRef ) );
+
 		switch( lightRef ) {
 			
 			case 'pd1':
@@ -590,8 +590,8 @@ console.log( lightRef, lightRefValue, this.getLightIntensity( lightRef ) );
 
 	async measurePD() {
 
-		this.pdIntensity[ 'pd1' ] = await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 );
-		this.pdIntensity[ 'pd2' ] = await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 );
+		this.pdIntensity[ 'pd1' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 ) );
+		this.pdIntensity[ 'pd2' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 ) );
 	}
 
 	getPDOptions() {
@@ -775,7 +775,7 @@ console.log( lightRef, lightRefValue, this.getLightIntensity( lightRef ) );
 		const status = this.getStatus( chanId );
 
 		if( this.preventMPPT[ chanId ] ) {
-			console.log( 'prev' );
+			
 			return;
 		}
 
