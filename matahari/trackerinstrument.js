@@ -361,8 +361,8 @@ class TrackerInstrument {
 		this._setStatus( chanId, "tracking_measure_voc_interval", Math.max( 60000, parseInt( newStatus.tracking_measure_voc_interval ) ), newStatus );
 		this._setStatus( chanId, "tracking_measure_jsc_interval", Math.max( 60000, parseInt( newStatus.tracking_measure_jsc_interval ) ), newStatus );
 
-		this._setStatus( chanId, "tracking_measure_voc", !! newStatus.tracking_measure_voc, newStatus );
-		this._setStatus( chanId, "tracking_measure_jsc", !! newStatus.tracking_measure_jsc, newStatus );
+		this._setStatus( chanId, "tracking_measure_voc", +newStatus.tracking_measure_voc, newStatus );
+		this._setStatus( chanId, "tracking_measure_jsc", +newStatus.tracking_measure_jsc, newStatus );
 
 
 		
@@ -567,7 +567,7 @@ class TrackerInstrument {
 	getLightFromChannel( chanId ) {
 
 		const { lightRef, lightRefValue } = this.getStatus( chanId );
-console.log( lightRef, lightRefValue );
+console.log( lightRef, lightRefValue, this.getLightIntensity( lightRef ) );
 		switch( lightRef ) {
 			
 			case 'pd1':
