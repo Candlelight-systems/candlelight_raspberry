@@ -408,6 +408,7 @@ class TrackerInstrument {
 
 		let newMode;
 
+		newStatus.tracking_mode = parseInt( newStatus.tracking_mode );
 		switch( newStatus.tracking_mode ) {
 
 			case 2:

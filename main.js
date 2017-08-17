@@ -197,11 +197,16 @@ app.post("/setStatuses", ( req, res ) => {
 	let instrumentId = req.body.instrumentId,
 		chanIds = req.body.chanIds;
 
-	Promise.all( chanIds.map( async ( chanId ) => {
-		
-		return matahari.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
 
-	} ) ).then( () => {
+	new Promise( async ( resolver, rejecter ) => {
+
+		for( chanId of chanIds ) {
+			await matahari.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
+		}
+
+		resolver();
+
+	}).then( () => {
 		
 		res.send("");	
 		
@@ -212,8 +217,7 @@ app.post("/setStatuses", ( req, res ) => {
 		res
 		  .status( 500 )
 		  .send( "Channel " + chanId + " could not be updated. Error was " + error );	
-
-	} );
+	});
 } );
 
 
