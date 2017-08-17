@@ -819,7 +819,7 @@ console.log( lightRef, lightRefValue );
 			voltageMax: voltageMax,
 			currentMax: currentMax,
 			powerMax: powerMax,
-			sun: sun,
+			sun: lightRef,
 			efficiency: efficiency/*,
 			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
 			humidity: EnvironmentalScheduler.getHumidity( status.chanId )*/
