@@ -189,6 +189,35 @@ app.post("/setStatus", function( req, res ) {
 	 });
 });
 
+
+
+app.post("/setStatuses", ( req, res ) => {
+
+	let status = req.body;
+	let instrumentId = req.body.instrumentId,
+		chanIds = req.body.chanIds;
+
+	Promise.all( chanIds.map( async ( chanId ) => {
+		
+		return matahari.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
+
+	} ) ).then( () => {
+		
+		res.send("");	
+		
+	} ).catch(( error ) => {
+
+		console.log( error );
+
+		res
+		  .status( 500 )
+		  .send( "Channel " + chanId + " could not be updated. Error was " + error );	
+
+	} );
+} );
+
+
+
 app.get("/resetStatus", function( req, res ) {
 
 	let status = req.query;
