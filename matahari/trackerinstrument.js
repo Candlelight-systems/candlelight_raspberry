@@ -143,7 +143,7 @@ class TrackerInstrument {
 			throw "Cannot write the instrument. The instrument communication is closed."
 		}
 
-		return query( this.getConnection(), command);
+		return query( this.getConnection(), command );
 	}
 
 
@@ -335,6 +335,12 @@ class TrackerInstrument {
 	async resetStatus( chanId ) {
 		this.saveStatus( chanId, defaultProps );
 	}
+
+	setVoltage( chanId, voltageValue ) {
+
+		return this.query( matahariconfig.specialcommands.setVoltage( chanId, voltageValue ) );
+	}
+
 
 
 	/**
@@ -564,7 +570,7 @@ class TrackerInstrument {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 
-					console.log( maxEff, maxEffLoc, maxEffVoltage );
+					this.setVoltage( chanId, maxEffVoltage );
 				}
 
 			} ) ();
@@ -750,8 +756,6 @@ class TrackerInstrument {
 					wave.append( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
 				}
 				
-				console.log( wave );
-
 				return wave;
 
 			} );

@@ -23,6 +23,7 @@ module.exports = {
 			readPD2: "MEASURE:PHOTODIODE2",
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
+			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME"
 		},
