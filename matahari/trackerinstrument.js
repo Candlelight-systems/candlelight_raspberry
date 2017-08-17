@@ -773,10 +773,12 @@ class TrackerInstrument {
 
 		return query( this.getConnection(), matahariconfig.specialcommands.getIVData, 2 ).then( ( data ) => {
 
-			return data
-				.split(',')
-				.pop()
-				.map( ( value ) => parseFloat( value ) );
+			data = data
+				.split(',');
+
+
+			data.pop()
+			return data.map( ( value ) => parseFloat( value ) );
 		});
 	}
 
