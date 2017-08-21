@@ -656,12 +656,11 @@ class TrackerInstrument {
 		return this.config.pdRefs;
 	}
 
-	setPDScaling( pdRef, pdScale ) {
+	async setPDScaling( pdRef, pdScale ) {
 		for( var i = 0; i < this.config.pdRefs.length; i ++ ) {
 
 			if( this.config.pdRefs[ i ].ref === pdRef ) {
-				this.config.pdRefs[ i ].scaling_ma_to_sun = pdScale;
-				return this;
+				this.config.pdRefs[ i ].scaling_ma_to_sun = pdScale;	
 			}
 		}
 	}

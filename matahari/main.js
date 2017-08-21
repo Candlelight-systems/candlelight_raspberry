@@ -55,8 +55,9 @@ module.exports = {
 		return getInstrument( instrumentId ).getPDOptions();
 	},
 
-	setPDScaling: ( instrumentId, pdRef, pdScale ) => {
-		return getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
+	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
+		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
+		fs.writeFileSync('../config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
 	},
 
 	executeIV: ( instrumentId, chanId ) => {
