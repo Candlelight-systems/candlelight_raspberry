@@ -183,8 +183,6 @@ app.get("/setVoltage", async ( req, res ) => {
 		res.status( 500 ).send("Could not set voltage. Error was " + error );
 	} );
 
-	res.type( "application/json" );
-	res.send( JSON.stringify( results ) );
 });
 
 app.get("/enableChannel", ( req, res ) => {
