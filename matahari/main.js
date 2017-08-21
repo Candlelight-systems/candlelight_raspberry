@@ -1,6 +1,7 @@
 
 const TrackerInstrument = require("./trackerinstrument");
 const { matahari } = require("../config");
+import fs from 'fs';
 
 let instrumentInstances = {};
 
