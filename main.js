@@ -137,8 +137,72 @@ app.get("/recordJsc", function( req, res ) {
 
 	} );
 } );
+	
+app.get("/measureCurrent", async ( req, res ) => {
+
+	let instrumentId = req.query.instrumentId,
+		channels = req.query.chanIds.split(','),
+		results = {};
+
+	for( let channel of channels ) {
+		results[ channel ] = await matahari.measureCurrent( channel );
+	}
+
+	res.type( "application/json" );
+	res.send( JSON.stringify( results ) );
+});
+
+app.get("/setVoltage", async ( req, res ) => {
+
+	let instrumentId = req.query.instrumentId,
+		chanId = req.query.chanId,
+		voltage = parseFloat( req.query.voltage );
+
+	matahari.setVoltage( instrumentId, chanId, voltage ).then( () => {
+		
+		res.send("");
+
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		res.status( 500 ).send("Could not set voltage. Error was " + error );
+	} );
+
+	res.type( "application/json" );
+	res.send( JSON.stringify( results ) );
+});
+
+app.get("/enableChannel", ( req, res ) => {
+
+	let instrumentId = req.query.instrumentId,
+		chanId = req.query.chanId;
+
+	matahari.enableChannel( instrumentId, chanId ).then( () => {
+		res.send("");
+
+	}).catch( ( error ) => {
+
+		console.error( error );
+		res.status( 500 ).send("Could not enable the channel. Error was " + error );
+	});
+});
 
 
+app.get("/disableChannel", ( req, res ) => {
+
+	let instrumentId = req.query.instrumentId,
+		chanId = req.query.chanId;
+
+	matahari.disableChannel( instrumentId, chanId ).then( () => {
+
+		res.send("");
+
+	}).catch( ( error ) => {
+
+		console.error( error );
+		res.status( 500 ).send("Could not disable the channel. Error was " + error );
+	});
+});
 
 app.get("/pauseChannels", function( req, res ) {
 

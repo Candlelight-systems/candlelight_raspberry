@@ -137,13 +137,13 @@ class TrackerInstrument {
 	 *	Writes a command to the instrument, and adds a trailing EOL
 	 *	@param {String} command - The command string to send
 	 */
-	query( command ) {
+	query( command, lines = 1 ) {
 
 		if( ! this.open ) {
 			throw "Cannot write the instrument. The instrument communication is closed."
 		}
 
-		return query( this.getConnection(), command );
+		return query( this.getConnection(), command, lines );
 	}
 
 
@@ -444,6 +444,17 @@ class TrackerInstrument {
 		}
 	}
 
+	enableChannel( chanId ) {
+		this.saveStatus( chanId, { enable: true } );
+	}
+
+	disableChannel( chanId ) {
+		this.saveStatus( chanId, { enable: false } );
+	}
+
+	measureCurrent( chanId ) {
+		return this.query( matahariconfig.specialcommands.measureCurrent( chanId ), 2 ).then( ( current ) => parseFloat( current ) );
+	}
 
 	_setStatus( chanId, paramName, paramValue, newStatus, save ) {
 
@@ -627,8 +638,16 @@ class TrackerInstrument {
 
 	async measurePD() {
 
-		this.pdIntensity[ 'pd1' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 ) );
-		this.pdIntensity[ 'pd2' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 ) );
+		await this.measurePD1();
+		await this.measurePD2();
+	}
+
+	async measurePD1() {
+		return this.pdIntensity[ 'pd1' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 ) );
+	}
+
+	async measurePD2() {
+		return this.pdIntensity[ 'pd2' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 ) );
 	}
 
 	getPDOptions() {

@@ -81,6 +81,30 @@ module.exports = {
 
 	resetStatus: ( instrumentId, chanId, status ) => {
 		return getInstrument( instrumentId ).resetStatus( chanId, status );
+	},
+
+	setVoltage: ( instrumentId, chanId, voltage ) => {
+		return getInstrument( instrumentId ).setVoltage( chanId, voltage );
+	},
+
+	measureCurrent: ( instrumentId, chanId, voltage ) => {
+
+		let instrument = getInstrument( instrumentId );
+		if( chanId == 'pd1' ) {
+			return instrument.measurePD1();
+		} else if( chanId == 'pd2' ) {
+			return instrument.measurePD2();
+		} else {
+			return instrument.measureCurrent( chanId );
+		}
+	},
+
+	enableChannel: ( instrumentId, chanId ) => {
+		return getInstrument( instrumentId ).enableChannel( chanId );
+	},
+
+	disableChannel: ( instrumentId, chanId ) => {
+		return getInstrument( instrumentId ).disableChannel( chanId );
 	}
 };
 
