@@ -80,15 +80,16 @@ app.get("/getPDOptions", function( req, res ) {
 } );
 
 
-app.get("/setPDScaling", function( req, res ) {
+app.post("/setPDScaling", function( req, res ) {
 
 	res.type("application/json");
 
-	const instrumentId = req.query.instrumentId;	
-	matahari.setPDScaling( instrumentId, req.query.pdRef, req.query.pdScale ).then( ( ) => {
+	const instrumentId = req.body.instrumentId;	
+
+	matahari.setPDScaling( instrumentId, req.body.pdRef, req.body.pdScale ).then( ( ) => {
 
 		res.send("");
-		
+
 	}).catch( ( error ) => {
 
 		console.error( error );
