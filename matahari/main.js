@@ -83,8 +83,9 @@ module.exports = {
 		return getInstrument( instrumentId ).resetStatus( chanId, status );
 	},
 
-	setVoltage: ( instrumentId, chanId, voltage ) => {
-		return getInstrument( instrumentId ).setVoltage( chanId, voltage );
+	setVoltage: async ( instrumentId, chanId, voltage ) => {
+		await getInstrument( instrumentId ).saveStatus( chanId, { tracking_mode: 0 } );
+		await getInstrument( instrumentId ).setVoltage( chanId, voltage );
 	},
 
 	measureCurrent: ( instrumentId, chanId, voltage ) => {
