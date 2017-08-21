@@ -90,9 +90,9 @@ module.exports = {
 	measureCurrent: ( instrumentId, chanId, voltage ) => {
 
 		let instrument = getInstrument( instrumentId );
-		if( chanId == 'pd1' ) {
+		if( chanId == 'pd_1' ) {
 			return instrument.measurePD1();
-		} else if( chanId == 'pd2' ) {
+		} else if( chanId == 'pd_2' ) {
 			return instrument.measurePD2();
 		} else {
 			return instrument.measureCurrent( chanId );
