@@ -656,6 +656,16 @@ class TrackerInstrument {
 		return this.config.pdRefs;
 	}
 
+	setPDScaling( pdRef, pdScale ) {
+		for( var i = 0; i < this.config.pdRefs.length; i ++ ) {
+
+			if( this.config.pdRefs[ i ].ref === pdRef ) {
+				this.config.pdRefs[ i ].scaling_ma_to_sun = pdScale;
+				return this;
+			}
+		}
+	}
+
 	//////////////////////////////////////
 	// IV CURVES
 	//////////////////////////////////////

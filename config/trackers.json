@@ -30,8 +30,8 @@
 		],
 
 		"pdRefs": [
-			{ "name": "Photodiode 1", "ref": "pd1" },
-			{ "name": "Photodiode 2", "ref": "pd2" }
+			{ "name": "Photodiode 1", "ref": "pd_1", "scaling_ma_to_sun": 1000 },
+			{ "name": "Photodiode 2", "ref": "pd_2", "scaling_ma_to_sun": 1000 }
 		]
 	}
 ]

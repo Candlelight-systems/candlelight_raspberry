@@ -80,7 +80,21 @@ app.get("/getPDOptions", function( req, res ) {
 } );
 
 
+app.get("/setPDScaling", function( req, res ) {
 
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;	
+	matahari.setPDScaling( instrumentId, req.query.pdRef, req.query.pdScale ).then( ( ) => {
+
+		res.send("");
+		
+	}).catch( ( error ) => {
+
+		console.error( error );
+		res.status( 500 ).send("Photodiode scaling could not be set. Error was " + error );
+	});
+} );
 
 
 app.get("/executeIV", function( req, res ) {
@@ -94,7 +108,7 @@ app.get("/executeIV", function( req, res ) {
 
 	} ).catch( ( error ) => {
 
-		console.log( error );
+		console.error( error );
 		res.status(500).send("IV could not be executed. Error was " + error );
 
 	} );

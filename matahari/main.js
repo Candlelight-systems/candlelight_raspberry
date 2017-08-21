@@ -55,6 +55,10 @@ module.exports = {
 		return getInstrument( instrumentId ).getPDOptions();
 	},
 
+	setPDScaling: ( instrumentId, pdRef, pdScale ) => {
+		return getInstrument( instrument ).setPDScaling( pdRef, pdScale );
+	}
+
 	executeIV: ( instrumentId, chanId ) => {
 		return getInstrument( instrumentId ).makeIV( chanId );
 	},
