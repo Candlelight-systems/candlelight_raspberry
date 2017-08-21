@@ -46,7 +46,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 			communication.on( "data", async ( d ) => {
 
 				data += d.toString('ascii'); // SAMD sends ASCII data
-console.log( data )
+
 				while( data.indexOf("\r\n") > -1 ) {
 					
 					lineCount++;
@@ -446,11 +446,11 @@ class TrackerInstrument {
 	}
 
 	enableChannel( chanId ) {
-		this.saveStatus( chanId, { enable: true } );
+		return this.saveStatus( chanId, { enable: true } );
 	}
 
 	disableChannel( chanId ) {
-		this.saveStatus( chanId, { enable: false } );
+		return this.saveStatus( chanId, { enable: false } );
 	}
 
 	measureCurrent( chanId ) {
