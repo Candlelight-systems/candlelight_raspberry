@@ -24,6 +24,7 @@ module.exports = {
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
+			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME"
 		},
