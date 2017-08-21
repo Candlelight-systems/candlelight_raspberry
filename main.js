@@ -145,7 +145,7 @@ app.get("/measureCurrent", async ( req, res ) => {
 		results = {};
 
 	for( let channel of channels ) {
-		results[ channel ] = await matahari.measureCurrent( channel );
+		results[ channel ] = await matahari.measureCurrent(  instrumentId, channel );
 	}
 
 	res.type( "application/json" );
