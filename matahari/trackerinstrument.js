@@ -328,7 +328,7 @@ class TrackerInstrument {
 		
 		let status = this.getStatus( chanId );
 
-		return status.tracking_mode > 0 && status.enable == 1;
+		return status.tracking_mode && status.enable == 1;
 	}
 
 
@@ -431,6 +431,7 @@ class TrackerInstrument {
 				newMode = 1;
 			break;
 
+			default:
 			case 0:
 				newMode = 0;
 			break;
@@ -558,7 +559,7 @@ class TrackerInstrument {
 
 			var setTrackTimer = () => {
 
-				if( status.tracking_mode == 0 || ! status.enable ) {
+				if( ! status.tracking_mode || ! status.enable ) {
 
 					this.removeTimer( "track", chanId );
 					
@@ -566,7 +567,7 @@ class TrackerInstrument {
 					! this.timerExists( "track", chanId )  
 					|| _hasChanged( [ "enabled", "tracking_mode", "tracking_record_interval"], status, previousState ) 
 					&& status.tracking_record_interval > 0 
-					&& status.tracking_mode > 0 
+					&& status.tracking_mode
 					&& status.tracking_record_interval !== null 
 					&& status.tracking_record_interval !== undefined ) {
 
@@ -835,7 +836,7 @@ class TrackerInstrument {
 
 		return query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
 
-			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode > 0
+			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode
 
 		} ).then( ( data ) => { return data.split(",") } );
 	}
