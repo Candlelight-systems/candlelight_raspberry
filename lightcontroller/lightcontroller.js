@@ -9,12 +9,14 @@ class LightController extends InstrumentController {
 
 		super( ...arguments );
 
-		this.currentCode = 0;
+		this.currentCode = 170;
 		this.setPoint = 0;
 
 		this.setConfig( config );
-		this.openConnection().then( () => {
+		this.openConnection().then( async () => {
 
+			await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
+			await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
 			this.checkLightStatus();
 		});
 	}
