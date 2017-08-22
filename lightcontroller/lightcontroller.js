@@ -113,7 +113,7 @@ class LightController extends InstrumentController {
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
-console.log( diffMa, sun, setPoint, pdValue );
+console.log( sun, setPoint, pdValue );
 			await this.trackerReference.pauseChannels();
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
