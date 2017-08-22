@@ -6,7 +6,7 @@ const Waveform						= require( "jsgraph-waveform" );
 class LightController {
 
 	constructor( config ) {
-		
+
 		this.config = config;
 		this.currentCode = 170;
 		this.on = false;
@@ -228,6 +228,10 @@ class LightController {
 
 	query( ) {
 		return this.host.query( ...arguments );
+	}
+
+	delay( timeMS = 500 ) {
+		return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, timeMS ) );
 	}
 }
 
