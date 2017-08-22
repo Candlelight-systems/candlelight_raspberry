@@ -596,7 +596,7 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 
-	getLightControllers() {
+	async getLightControllers() {
 		return this.config.lightControllers;
 	}
 
