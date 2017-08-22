@@ -113,13 +113,12 @@ class LightController extends InstrumentController {
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
-
+console.log( diffMa, sun, setPoint, pdValue );
 			await this.trackerReference.pauseChannels();
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
 			let idealCodeChange = codePerMa * diffmA; // Get the code difference
-
 
 			await this.setCode( this.getCurrentCode() + idealCodeChange ); // First correction based on linear extrapolation
 			await this.delay( 300 );
@@ -182,15 +181,15 @@ class LightController extends InstrumentController {
 
 	async turnOn() {
 		if( this.on ) {
-
-			await this.delay( 500 );
-			await this.trackerReference.measurePD( this.config.pdRef )
-
 			return;
 		}
 
 		this.on = true;
-		return this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
+		await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
+
+		await this.delay( 500 );
+		await this.trackerReference.measurePD( this.config.pdRef )
+
 	}
 
 	turnOff() {
