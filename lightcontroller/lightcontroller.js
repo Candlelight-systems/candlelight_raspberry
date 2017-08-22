@@ -108,7 +108,7 @@ console.log( sun, setPoint );
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
-			let idealCodeChange = codePerMA * diffmA; // Get the code difference
+			let idealCodeChange = codePerMa * diffmA; // Get the code difference
 
 console.log( codePerMa, diffmA, idealCodeChange );
 
