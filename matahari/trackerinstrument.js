@@ -569,9 +569,6 @@ class TrackerInstrument extends InstrumentController {
 		return this.pdIntensity[ ref ];
 	}
 
-	measurePDValue( ref ) {
-
-	}
 
 	async setPDScaling( pdRef, pdScale ) {
 		for( var i = 0; i < this.config.pdRefs.length; i ++ ) {

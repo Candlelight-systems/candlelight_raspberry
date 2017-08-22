@@ -10,7 +10,7 @@ class LightController extends InstrumentController {
 		super( ...arguments );
 
 		this.currentCode = 170;
-		this.setPoint = 0;
+		
 
 		this.setConfig( config );
 		this.openConnection().then( async () => {
@@ -73,6 +73,7 @@ class LightController extends InstrumentController {
 			ellapsed = ellapsed - ( ellapsed % this._scheduling.msBasis );
 
 			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
+			console.log( ellapsed, index, this._scheduling.waveform );
 			return this._scheduling.waveform.getY( index );
 		}
 
@@ -120,7 +121,7 @@ console.log( codePerMa, diffmA, idealCodeChange );
 
 			do {
 
-				sun = ( await this.trackerReference.measurePDValue( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
+				sun = ( await this.trackerReference.measurePD( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
 console.log( sun, setPoint );
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
