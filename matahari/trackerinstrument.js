@@ -600,6 +600,23 @@ class TrackerInstrument extends InstrumentController {
 		return this.config.lightControllers;
 	}
 
+	saveLightControllers( controllers ) {
+
+
+		for( var ref in controllers ) {
+
+			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
+
+				if( this.config.lightControllers[ i ].ref == ref ) {
+
+					this.config.lightControllers[ i ].setPoint = controllers[ ref ].setPoint;
+					this.config.lightControllers[ i ].scheduling.basis = controllers[ ref ].schedulingBasis;
+					this.config.lightControllers[ i ].scheduling.values = controllers[ ref ].scheduleValues;
+				}
+			}
+		}
+	}
+
 
 	//////////////////////////////////////
 	// IV CURVES

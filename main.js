@@ -339,4 +339,18 @@ app.get("/light.getControllers", function( req, res ) {
 	} );
 });
 
+app.post("/light.saveControllers", ( req, res ) => {
+
+	matahari.saveLightControllers( req.body.instrumentId, req.body.lightControllers ).then( () => {
+		
+		res.send("");
+
+	}).catch( ( error ) => {
+
+		console.error( error );
+		res.status( 500 ).send("Cannot save light controllers. Error was " + error );
+
+	});
+})
+
 

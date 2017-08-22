@@ -117,6 +117,12 @@ module.exports = {
 
 	getLightControllers: ( instrumentId ) => {
 		return getInstrument( instrumentId ).getLightControllers();
+	},
+
+	saveLightControllers: async ( instrumentId, controllers ) => {
+		getInstrument( instrumentId ).saveLightControllers( controllers );
+		fs.writeFileSync('./config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
+		return;
 	}
 };
 
