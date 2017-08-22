@@ -97,17 +97,20 @@ class LightController extends InstrumentController {
 		}
 
 		let pdData = this.trackerReference.getPDData( this.config.pdRef );
-
+console.log( pdData );
 		let pdValue = this.trackerReference.getPDValue( this.config.pdRef );
+		console.log( pdValue );
 		let sun = pdValue / pdData.ma_to_sun_scaling;
-
+console.log( sun );
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
 			await this.trackerReference.pauseHardware();
 
-			let codePerMa = this.getCurrentCode() / pdValue; // From the current value, get the code / current(PD) ratio
+			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
 			let idealCodeChange = codePerPDmA * diffmA; // Get the code difference
+
+console.log( diffmA, idealCodeChange );
 
 			await this.setCode( this.getCurrentCode() + idealCodeChange ); // First correction based on linear extrapolation
 			await this.delay( 200 );
@@ -140,11 +143,11 @@ class LightController extends InstrumentController {
 	}
 
 	increaseCode() {
-		return this.setCode( this.getCurrentCode() + 1 );
+		return this.setCode( this.getCurrentCode() - 1 );
 	}
 
 	decreaseCode() {
-		return this.setCode( this.getCurrentCode() - 1 );
+		return this.setCode( this.getCurrentCode() + 1 );
 	}
 
 	getCode() {
@@ -152,6 +155,7 @@ class LightController extends InstrumentController {
 	}
 
 	setCode() {
+		console.log( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
 
