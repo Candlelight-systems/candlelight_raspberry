@@ -46,11 +46,11 @@ class LightController extends InstrumentController {
 
 			if( this.config.scheduling.basis == '1day' ) {
 
-				this._scheduling.msBasis = 3600 * 24;
+				this._scheduling.msBasis = 3600 * 24 * 1000;
 
 			} else if( this.config.scheduling.basis == '1hour' ) {
 
-				this._scheduling.msBasis = 3600;
+				this._scheduling.msBasis = 3600 * 1000;
 			}
 
 			let waveform = new Waveform( this.config.scheduling.intensities );
