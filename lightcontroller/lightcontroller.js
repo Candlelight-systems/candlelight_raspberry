@@ -10,13 +10,13 @@ class LightController extends InstrumentController {
 		super( ...arguments );
 
 		this.currentCode = 170;
-		
+		this.on = false;
 
 		this.setConfig( config );
 		this.openConnection().then( async () => {
 
 			await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
-			await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
+			await this.turnOn();
 			this.checkLightStatus();
 		});
 	}
@@ -99,12 +99,16 @@ class LightController extends InstrumentController {
 			throw "No photodiode reference from which to read the light intensity";
 		}
 
+		if( setPoint == 0 ) {
+			await this.turnOff();
+		} else {
+			await this.turnOn();
+		}
+
 		let pdData = this.trackerReference.getPDData( this.config.pdRef );
-console.log( pdData );
 		let pdValue = this.trackerReference.getPDValue( this.config.pdRef ) * 1000;
-		
 		let sun = pdValue / pdData.scaling_ma_to_sun;
-console.log( sun, setPoint );
+
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
 			await this.trackerReference.pauseChannels();
@@ -113,11 +117,11 @@ console.log( sun, setPoint );
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
 			let idealCodeChange = codePerMa * diffmA; // Get the code difference
 
-console.log( codePerMa, diffmA, idealCodeChange );
 
 			await this.setCode( this.getCurrentCode() + idealCodeChange ); // First correction based on linear extrapolation
-			await this.delay( 200 );
+			await this.delay( 300 );
 
+			let i = 0;
 
 			do {
 
@@ -169,6 +173,21 @@ console.log( sun, setPoint );
 		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
 
+	turnOn() {
+		if( this.on ) {
+			return;
+		}
+
+		return this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
+	}
+
+	turnOff() {
+		if( ! this.on ) {
+			return;
+		}
+
+		return this.query( "OUTPUT:OFF:CH" + this.config.pwmChannel );
+	}
 	
 }
 
