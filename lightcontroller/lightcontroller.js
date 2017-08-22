@@ -6,9 +6,8 @@ const Waveform						= require( "jsgraph-waveform" );
 class LightController {
 
 	constructor( config ) {
-
-		super( ...arguments );
-
+		
+		this.config = config;
 		this.currentCode = 170;
 		this.on = false;
 
