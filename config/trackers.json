@@ -56,7 +56,7 @@
 				},
 
 				"pwmChannel": 4,
-				"pdRef": "pd_1",
+				"pdRef": "pd_2",
 				"scheduling": {
 					"basis": "1hour",
 					"intensities": [ 0, 0.1, 0.2, 0.3, 0.2, 0.7, 0.9, 1, 0.8, 0.6, 0.2, 0.1, 1 ]

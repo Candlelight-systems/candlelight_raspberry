@@ -121,7 +121,7 @@ console.log( codePerMa, diffmA, idealCodeChange );
 			do {
 
 				sun = ( await this.trackerReference.measurePDValue( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
-
+console.log( sun, setPoint );
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
 					if( sun < setPoint ) {
@@ -162,7 +162,8 @@ console.log( codePerMa, diffmA, idealCodeChange );
 		return this.getCode();
 	}
 
-	setCode() {
+	setCode( newCode ) {
+		this.currentCode = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
 		console.log( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
