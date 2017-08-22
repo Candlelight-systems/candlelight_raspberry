@@ -101,8 +101,10 @@ class LightController extends InstrumentController {
 
 		if( setPoint == 0 ) {
 			await this.turnOff();
+			return;
 		} else {
 			await this.turnOn();
+			return;
 		}
 
 		let pdData = this.trackerReference.getPDData( this.config.pdRef );
