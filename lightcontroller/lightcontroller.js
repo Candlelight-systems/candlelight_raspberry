@@ -105,8 +105,6 @@ class LightController extends InstrumentController {
 			return;
 		} else {
 			await this.turnOn();
-			this.setTimeout();
-			return;
 		}
 
 		let pdData = this.trackerReference.getPDData( this.config.pdRef );
@@ -186,6 +184,7 @@ console.log( sun, setPoint );
 			return;
 		}
 
+		this.on = true;
 		return this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
 	}
 
@@ -194,6 +193,7 @@ console.log( sun, setPoint );
 			return;
 		}
 
+		this.on = false;
 		return this.query( "OUTPUT:OFF:CH" + this.config.pwmChannel );
 	}
 	
