@@ -47,9 +47,12 @@
 		"lightControllers": [
 
 			{	
+				"ref": "ch4",
+				"name": "Top lamp",
 				"hostAlias": "platform-3f980000.usb-usb-0:1.2:1.0",
 				"pwmChannel": 4,
 				"pdRef": "pd_2",
+				"setPoint": false,
 				"scheduling": {
 					"basis": "1hour",
 					"intensities": [ 0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25 ]

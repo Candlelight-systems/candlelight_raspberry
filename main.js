@@ -323,31 +323,17 @@ app.get("/resetStatus", function( req, res ) {
 });
 
 
+app.get("/light.getControllers", function( req, res ) {
 
-
-app.get("/light.pause", function( req, res ) {
-console.log('pausing');
-	matahari.lightPauseSetpoint( req.query.instrumentId ).then( () => {
+	matahari.getLightControllers( req.query.instrumentId ).then( () => {
 		
 		res.send("");	
 		
-	}).catch(( error ) => {
+	} ).catch( ( error ) => {
 
 		console.log( error );
-		res.status( 500 ).send("Light could not be paused. Error was " + error );
-	 });
+		res.status( 500 ).send("Light controllers could not be retrieved. Error was " + error );
+	} );
 });
 
-app.get("/light.resume", function( req, res ) {
-console.log('resuming');
-	matahari.lightResumeSetpoint( req.query.instrumentId ).then( () => {
-		
-		res.send("");	
-		
-	}).catch(( error ) => {
-
-		console.log( error );
-		res.status( 500 ).send("Light could not be paused. Error was " + error );
-	 });
-});
 

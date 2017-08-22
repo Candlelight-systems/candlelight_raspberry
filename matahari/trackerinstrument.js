@@ -596,18 +596,9 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 
-	async lightPauseSetpoint() {
-
-		this.lightControllers.forEach( ( controller ) => { controller.pause() } );
+	getLightControllers() {
+		return this.config.lightControllers;
 	}
-
-	async lightResumeSetpoint() {
-
-		this.lightControllers.forEach( ( controller ) => { controller.pause() } );
-	}
-
-
-
 
 
 	//////////////////////////////////////

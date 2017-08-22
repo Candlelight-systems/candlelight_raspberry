@@ -115,13 +115,8 @@ module.exports = {
 		return getInstrument( instrumentId ).disableChannel( chanId );
 	}
 
-
-	lightPauseSetpoint: ( instrumentId ) => {
-		return getInstrument( instrumentId ).lightPauseSetpoint( chanId );
-	},
-
-	lightResumeSetpoint: ( instrumentId ) => {
-		return getInstrument( instrumentId ).lightResumeSetpoint( chanId );
+	getLightControllers: ( instrumentId ) => {
+		return getInstrument( instrumentId ).getLightControllers();
 	}
 };
 
