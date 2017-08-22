@@ -180,12 +180,12 @@ class LightController extends InstrumentController {
 		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
 
-	turnOn() {
+	async turnOn() {
 		if( this.on ) {
 
 			await this.delay( 500 );
 			await this.trackerReference.measurePD( this.config.pdRef )
-			
+
 			return;
 		}
 
