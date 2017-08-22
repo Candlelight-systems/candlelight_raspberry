@@ -602,7 +602,7 @@ class TrackerInstrument extends InstrumentController {
 
 	saveLightControllers( controllers ) {
 
-
+console.log( controllers );
 		for( var ref in controllers ) {
 
 			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
@@ -611,7 +611,7 @@ class TrackerInstrument extends InstrumentController {
 
 					this.config.lightControllers[ i ].setPoint = controllers[ ref ].setPoint;
 					this.config.lightControllers[ i ].scheduling.basis = controllers[ ref ].schedulingBasis;
-					this.config.lightControllers[ i ].scheduling.values = controllers[ ref ].scheduleValues;
+					this.config.lightControllers[ i ].scheduling.intensities = controllers[ ref ].scheduleValues;
 				}
 			}
 		}
