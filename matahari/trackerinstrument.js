@@ -564,6 +564,8 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 	getPDValue( ref ) {
+
+		console.log( this.pdIntensity );
 		return this.pdIntensity[ ref ];
 	}
 
