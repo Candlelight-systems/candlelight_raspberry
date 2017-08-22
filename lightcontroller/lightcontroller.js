@@ -98,8 +98,8 @@ class LightController extends InstrumentController {
 
 		let pdData = this.trackerReference.getPDData( this.config.pdRef );
 console.log( pdData );
-		let pdValue = this.trackerReference.getPDValue( this.config.pdRef );
-		console.log( pdValue );
+		let pdValue = this.trackerReference.getPDValue( this.config.pdRef ) * 1000;
+		
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 console.log( sun, setPoint );
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
@@ -110,7 +110,7 @@ console.log( sun, setPoint );
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
 			let idealCodeChange = codePerPDmA * diffmA; // Get the code difference
 
-console.log( diffmA, idealCodeChange );
+console.log( codePerMa, diffmA, idealCodeChange );
 
 			await this.setCode( this.getCurrentCode() + idealCodeChange ); // First correction based on linear extrapolation
 			await this.delay( 200 );
@@ -118,7 +118,7 @@ console.log( diffmA, idealCodeChange );
 
 			do {
 
-				sun = ( await this.trackerReference.measurePDValue( this.config.pdRef ) ) / pdData.scaling_ma_to_sun;
+				sun = ( await this.trackerReference.measurePDValue( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
 
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -154,6 +154,10 @@ console.log( diffmA, idealCodeChange );
 
 	getCode() {
 		return this.currentCode;
+	}
+
+	getCurrentCode() {
+		return this.getCode();
 	}
 
 	setCode() {
