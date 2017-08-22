@@ -1,4 +1,6 @@
 
+const serialport 					= require("serialport");
+const queryManager					= require("./matahari/queryhandler")
 
 
 function query( communication, query, linesExpected = 1, executeBefore = () => { return true; } ) {
@@ -85,6 +87,14 @@ class InstrumentController {
 
 
 
+	/**
+	 *	@returns the configuration object
+	 */
+	getConfig() {
+		return this.config;
+	}
+
+
 	async openConnection() {
 
 		const cfg = this.getConfig();
@@ -136,3 +146,5 @@ class InstrumentController {
 	}
 
 }
+
+module.exports = InstrumentController;

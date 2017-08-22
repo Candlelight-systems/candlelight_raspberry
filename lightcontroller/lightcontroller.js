@@ -1,24 +1,13 @@
 'use strict';
 
-let status 							= require("./status.json").channels;
-let serialport 						= require("serialport");
-let influx 							= require("./influxhandler");
-
-const InstrumentController			= require("../instrumentcontroller");
-const waveform						= require("jsgraph-waveform");
-
-const lightControllerConfig = globalConfig.matahari;
-const fs = require("fs");
-
-const defaultProps = matahariconfig.defaults;
-
-let connections = {};
-let intervals = {};
-
+const InstrumentController			= require( "../instrumentcontroller" );
+const Waveform						= require( "jsgraph-waveform" );
 
 class LightController extends InstrumentController {
 
 	constructor( config ) {
+
+		super( ...arguments );
 
 		this.currentCode = 0;
 		this.setPoint = 0;
@@ -63,7 +52,7 @@ class LightController extends InstrumentController {
 			}
 
 			let waveform = new Waveform( this.config.scheduling.intensities );
-			waveform.rescaleX( 0, this.config.scheduling( this._scheduling.msBasis / this.waveform.length ) ); 
+			waveform.rescaleX( 0, this._scheduling.msBasis / waveform.getLength() ); 
 
 			this._scheduling.waveform = waveform;
 			this._scheduling.startDate = Date.now();
@@ -95,7 +84,7 @@ class LightController extends InstrumentController {
 		}
 	}
 
-	checkLightStatus() {
+	async checkLightStatus() {
 
 		var setPoint = this.getSetPoint();
 
@@ -163,7 +152,7 @@ class LightController extends InstrumentController {
 	}
 
 	setCode() {
-		await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
+		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
 
 	delay( delayMS = 100 ) {

@@ -1,7 +1,6 @@
 'use strict';
 
 let status 							= require("./status.json").channels;
-let serialport 						= require("serialport");
 let influx 							= require("./influxhandler");
 
 const globalConfig					= require("../config");
@@ -42,7 +41,7 @@ class TrackerInstrument extends InstrumentController {
 		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
 		
 			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
-				let controller = new LightController( this.config.lightControllers );
+				let controller = new LightController( this.config.lightControllers[ i ] );
 				controller.setTracker( this );
 				this.lightControllers.push( controller );
 			}
@@ -78,12 +77,6 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 
-	/**
-	 *	@returns the configuration object
-	 */
-	getConfig() {
-		return this.config;
-	}
 
 	/**
 	 *	Writes a command to the instrument, and adds a trailing EOL
@@ -551,7 +544,7 @@ class TrackerInstrument extends InstrumentController {
 			return;
 		}
 
-		return await this._measurePD( ref; );		
+		return await this._measurePD( ref );		
 	}
 
 	async _measurePD( ref ) {
