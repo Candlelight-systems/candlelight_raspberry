@@ -61,9 +61,9 @@ class TrackerInstrument extends InstrumentController {
 
 	kill() {
 
-		this.lightControllers.forEach( ( controller ) => {
+		for( let controller of this.lightControllers ) {
 			controller.kill();
-		});
+		}
 
 		super.kill();
 	}
@@ -583,14 +583,14 @@ class TrackerInstrument extends InstrumentController {
 			return;
 		}
 
-		this.lightControllers = [];
+		this.lightControllers = {};
 
 		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
 		
 			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
 				let controller = new LightController( this.config.lightControllers[ i ] );
 				controller.setTracker( this );
-				this.lightControllers.push( controller );
+				this.lightControllers[ this.config.lightControllers[ i ].ref ] = controller;
 			}
 		}
 	}
@@ -602,7 +602,6 @@ class TrackerInstrument extends InstrumentController {
 
 	saveLightControllers( controllers ) {
 
-console.log( controllers );
 		for( var ref in controllers ) {
 
 			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
@@ -612,6 +611,8 @@ console.log( controllers );
 					this.config.lightControllers[ i ].setPoint = controllers[ ref ].setPoint;
 					this.config.lightControllers[ i ].scheduling.basis = controllers[ ref ].schedulingBasis;
 					this.config.lightControllers[ i ].scheduling.intensities = controllers[ ref ].schedulingValues;
+
+					this.lightControllers[ ref ].setConfig( this.config.lightControllers[ i ] );
 				}
 			}
 		}
