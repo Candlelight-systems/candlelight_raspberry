@@ -14,7 +14,7 @@ module.exports = {
 			return hosts[ alias ];
 		}
 
-		hosts[ alias ] = new InstrumentController( config );
+		hosts[ alias ] = new InstrumentController( { config: config } );
 		return hosts[ alias ];
 	},
 
