@@ -101,9 +101,11 @@ class LightController extends InstrumentController {
 
 		if( setPoint == 0 ) {
 			await this.turnOff();
+			this.setTimeout();
 			return;
 		} else {
 			await this.turnOn();
+			this.setTimeout();
 			return;
 		}
 
@@ -150,6 +152,10 @@ console.log( sun, setPoint );
 			await this.trackerReference.resumeChannels();
 		}
 
+		this.setTimeout();
+	}
+
+	setTimeout() {
 		setTimeout( () => { this.checkLightStatus() }, 20000 );
 	}
 
