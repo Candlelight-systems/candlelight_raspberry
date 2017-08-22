@@ -136,7 +136,7 @@ class InstrumentController {
 
 		let _delay = this.getConfig().config.reconnectTimeout;
 		console.warn("Reconnecting in " + _delay + "s" );
-		await delay( _delay );
+		await this.delay( _delay * 1000 );
 		return this.connection.open();
 	}
 
@@ -145,6 +145,11 @@ class InstrumentController {
 		return this.stateManager;
 	}
 
+}
+
+
+function delay( time ) {
+	return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, time ) );
 }
 
 module.exports = InstrumentController;

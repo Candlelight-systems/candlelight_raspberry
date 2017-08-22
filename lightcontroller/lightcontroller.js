@@ -155,9 +155,7 @@ class LightController extends InstrumentController {
 		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 	}
 
-	delay( delayMS = 100 ) {
-		return new Promise( ( resolver ) => { setTimeout( resolver, delayMS ) } );
-	}
+	
 }
 
 module.exports = LightController;

@@ -900,6 +900,9 @@ class TrackerInstrument extends InstrumentController {
 			} );
 	}
 
+	delay( delayMS = 100 ) {
+		return new Promise( ( resolver ) => { setTimeout( resolver, delayMS ) } );
+	}
 }
 
 /*
