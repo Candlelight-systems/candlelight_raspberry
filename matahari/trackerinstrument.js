@@ -611,7 +611,7 @@ console.log( controllers );
 
 					this.config.lightControllers[ i ].setPoint = controllers[ ref ].setPoint;
 					this.config.lightControllers[ i ].scheduling.basis = controllers[ ref ].schedulingBasis;
-					this.config.lightControllers[ i ].scheduling.intensities = controllers[ ref ].scheduleValues;
+					this.config.lightControllers[ i ].scheduling.intensities = controllers[ ref ].schedulingValues;
 				}
 			}
 		}
