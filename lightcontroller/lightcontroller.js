@@ -71,7 +71,7 @@ class LightController extends InstrumentController {
 			ellapsed = ellapsed - ( ellapsed % this._scheduling.msBasis );
 
 			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
-			return this._scheduling.waveform.getX( index );
+			return this._scheduling.waveform.getY( index );
 		}
 
 		if( this.setPoint > this.config.maxIntensity ) {
@@ -104,7 +104,7 @@ console.log( pdData );
 console.log( sun, setPoint );
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
-			await this.trackerReference.pauseHardware();
+			await this.trackerReference.pauseChannels();
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
@@ -137,6 +137,8 @@ console.log( diffmA, idealCodeChange );
 				}
 
 			} while( i < 100 );
+
+			await this.trackerReference.resumeChannels();
 		}
 
 		setTimeout( () => { this.checkLightStatus() }, 20000 );
