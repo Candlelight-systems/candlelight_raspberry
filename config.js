@@ -17,8 +17,8 @@ module.exports = {
 	hosts: [
 
 	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-		"alias": "platform-3f980000.usb-usb-0:1.4:1.0",
+		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
+		"alias": "platform-3f980000.usb-usb-0:1.2:1.0",
 		"params": {
 			"baudrate": 115200
 		},
