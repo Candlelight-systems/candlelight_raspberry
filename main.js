@@ -4,16 +4,19 @@ const express = require("express");
 const config = require("./config");
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const matahari = require('./matahari/main');
+
 const hostmanager = require('./hostmanager');
-
-var app = express();
-var server = app.listen( config.express.port, function() { /* callback */ } );
-
 
 for( var i = 0; i < config.hosts.length; i ++ ) {
 	hostmanager.addHost( config.hosts[ i ] );
 }
+
+
+const matahari = require('./matahari/main');
+
+var app = express();
+var server = app.listen( config.express.port, function() { /* callback */ } );
+
 
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
