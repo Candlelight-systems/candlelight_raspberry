@@ -100,8 +100,8 @@ class LightController extends InstrumentController {
 console.log( pdData );
 		let pdValue = this.trackerReference.getPDValue( this.config.pdRef );
 		console.log( pdValue );
-		let sun = pdValue / pdData.ma_to_sun_scaling;
-console.log( sun );
+		let sun = pdValue / pdData.scaling_ma_to_sun;
+console.log( sun, setPoint );
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
 			await this.trackerReference.pauseHardware();
