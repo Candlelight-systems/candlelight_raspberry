@@ -70,6 +70,7 @@ class LightController extends InstrumentController {
 			}
 
 			let ellapsed = ( Date.now() - this._scheduling.startDate );
+			console.log( ellapsed, this._scheduling.msBasis );
 			ellapsed = ellapsed - ( ellapsed % this._scheduling.msBasis );
 
 			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
