@@ -3,7 +3,7 @@
 		"instrumentId": "matahari1000",
 
 		"config": {
-			"host": "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Zero-if00",
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
 			"params": {
 				"baudrate": 115200
 			},
@@ -41,6 +41,26 @@
 				"ref": "pd_2", 
 				"scaling_ma_to_sun": 1000,
 				"factory_scaling_ma_to_sun": 1000
+			}
+		],
+
+		"lightControllers": [
+
+			{	
+				"config": {
+					"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
+					"params": {
+						"baudrate": 115200
+					},
+					"reconnectTimeout": 1000
+				},
+
+				"pwmChannel": 4,
+				"pdRef": "pd_1",
+				"scheduling": {
+					"basis": "1hour",
+					"intensities": [ 0, 0.1, 0.2, 0.3, 0.2, 0.7, 0.9, 1, 0.8, 0.6, 0.2, 0.1, 1 ]
+				}
 			}
 		]
 	}

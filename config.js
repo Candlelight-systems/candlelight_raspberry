@@ -19,8 +19,10 @@ module.exports = {
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
-			readPD1: "MEASURE:PHOTODIODE1",
-			readPD2: "MEASURE:PHOTODIODE2",
+			readPD: {
+				pd_1: "MEASURE:PHOTODIODE1",
+				pd_2: "MEASURE:PHOTODIODE2"
+			},			
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,

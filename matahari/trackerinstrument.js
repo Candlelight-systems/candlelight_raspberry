@@ -5,8 +5,10 @@ let serialport 						= require("serialport");
 let influx 							= require("./influxhandler");
 
 const globalConfig					= require("../config");
-const queryManager 					= require("./queryhandler");
-	
+
+const InstrumentController			= require("../instrumentcontroller");
+const LightController				= require("../lightcontroller/lightcontroller");
+
 const waveform						= require("jsgraph-waveform");
 
 const matahariconfig = globalConfig.matahari;
@@ -17,62 +19,6 @@ const defaultProps = matahariconfig.defaults;
 let connections = {};
 let intervals = {};
 
-
-function query( communication, query, linesExpected = 1, executeBefore = () => { return true; } ) {
-
-
-	if( ! communication ) {
-		throw "Could not find communication based on the instrument id";
-	}	
-
-	return communication.queryManager.addQuery( async () => {
-
-
-		await communication.lease;
-
-		if( executeBefore ) {
-			if( ! executeBefore() ) {
-				throw "Cannot execute method. Forbidden";
-			}
-		}
-
-		return communication.lease = new Promise( ( resolver, rejecter ) => {
-
-			let data = "", 
-				dataThatMatters, 
-				lineCount = 0;
-
-			communication.removeAllListeners( "data" );
-			communication.on( "data", async ( d ) => {
-
-				data += d.toString('ascii'); // SAMD sends ASCII data
-
-				while( data.indexOf("\r\n") > -1 ) {
-					
-					lineCount++;
-					
-					if( lineCount == 1 ) {
-
-						dataThatMatters = data.substr( 0, data.indexOf("\r\n") );
-						data = data.substr( data.indexOf("\r\n") + 2 );
-					}
-
-					if( lineCount >= linesExpected ) {
-
-						communication.removeAllListeners( "data" );
-						communication.flush();
-						await delay( 10 );
-						resolver( dataThatMatters );
-						return;
-					}
-				}
-			} );	
-			console.log( query );
-			communication.write( query + "\n" );
-			communication.drain( );
-		});
-	});
-}
 
 
 
@@ -85,20 +31,33 @@ function saveStatus() {
 }
 
 
-class TrackerInstrument {
+class TrackerInstrument extends InstrumentController {
 
 	constructor( config ) {
 
-		this.config = config;
+		super( ...arguments );
+
+		this.lightControllers = [];
+
+		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
+		
+			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
+				let controller = new LightController( this.config.lightControllers );
+				controller.setTracker( this );
+				this.lightControllers.push( controller );
+			}
+		}
+
 		this.preventMPPT = {};
 		this.pdIntensity = {};
 
 		this.cancelTimer = {};
 
-		this.openConnection().then( () => {
+		this.openConnection().then( async () => {
 			
-			this.normalizeStatus();
-			this.scheduleLightReading( 10000 );
+			await this.query( "RESERVED:SETUP" );
+			await this.normalizeStatus();
+			await this.scheduleLightReading( 10000 );
 
 		} ).catch( ( e ) => {
 			
@@ -107,13 +66,17 @@ class TrackerInstrument {
 //			this.waitAndReconnect();
 		
 		});
-
-		this.stateManager = new queryManager();
 	}
 
-	getStateManager() {
-		return this.stateManager;
+	kill() {
+
+		this.lightControllers.forEach( ( controller ) => {
+			controller.kill();
+		});
+
+		super.kill();
 	}
+
 
 	/**
 	 *	@returns the configuration object
@@ -122,17 +85,6 @@ class TrackerInstrument {
 		return this.config;
 	}
 
-	/**
-	 *	@returns {SerialPort} The serial communication with the instrument
-	 */
-	getConnection() {
-
-		if( ! this.connection ) {
-			throw "Cannot retrieve the serial connection. Connection does not exist yet.";
-		}
-
-		return this.connection;
-	}
 	/**
 	 *	Writes a command to the instrument, and adds a trailing EOL
 	 *	@param {String} command - The command string to send
@@ -143,57 +95,9 @@ class TrackerInstrument {
 			throw "Cannot write the instrument. The instrument communication is closed."
 		}
 
-		return query( this.getConnection(), command, lines );
+		return super.query( command, lines );
 	}
 
-
-	async openConnection() {
-
-		const cfg = this.getConfig();
-
-		if( this.connection ) {
-			this.connection.open();
-			return;
-		}
-
-		const connection = new serialport( cfg.config.host, cfg.config.params );
-		this.connection = connection;
-
-
-		connection.on("error", ( err ) => {
-			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
-			console.warn(`Error thrown by the serial communication: ${ err }`); 
-		} );
-
-		connection.on("close", ( ) => {
-			this.waitAndReconnect();
-		} );
-
-		return new Promise( ( resolver, rejecter ) => {
-
-
-			connection.lease = Promise.resolve();
-			connection.queryManager = new queryManager( connection );
-
-			connection.on("open", async () => {
-
-				connection.flush();
-				this.open = true;
-				await this.query( "RESERVED:SETUP" );
-				
-				resolver();
-			} );
-
-		} );
-	}
-
-	async waitAndReconnect() {
-
-		let _delay = this.getConfig().config.reconnectTimeout;
-		console.warn("Reconnecting in " + _delay + "s" );
-		await delay( _delay );
-		return this.connection.open();
-	}
 
 
 	/**
@@ -620,8 +524,8 @@ class TrackerInstrument {
 
 		switch( lightRef ) {
 			
-			case 'pd1':
-			case 'pd2':
+			case 'pd_1':
+			case 'pd_2':
 				return this.getLightIntensity( lightRef );
 			break;
 
@@ -638,22 +542,40 @@ class TrackerInstrument {
 		//} 
 	}
 
-	async measurePD() {
+	async measurePD( ref ) {
 
-		await this.measurePD1();
-		await this.measurePD2();
+		if( ! ref ) {
+			for( var i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
+				await this._measurePD( this.config.pdRefs[ i ].ref );		
+			}
+			return;
+		}
+
+		return await this._measurePD( ref; );		
 	}
 
-	async measurePD1() {
-		return this.pdIntensity[ 'pd1' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD1, 2 ) );
-	}
-
-	async measurePD2() {
-		return this.pdIntensity[ 'pd2' ] = parseFloat( await query( this.getConnection(), matahariconfig.specialcommands.readPD2, 2 ) );
+	async _measurePD( ref ) {
+		return this.pdIntensity[ ref ] = parseFloat( await this.query( matahariconfig.specialcommands.readPD[ ref ], 2 ) );
 	}
 
 	getPDOptions() {
 		return this.config.pdRefs;
+	}
+
+	getPDData( ref ) {
+		for( var i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
+			if( ref == this.config.pdRefs[ i ].ref ) {
+				return this.config.pdRefs[ i ];
+			}
+		}
+	}
+
+	getPDValue( ref ) {
+		return this.pdIntensity[ ref ];
+	}
+
+	measurePDValue( ref ) {
+
 	}
 
 	async setPDScaling( pdRef, pdScale ) {
@@ -806,18 +728,18 @@ class TrackerInstrument {
 
 	requestIVCurve( chanId ) {
 		
-		return query( this.getConnection(), matahariconfig.specialcommands.executeIV + ":CH" + chanId );
+		return this.query( matahariconfig.specialcommands.executeIV + ":CH" + chanId );
 	}
 	
 
 	requestIVCurveStatus( chanId ) {
 
-		return query( this.getConnection(), matahariconfig.specialcommands.getIVStatus( chanId ), 2 );
+		return this.query( matahariconfig.specialcommands.getIVStatus( chanId ), 2 );
 	}
 
 	requestIVCurveData( chanId ) {
 
-		return query( this.getConnection(), matahariconfig.specialcommands.getIVData, 2 ).then( ( data ) => {
+		return this.query( matahariconfig.specialcommands.getIVData, 2 ).then( ( data ) => {
 
 			data = data
 				.split(',');
@@ -843,7 +765,7 @@ class TrackerInstrument {
 
 	_getTrackData( chanId ) {
 
-		return query( this.getConnection(), matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
+		return this.query(  matahariconfig.specialcommands.getTrackData + ":CH" + chanId, 2, () => {
 
 			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode
 

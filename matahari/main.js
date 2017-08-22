@@ -58,7 +58,7 @@ module.exports = {
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
 		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
-		fs.writeFileSync('../config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
+		fs.writeFileSync('./config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
 	},
 
 	executeIV: ( instrumentId, chanId ) => {
@@ -97,11 +97,12 @@ module.exports = {
 	measureCurrent: ( instrumentId, chanId, voltage ) => {
 
 		let instrument = getInstrument( instrumentId );
-		if( chanId == 'pd_1' ) {
-			return instrument.measurePD1();
-		} else if( chanId == 'pd_2' ) {
-			return instrument.measurePD2();
+		if( chanId.indexOf( 'pd' ) > -1 ) {
+
+			return instrument.measurePD( chanId );
+			
 		} else {
+
 			return instrument.measureCurrent( chanId );
 		}
 	},
