@@ -14,6 +14,20 @@ module.exports = {
 
 	influx: influx,
 
+	hosts: [
+
+	{	
+		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+		"alias": "platform-3f980000.usb-usb-0:1.4:1.0",
+		"params": {
+			"baudrate": 115200
+		},
+		"reconnectTimeout": 1000
+	}
+
+	],
+
+
 	matahari: {
 
 		specialcommands: {

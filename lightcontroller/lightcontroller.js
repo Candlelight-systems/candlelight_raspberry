@@ -1,9 +1,9 @@
 'use strict';
 
-const InstrumentController			= require( "../instrumentcontroller" );
+const HostManager					= require( "../hostmanager" );
 const Waveform						= require( "jsgraph-waveform" );
 
-class LightController extends InstrumentController {
+class LightController {
 
 	constructor( config ) {
 
@@ -13,7 +13,9 @@ class LightController extends InstrumentController {
 		this.on = false;
 
 		this.setConfig( config );
-		this.openConnection().then( async () => {
+
+		this.host = HostManager.getHost( config.hostAlias );
+		this.host.openConnection().then( async () => {
 
 			await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 			await this.turnOn();
@@ -23,6 +25,20 @@ class LightController extends InstrumentController {
 
 	setTracker( tracker ) {
 		this.trackerReference = tracker;
+	}
+
+	pause() {
+		if( this._timeout ) {
+			clearTimeout( this._timeout );
+			this._timeout = false;
+		}
+
+		this.paused = true;
+	}
+
+	resume() {
+		this.paused = false;
+		this.checkLightStatus();
 	}
 
 	setConfig( config ) {
@@ -90,6 +106,10 @@ class LightController extends InstrumentController {
 
 	async checkLightStatus() {
 
+		if( this.paused ) {
+			return;
+		}
+
 		var setPoint = this.getSetPoint();
 
 		if( ! this.trackerReference ) {
@@ -113,7 +133,7 @@ class LightController extends InstrumentController {
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
-console.log( sun, setPoint, pdValue );
+
 			await this.trackerReference.pauseChannels();
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
@@ -154,7 +174,12 @@ console.log( sun, setPoint, pdValue );
 	}
 
 	setTimeout() {
-		setTimeout( () => { this.checkLightStatus() }, 20000 );
+
+		if( this._timeout ) {
+			clearTimeout( this._timeout );
+		}
+
+		this._timeout = setTimeout( () => { this.checkLightStatus() }, 20000 );
 	}
 
 	increaseCode() {
@@ -201,6 +226,10 @@ console.log( sun, setPoint, pdValue );
 		return this.query( "OUTPUT:OFF:CH" + this.config.pwmChannel );
 	}
 	
+
+	query( ) {
+		return this.host.query( ...arguments );
+	}
 }
 
 module.exports = LightController;

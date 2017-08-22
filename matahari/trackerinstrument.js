@@ -36,16 +36,8 @@ class TrackerInstrument extends InstrumentController {
 
 		super( ...arguments );
 
-		this.lightControllers = [];
-
-		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
 		
-			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
-				let controller = new LightController( this.config.lightControllers[ i ] );
-				controller.setTracker( this );
-				this.lightControllers.push( controller );
-			}
-		}
+		this._initLightControllers();
 
 		this.preventMPPT = {};
 		this.pdIntensity = {};
@@ -506,6 +498,7 @@ class TrackerInstrument extends InstrumentController {
 	// LIGHT MANAGEMENT
 	//////////////////////////////////////
 
+
 	getLightIntensity( lightRef ) {
 
 		return this.pdIntensity[ lightRef ];
@@ -578,6 +571,44 @@ class TrackerInstrument extends InstrumentController {
 			}
 		}
 	}
+
+	//////////////////////////////////////
+	// LIGHT MANAGER
+	//////////////////////////////////////
+
+
+	_initLightControllers() {
+
+		if( this.lightControllers ) {
+			return;
+		}
+
+		this.lightControllers = [];
+
+		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
+		
+			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
+				let controller = new LightController( this.config.lightControllers[ i ] );
+				controller.setTracker( this );
+				this.lightControllers.push( controller );
+			}
+		}
+	}
+
+
+	async lightPauseSetpoint() {
+
+		this.lightControllers.forEach( ( controller ) => { controller.pause() } );
+	}
+
+	async lightResumeSetpoint() {
+
+		this.lightControllers.forEach( ( controller ) => { controller.pause() } );
+	}
+
+
+
+
 
 	//////////////////////////////////////
 	// IV CURVES

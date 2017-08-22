@@ -1,6 +1,6 @@
 
-const serialport 					= require("serialport");
-const queryManager					= require("./matahari/queryhandler")
+const serialport 	= require("serialport");
+const queryManager	= require("./matahari/queryhandler")
 
 
 function query( communication, query, linesExpected = 1, executeBefore = () => { return true; } ) {

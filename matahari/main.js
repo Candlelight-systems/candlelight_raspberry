@@ -100,7 +100,7 @@ module.exports = {
 		if( chanId.indexOf( 'pd' ) > -1 ) {
 
 			return instrument.measurePD( chanId );
-			
+
 		} else {
 
 			return instrument.measureCurrent( chanId );
@@ -113,6 +113,15 @@ module.exports = {
 
 	disableChannel: ( instrumentId, chanId ) => {
 		return getInstrument( instrumentId ).disableChannel( chanId );
+	}
+
+
+	lightPauseSetpoint: ( instrumentId ) => {
+		return getInstrument( instrumentId ).lightPauseSetpoint( chanId );
+	},
+
+	lightResumeSetpoint: ( instrumentId ) => {
+		return getInstrument( instrumentId ).lightResumeSetpoint( chanId );
 	}
 };
 

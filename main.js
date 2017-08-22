@@ -5,9 +5,15 @@ const config = require("./config");
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const matahari = require('./matahari/main');
+const hostmanager = require('./hostmanager');
 
 var app = express();
 var server = app.listen( config.express.port, function() { /* callback */ } );
+
+
+for( var i = 0; i < config.hosts.length; i ++ ) {
+	hostmanager.addHost( config.hosts[ i ] );
+}
 
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -313,6 +319,35 @@ app.get("/resetStatus", function( req, res ) {
 
 		console.log( error );
 		res.status( 500 ).send("Channel " + chanId + " could not be reset. Error was " + error );
+	 });
+});
+
+
+
+
+app.get("/light.pause", function( req, res ) {
+console.log('pausing');
+	matahari.lightPauseSetpoint( req.query.instrumentId ).then( () => {
+		
+		res.send("");	
+		
+	}).catch(( error ) => {
+
+		console.log( error );
+		res.status( 500 ).send("Light could not be paused. Error was " + error );
+	 });
+});
+
+app.get("/light.resume", function( req, res ) {
+console.log('resuming');
+	matahari.lightResumeSetpoint( req.query.instrumentId ).then( () => {
+		
+		res.send("");	
+		
+	}).catch(( error ) => {
+
+		console.log( error );
+		res.status( 500 ).send("Light could not be paused. Error was " + error );
 	 });
 });
 
