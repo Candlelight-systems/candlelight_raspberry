@@ -74,7 +74,7 @@ class LightController extends InstrumentController {
 			ellapsed = ellapsed - ( ellapsed % this._scheduling.msBasis / this._scheduling.waveform.getLength() );
 
 			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
-			console.log( ellapsed, index, this._scheduling.waveform );
+			
 			return this._scheduling.waveform.getY( index );
 		}
 
@@ -129,7 +129,7 @@ class LightController extends InstrumentController {
 			do {
 
 				sun = ( await this.trackerReference.measurePD( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
-console.log( sun, setPoint );
+
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
 					if( sun < setPoint ) {
@@ -182,6 +182,10 @@ console.log( sun, setPoint );
 
 	turnOn() {
 		if( this.on ) {
+
+			await this.delay( 500 );
+			await this.trackerReference.measurePD( this.config.pdRef )
+			
 			return;
 		}
 
