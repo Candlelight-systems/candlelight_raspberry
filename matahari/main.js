@@ -113,7 +113,7 @@ module.exports = {
 
 	disableChannel: ( instrumentId, chanId ) => {
 		return getInstrument( instrumentId ).disableChannel( chanId );
-	}
+	},
 
 	getLightControllers: ( instrumentId ) => {
 		return getInstrument( instrumentId ).getLightControllers();
