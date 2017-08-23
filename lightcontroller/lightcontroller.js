@@ -84,9 +84,7 @@ class LightController {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
 			}
 
-			let ellapsed = ( Date.now() - this._scheduling.startDate );
-			
-			ellapsed = ellapsed - ( ellapsed % this._scheduling.msBasis / this._scheduling.waveform.getLength() );
+			let ellapsed = ( Date.now() - this._scheduling.startDate ) % this._scheduling.msBasis;
 
 			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
 			
