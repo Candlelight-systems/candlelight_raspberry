@@ -613,6 +613,7 @@ class TrackerInstrument extends InstrumentController {
 					this.config.lightControllers[ i ].scheduling.intensities = controllers[ ref ].schedulingValues;
 
 					this.lightControllers[ ref ].setConfig( this.config.lightControllers[ i ] );
+					this.lightControllers[ ref ].checkLightStatus( );
 				}
 			}
 		}

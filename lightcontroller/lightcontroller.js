@@ -48,7 +48,7 @@ class LightController {
 			removeInterval( this.scheduler );
 		}
 
-		if( this.config.setPoint ) {
+		if( this.config.setPoint !== undefined && this.config.setPoint !== null ) {
 			
 			this.setPoint = this.config.setPoint;
 			this._scheduling = undefined;
@@ -115,6 +115,11 @@ class LightController {
 
 		if( ! this.config.pdRef ) {
 			throw "No photodiode reference from which to read the light intensity";
+		}
+
+
+		if( this._timeout ) {
+			clearTimeout( this._timeout );
 		}
 
 		if( setPoint == 0 ) {
