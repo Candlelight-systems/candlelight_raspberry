@@ -44,10 +44,6 @@ class LightController {
 
 		this.config = config;
 
-		if( this.scheduler ) {
-			removeInterval( this.scheduler );
-		}
-
 		if( this.config.setPoint !== undefined && this.config.setPoint !== null ) {
 			
 			this.setPoint = this.config.setPoint;
@@ -77,8 +73,8 @@ class LightController {
 	}
 
 	getSetPoint() {
-
-		if( this.setPoint === undefined ) {
+console.log( this.setPoint );
+		if( this.setPoint === undefined || this.setPoint === null ) {
 			
 			if( ! this._scheduling ) {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
@@ -117,10 +113,12 @@ class LightController {
 			throw "No photodiode reference from which to read the light intensity";
 		}
 
-
 		if( this._timeout ) {
 			clearTimeout( this._timeout );
+			this._timeout = false;
 		}
+
+		console.log( setPoint );
 
 		if( setPoint == 0 ) {
 			await this.turnOff();
@@ -179,6 +177,7 @@ class LightController {
 
 		if( this._timeout ) {
 			clearTimeout( this._timeout );
+			this._timeout = false;
 		}
 
 		this._timeout = setTimeout( () => { this.checkLightStatus() }, 20000 );
