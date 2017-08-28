@@ -44,7 +44,7 @@ class LightController {
 
 		this.config = config;
 
-		if( this.config.setPoint !== undefined && this.config.setPoint !== null ) {
+		if( ! this.setPoint && this.setPoint !== 0 ) {
 			
 			this.setPoint = this.config.setPoint;
 			this._scheduling = undefined;
