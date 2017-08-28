@@ -95,6 +95,8 @@ console.log( this.setPoint );
 
 			return 0;
 		}
+
+		return this.setPoint;
 	}
 
 	async checkLightStatus() {
