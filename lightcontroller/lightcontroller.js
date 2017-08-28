@@ -73,8 +73,8 @@ class LightController {
 	}
 
 	getSetPoint() {
-console.log( this.setPoint );
-		if( this.setPoint === undefined || this.setPoint === null ) {
+
+		if( ! this.setPoint && this.setPoint !== 0 ) {
 			
 			if( ! this._scheduling ) {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
@@ -122,7 +122,7 @@ console.log( this.setPoint );
 
 		console.log( setPoint );
 
-		if( setPoint == 0 ) {
+		if( setPoint === 0 ) {
 			await this.turnOff();
 			this.setTimeout();
 			return;
