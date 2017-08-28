@@ -44,7 +44,7 @@ class LightController {
 
 		this.config = config;
 
-		if( this.setPoint || this.setPoint == 0 ) {
+		if( this.config.setPoint || this.config.setPoint === 0 ) {
 			
 			this.setPoint = this.config.setPoint;
 			this._scheduling = undefined;
@@ -75,7 +75,7 @@ class LightController {
 	getSetPoint() {
 
 		if( ! this.setPoint && this.setPoint !== 0 ) {
-			
+			console.log( this.setPoint );
 			if( ! this._scheduling ) {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
 			}
