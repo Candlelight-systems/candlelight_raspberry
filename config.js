@@ -75,6 +75,7 @@ module.exports = {
 			"iv_rate": 0.1,
 			"iv_interval": 24 * 3600 * 1000,
 			"enable": 0,
+			"tracking_pga": -1,
 			"tracking_measure_jsc": 0,
 			"tracking_measure_voc": 0,
 			"tracking_measure_jsc_time": 10000,
