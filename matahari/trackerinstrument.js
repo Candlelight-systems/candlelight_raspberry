@@ -277,7 +277,7 @@ class TrackerInstrument extends InstrumentController {
 		// Step size
 		this._setStatus( chanId, "tracking_switchdelay", Math.max( 0, parseFloat( newStatus.tracking_switchdelay ) ), newStatus );	
 
-		this._setStatus( chanId, "tracking_gain", Math.max( 1, Math.min( 128, parseInt( newStatus.tracking_gain ) ) ), newStatus );	
+		this._setStatus( chanId, "tracking_gain", parseInt( newStatus.tracking_gain ) == -1 ? -1 : Math.max( Math.min( 128, parseInt( newStatus.tracking_gain ) ) ), newStatus );	
 
 		// IV start point
 		this._setStatus( chanId, "iv_start", parseFloat( newStatus.iv_start ), newStatus );	
