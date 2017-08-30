@@ -1,4 +1,4 @@
-[ 
+[
 	{
 		"instrumentId": "matahari1000",
 		"fullScaleCurrent": 15e-3,
@@ -6,57 +6,163 @@
 		"config": {
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
 			"params": {
-				"baudrate": 115200
+				"baudRate": 115200
 			},
 			"reconnectTimeout": 1000
 		},
-
-		"channels": [ 
-			{ "chanId": 1, "chanName": "Channel 1" },
-			{ "chanId": 2, "chanName": "Channel 2" },
-			{ "chanId": 3, "chanName": "Channel 3" },
-			{ "chanId": 4, "chanName": "Channel 4" },
-			{ "chanId": 5, "chanName": "Channel 5" },
-			{ "chanId": 6, "chanName": "Channel 6" },
-			{ "chanId": 7, "chanName": "Channel 7" },
-			{ "chanId": 8, "chanName": "Channel 8" },
-			{ "chanId": 9, "chanName": "Channel 9" },
-			{ "chanId": 10, "chanName": "Channel 10" },
-			{ "chanId": 11, "chanName": "Channel 11" },
-			{ "chanId": 12, "chanName": "Channel 12" },
-			{ "chanId": 13, "chanName": "Channel 13" },
-			{ "chanId": 14, "chanName": "Channel 14" },
-			{ "chanId": 15, "chanName": "Channel 15" },
-			{ "chanId": 16, "chanName": "Channel 16" }
-		],
-
-		"pdRefs": [
-			{ 
-				"name": "Photodiode 1", 
-				"ref": "pd_1", 
-				"scaling_ma_to_sun": 1000, 
-				"factory_scaling_ma_to_sun": 1000 
+		"channels": [
+			{
+				"chanId": 1,
+				"chanName": "Channel 1",
+				"instrumentId": "matahari1000",
+				"busy": false
 			},
-			{ 
-				"name": "Photodiode 2", 
-				"ref": "pd_2", 
+			{
+				"chanId": 2,
+				"chanName": "Channel 2",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 3,
+				"chanName": "Channel 3",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 4,
+				"chanName": "Channel 4",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 5,
+				"chanName": "Channel 5",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 6,
+				"chanName": "Channel 6",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 7,
+				"chanName": "Channel 7",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 8,
+				"chanName": "Channel 8",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 9,
+				"chanName": "Channel 9",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 10,
+				"chanName": "Channel 10",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 11,
+				"chanName": "Channel 11",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 12,
+				"chanName": "Channel 12",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 13,
+				"chanName": "Channel 13",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 14,
+				"chanName": "Channel 14",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 15,
+				"chanName": "Channel 15",
+				"instrumentId": "matahari1000",
+				"busy": false
+			},
+			{
+				"chanId": 16,
+				"chanName": "Channel 16",
+				"instrumentId": "matahari1000",
+				"busy": false
+			}
+		],
+		"pdRefs": [
+			{
+				"name": "Photodiode 1",
+				"ref": "pd_1",
+				"scaling_ma_to_sun": 1000,
+				"factory_scaling_ma_to_sun": 1000
+			},
+			{
+				"name": "Photodiode 2",
+				"ref": "pd_2",
 				"scaling_ma_to_sun": 1000,
 				"factory_scaling_ma_to_sun": 1000
 			}
 		],
-
 		"lightControllers": [
-
-			{	
+			{
 				"ref": "ch4",
 				"name": "Top lamp",
 				"hostAlias": "platform-3f980000.usb-usb-0:1.2:1.0",
 				"pwmChannel": 4,
 				"pdRef": "pd_2",
-				"setPoint": false,
+				"setPoint": 0.3,
 				"scheduling": {
 					"basis": "1hour",
-					"intensities": [ 0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25 ]
+					"intensities": [
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0,
+						1,
+						0
+					]
 				}
 			}
 		]
