@@ -47,7 +47,8 @@ module.exports.storeTrack = function( measurementName, trackData ) {
           power_mean: trackData.powerMean,
           power_max: trackData.powerMax,
           efficiency: trackData.efficiency,
-          sun: trackData.sun
+          sun: trackData.sun,
+          pga: trackData.pga
         },
       }
 
