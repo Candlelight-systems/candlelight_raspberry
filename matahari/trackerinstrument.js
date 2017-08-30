@@ -278,6 +278,8 @@ class TrackerInstrument extends InstrumentController {
 		// Step size
 		this._setStatus( chanId, "tracking_switchdelay", Math.max( 0, parseFloat( newStatus.tracking_switchdelay ) ), newStatus );	
 
+		this._setStatus( chanId, "tracking_gain", Math.max( 1, Math.min( 128, parseInt( newStatus.tracking_gain ) ), newStatus );	
+
 		// IV start point
 		this._setStatus( chanId, "iv_start", parseFloat( newStatus.iv_start ), newStatus );	
 
@@ -292,6 +294,7 @@ class TrackerInstrument extends InstrumentController {
 
 		this._setStatus( chanId, "enable", newStatus.enable ? 1 : 0, newStatus );
 
+	
 
 		
 		// Updates the stuff unrelated to the tracking
@@ -873,13 +876,14 @@ class TrackerInstrument extends InstrumentController {
 				const status = this.getStatus( chanId );
 				// Save the current mode
 				const statusSaved = status.tracking_mode,	
-					intervalSaved = status.tracking_interval;
+					intervalSaved = status.tracking_interval
+					gainSaved = status.tracking_gain;
 
 				this.preventMPPT[ chanId ] = true;
 
 				// Change the mode to Voc tracking, with low interval
 				// Update the cell status. Wait for it to be done
-				await this.saveStatus( chanId, { tracking_mode: 2, tracking_interval: 10 } );
+				await this.saveStatus( chanId, { tracking_mode: 2, tracking_interval: 10, tracking_gain: 128 } );
 				
 				await delay( status.tracking_measure_voc_time ); // Go towards the Voc
 
@@ -891,7 +895,7 @@ class TrackerInstrument extends InstrumentController {
 
 				// Set back the tracking mode to the previous one
 				// Update the channel. Make it synchronous.
-				await this.saveStatus( chanId, { tracking_mode: statusSaved, tracking_interval: intervalSaved } );
+				await this.saveStatus( chanId, { tracking_mode: statusSaved, tracking_interval: intervalSaved, tracking_gain: gainSaved } );
 
 				await delay( 5000 ); // Re equilibration
 
