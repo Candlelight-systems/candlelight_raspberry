@@ -829,7 +829,8 @@ class TrackerInstrument extends InstrumentController {
 			currentMax = parseFloat( data[ 7 ] ),
 			powerMax = parseFloat( data[ 8 ] ),
 			sun = parseFloat( data[ 9 ] ),
-			nb = parseInt( data[ 10 ] );
+			nb = parseInt( data[ 10 ] ),
+			pga = parseInt( data[ 11 ] );
 
 		if( parseInt( nb ) == 0 ) {
 			return;
@@ -858,7 +859,8 @@ class TrackerInstrument extends InstrumentController {
 			currentMax: currentMax,
 			powerMax: powerMax,
 			sun: lightRef,
-			efficiency: efficiency/*,
+			efficiency: efficiency,
+			pga: pga/*,
 			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
 			humidity: EnvironmentalScheduler.getHumidity( status.chanId )*/
 		} );
