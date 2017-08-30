@@ -53,6 +53,7 @@ module.exports = {
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
 
 			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
+			[ "TRACKING:GAIN", function( status ) { return status.tracking_gain || -1; } ],
 			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
 			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold || 0.99; } ],
 			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold || 0.99; } ],
@@ -75,7 +76,7 @@ module.exports = {
 			"iv_rate": 0.1,
 			"iv_interval": 24 * 3600 * 1000,
 			"enable": 0,
-			"tracking_pga": -1,
+			"tracking_gain": -1,
 			"tracking_measure_jsc": 0,
 			"tracking_measure_voc": 0,
 			"tracking_measure_jsc_time": 10000,

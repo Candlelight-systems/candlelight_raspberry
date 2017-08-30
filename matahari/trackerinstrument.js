@@ -133,7 +133,6 @@ class TrackerInstrument extends InstrumentController {
 			}
 		}
 
-		console.trace();
 		throw "No channel associated with this chanId (" + chanId + ")";
 	}
 
