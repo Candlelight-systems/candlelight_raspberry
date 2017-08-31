@@ -23,7 +23,7 @@ let intervals = {};
 
 function saveStatus() {
 	
-	return 	fs.writeFileSync(
+	return fs.writeFileSync(
 			"matahari/status.json", 
 			JSON.stringify( { channels: status }, undefined, "\t" ) 
 		);
@@ -90,21 +90,27 @@ class TrackerInstrument extends InstrumentController {
 	 */
 	async normalizeStatus() {
 
-		let instrumentId = this.getConfig().instrumentId, 
+		const cfg = this.getConfig(),
+			  groups = cfg.groups;
+
+		let instrumentId = cfg.instrumentId, 
 			chanId;
 
-		for( var j = 0, l = this.getConfig().channels.length; j < l; j ++ ) {
+		for( var i = 0, m = groups.length;  i < m ; i ++ ) {
+		
+			for( var j = 0, l = groups[ i ].length; j < l; j ++ ) {
 
-			chanId = this.getConfig().channels[ j ].chanId;
+				chanId = groups[ i ].channels[ j ].chanId;
 
-			if( ! this.statusExists( chanId ) ) {
+				if( ! this.statusExists( chanId ) ) {
 
-				status.push( Object.assign( {}, defaultProps, {
-					chanId: chanId,
-					instrumentId: instrumentId
-				} ) );
+					status.push( Object.assign( {}, defaultProps, {
+						chanId: chanId,
+						instrumentId: instrumentId
+					} ) );
 
-				await this.updateInstrumentStatusChanId( chanId, {}, true );
+					await this.updateInstrumentStatusChanId( chanId, {}, true );
+				}
 			}
 		}
 
