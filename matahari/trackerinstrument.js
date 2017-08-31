@@ -188,11 +188,11 @@ class TrackerInstrument extends InstrumentController {
 
 
 
-	getModules() {
+	getGroups() {
 
-		return this.getConfig().modules.map( ( module ) => { 
+		return this.getConfig().groups;/*.map( ( group ) => { 
 
-			module.channels.map( ( channel ) => {
+			group.channels.map( ( channel ) => {
 
 // We should check if this is legacy code ?
 
@@ -202,17 +202,17 @@ class TrackerInstrument extends InstrumentController {
 
 			} );
 
-			return module;
-		} );
+			return group;
+		} );*/
 	}
 
-	getChannels( moduleName = "" ) {
+	getChannels( groupName = "" ) {
 
-		for( let module of this this.getConfig().modules ) {
+		for( let group of this.getConfig().groups ) {
 
-			if( module.moduleName == moduleName )  {
+			if( group.groupName == groupName )  {
 
-				return module.channels;
+				return group.channels;
 			}
 		}
 

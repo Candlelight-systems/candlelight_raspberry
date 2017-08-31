@@ -9,7 +9,7 @@
 			},
 			"reconnectTimeout": 1000
 		},
-		"modules": [
+		"groups": [
 			{
 				"groupName": "Box A",
 				"pd": [ "pd_1"],
