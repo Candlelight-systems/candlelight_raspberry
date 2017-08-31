@@ -188,17 +188,35 @@ class TrackerInstrument extends InstrumentController {
 
 
 
-	getChannels() {
+	getModules() {
 
-		return this.getConfig().channels.map( 
+		return this.getConfig().modules.map( ( module ) => { 
 
-			( chan ) => { 
+			module.channels.map( ( channel ) => {
 
-				chan.instrumentId = this.getInstrumentId(); 
-				chan.busy = this.isBusy( chan.chanId ); 
-				return chan; 
+// We should check if this is legacy code ?
+
+//				channel.instrumentId = this.getInstrumentId(); 
+//				channel.busy = this.isBusy( channel.chanId ); 
+				return channel; 
+
+			} );
+
+			return module;
+		} );
+	}
+
+	getChannels( moduleName = "" ) {
+
+		for( let module of this this.getConfig().modules ) {
+
+			if( module.moduleName == moduleName )  {
+
+				return module.channels;
 			}
-		)
+		}
+
+		return [];
 	}
 
 
@@ -831,7 +849,7 @@ class TrackerInstrument extends InstrumentController {
 			nb = parseInt( data[ 10 ] ),
 			pga = parseInt( data[ 11 ] );
 
-		if( parseInt( nb ) == 0 ) {
+		if( nb == 0 ) {
 			return;
 		}
 

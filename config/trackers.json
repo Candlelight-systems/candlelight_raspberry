@@ -10,104 +10,111 @@
 			},
 			"reconnectTimeout": 1000
 		},
-		"channels": [
+		"modules": [
 			{
-				"chanId": 1,
-				"chanName": "Channel 1",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 2,
-				"chanName": "Channel 2",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 3,
-				"chanName": "Channel 3",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 4,
-				"chanName": "Channel 4",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 5,
-				"chanName": "Channel 5",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 6,
-				"chanName": "Channel 6",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 7,
-				"chanName": "Channel 7",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 8,
-				"chanName": "Channel 8",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 9,
-				"chanName": "Channel 9",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 10,
-				"chanName": "Channel 10",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 11,
-				"chanName": "Channel 11",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 12,
-				"chanName": "Channel 12",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 13,
-				"chanName": "Channel 13",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 14,
-				"chanName": "Channel 14",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 15,
-				"chanName": "Channel 15",
-				"instrumentId": "matahari1000",
-				"busy": false
-			},
-			{
-				"chanId": 16,
-				"chanName": "Channel 16",
-				"instrumentId": "matahari1000",
-				"busy": false
-			}
+				"groupName": "Box A",
+				"pd": [ "pd_1"],
+				"channels": [
+				{
+					"chanId": 1,
+					"chanName": "Channel 1",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 2,
+					"chanName": "Channel 2",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 3,
+					"chanName": "Channel 3",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 4,
+					"chanName": "Channel 4",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 5,
+					"chanName": "Channel 5",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 6,
+					"chanName": "Channel 6",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 7,
+					"chanName": "Channel 7",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 8,
+					"chanName": "Channel 8",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 9,
+					"chanName": "Channel 9",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 10,
+					"chanName": "Channel 10",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 11,
+					"chanName": "Channel 11",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 12,
+					"chanName": "Channel 12",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 13,
+					"chanName": "Channel 13",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 14,
+					"chanName": "Channel 14",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 15,
+					"chanName": "Channel 15",
+					"instrumentId": "matahari1000",
+					"busy": false
+				},
+				{
+					"chanId": 16,
+					"chanName": "Channel 16",
+					"instrumentId": "matahari1000",
+					"busy": false
+				}
+			]
+	}
 		],
+
 		"pdRefs": [
 			{
 				"name": "Photodiode 1",
