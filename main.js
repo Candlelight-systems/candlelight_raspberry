@@ -54,9 +54,9 @@ app.get("/getChannels", function( req, res ) {
 	res.header("Content-Type", "application/json");
 
 	const instrumentId = req.query.instrumentId;
-	const moduleName = req.query.moduleName;
+	const groupName = req.query.groupName;
 
-	res.send( JSON.stringify( matahari.getChannels( instrumentId, moduleName ) ) );
+	res.send( JSON.stringify( matahari.getChannels( instrumentId, groupName ) ) );
 } );
 
 
