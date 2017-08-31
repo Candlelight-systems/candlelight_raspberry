@@ -27,9 +27,15 @@ module.exports = {
 		});
 	},
 
-	getChannels: ( instrumentId ) => {
+	getChannels: ( instrumentId, moduleName ) => {
 
-		return getInstrument( instrumentId ).getChannels();
+		return getInstrument( instrumentId ).getChannels( moduleName );
+	},
+
+
+	getModules: ( instrumentId ) => {
+
+		return getInstrument( instrumentId ).getModules();
 	},
 
 	getStatus: ( instrumentId, chanId ) => {
@@ -37,16 +43,20 @@ module.exports = {
 		chanId = parseInt( chanId );
 		
 		let instrument = getInstrument( instrumentId ),
-			channels = instrument.getChannels(),
-			returnObject = {};
+			modules = instrument.getModules(),
+			returnObject = {};;
 
-		channels.forEach( ( channel ) => {
+		modules.forEach( ( module ) => {
 
-			if( chanId && chanId !== channel.chanId ) {
-				return;
-			}
+			returnObject[ module.moduleName ] = {};
+			module.channels.forEach( ( channel ) => {
 
-			returnObject[ channel.chanId ] = instrument.getStatus( channel.chanId );
+				if( chanId && chanId !== channel.chanId ) {
+					return;
+				}
+
+				returnObject[ module.moduleName ][ channel.chanId ] = instrument.getStatus( channel.chanId );
+			});
 		});
 
 		return returnObject;

@@ -54,8 +54,20 @@ app.get("/getChannels", function( req, res ) {
 	res.header("Content-Type", "application/json");
 
 	const instrumentId = req.query.instrumentId;
+	const moduleName = req.query.moduleName;
 
-	res.send( JSON.stringify( matahari.getChannels( instrumentId ) ) );
+	res.send( JSON.stringify( matahari.getChannels( instrumentId, moduleName ) ) );
+} );
+
+
+app.get("/getModules", function( req, res ) {
+
+	res.type("application/json");
+	res.header("Content-Type", "application/json");
+
+	const instrumentId = req.query.instrumentId;
+
+	res.send( JSON.stringify( matahari.getModules( instrumentId ) ) );
 } );
 
 app.post("/setInfluxDB", function( req, res ) {
