@@ -1,8 +1,7 @@
 [
 	{
 		"instrumentId": "matahari1000",
-		"fullScaleCurrent": 15e-3,
-
+		"fullScaleCurrent": 0.015,
 		"config": {
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
 			"params": {
@@ -136,7 +135,7 @@
 				"hostAlias": "platform-3f980000.usb-usb-0:1.2:1.0",
 				"pwmChannel": 4,
 				"pdRef": "pd_2",
-				"setPoint": 0.3,
+				"setPoint": 1,
 				"scheduling": {
 					"basis": "1hour",
 					"intensities": [
