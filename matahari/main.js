@@ -33,9 +33,9 @@ module.exports = {
 	},
 
 
-	getModules: ( instrumentId ) => {
+	getGroups: ( instrumentId ) => {
 
-		return getInstrument( instrumentId ).getModules();
+		return getInstrument( instrumentId ).getGroups();
 	},
 
 	getStatus: ( instrumentId, chanId ) => {

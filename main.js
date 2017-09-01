@@ -60,14 +60,14 @@ app.get("/getChannels", function( req, res ) {
 } );
 
 
-app.get("/getModules", function( req, res ) {
+app.get("/getGroups", function( req, res ) {
 
 	res.type("application/json");
 	res.header("Content-Type", "application/json");
 
 	const instrumentId = req.query.instrumentId;
 
-	res.send( JSON.stringify( matahari.getModules( instrumentId ) ) );
+	res.send( JSON.stringify( matahari.getGroups( instrumentId ) ) );
 } );
 
 app.post("/setInfluxDB", function( req, res ) {

@@ -539,7 +539,7 @@ class TrackerInstrument extends InstrumentController {
 			case 'pd_1':
 			case 'pd_2':
 				return this.getLightIntensity( lightRef );
-			break;
+ 				break;
 
 			default:
 				return lightRefValue;
