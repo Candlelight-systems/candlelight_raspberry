@@ -689,8 +689,8 @@ class TrackerInstrument extends InstrumentController {
 
 	getPDOptions( groupName ) {
 
-		let pds,
-			pdOptions = [];
+		
+		let pdOptions = [];
 
 		const group = this.getGroupFromGroupName( groupName );
 		const pds = group.pds;
