@@ -764,7 +764,7 @@ class TrackerInstrument extends InstrumentController {
 			throw "No light controller for group with name \"" + groupName + "\"";
 		}
 
-		return return group.lightController;
+		return group.lightController;
 	}
 
 	hasLightController( groupName ) {
