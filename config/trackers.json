@@ -67,7 +67,7 @@
 					"chanName": "Channel 1",
 					"temperatureSensor": {
 						"offset": 0,
-						"gain": 0.001 // mV to temperature
+						"gain": 0.001
 					}
 				},
 				{

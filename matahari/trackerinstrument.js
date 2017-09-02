@@ -750,7 +750,7 @@ console.log( groups );
 
 			if( groups[ i ].lightController ) {
 
-				let controller = new LightController( this.config.lightControllers[ i ] )
+				let controller = new LightController( groups[ i ].lightController )
 				controller.setTracker( this );
 				this.lightControllers[ groups[ i ].groupName ] = controller;
 			}
