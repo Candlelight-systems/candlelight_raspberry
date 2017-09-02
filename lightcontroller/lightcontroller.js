@@ -111,7 +111,7 @@ class LightController {
 			throw "No MPP Tracker reference from which to read the photodiode input";
 		}
 
-		if( ! this.config.pdRef ) {
+		if( ! this.config.pd ) {
 			throw "No photodiode reference from which to read the light intensity";
 		}
 
@@ -130,8 +130,8 @@ class LightController {
 			await this.turnOn();
 		}
 
-		let pdData = this.trackerReference.getPDData( this.config.pdRef );
-		let pdValue = this.trackerReference.getPDValue( this.config.pdRef ) * 1000;
+		let pdData = this.trackerReference.getPDData( this.config.pd );
+		let pdValue = this.trackerReference.getPDValue( this.config.pd ) * 1000;
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
@@ -149,7 +149,7 @@ class LightController {
 
 			do {
 
-				sun = ( await this.trackerReference._measurePD( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
+				sun = ( await this.trackerReference._measurePD( this.config.pd ) ) * 1000 / pdData.scaling_ma_to_sun;
 
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -216,7 +216,7 @@ class LightController {
 		await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
 
 		await this.delay( 500 );
-		await this.trackerReference._measurePD( this.config.pdRef )
+		await this.trackerReference._measurePD( this.config.pd )
 
 	}
 
