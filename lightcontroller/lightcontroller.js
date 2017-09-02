@@ -149,7 +149,7 @@ class LightController {
 
 			do {
 
-				sun = ( await this.trackerReference.measurePD( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
+				sun = ( await this.trackerReference._measurePD( this.config.pdRef ) ) * 1000 / pdData.scaling_ma_to_sun;
 
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -216,7 +216,7 @@ class LightController {
 		await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
 
 		await this.delay( 500 );
-		await this.trackerReference.measurePD( this.config.pdRef )
+		await this.trackerReference._measurePD( this.config.pdRef )
 
 	}
 
