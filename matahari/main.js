@@ -109,7 +109,7 @@ module.exports = {
 		let instrument = getInstrument( instrumentId );
 		if( chanId.indexOf( 'pd' ) > -1 ) {
 
-			return instrument.measurePD( chanId );
+			return instrument._measurePD( chanId );
 
 		} else {
 
