@@ -52,7 +52,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 					}
 				}
 			} );	
-			console.log( query );
+			console.log( "query:" + query );
 			communication.write( query + "\n" );
 			communication.drain( );
 		});
