@@ -95,3 +95,29 @@ module.exports.storeJsc = function( measurementName, jsc ) {
       console.error( `Error saving data to InfluxDB! ${err.stack}` );
     });
 }
+
+
+
+module.exports.storeEnvironment = function( measurementName, temperature, humidity, lights ) {
+
+  let fields = { 
+    temperature: temperature,
+    humidity: humidity
+  };
+
+  lights.forEach( ( val, index ) => {
+    fields[ "light" + ( index + 1 ) ] = val;
+  });
+
+
+    return influxClient.writePoints( [
+      {
+        measurement: measurementName,
+        fields: fields
+      }
+
+    ] ).catch( ( err ) => {
+
+      console.error( `Error saving data to InfluxDB! ${err.stack}` );
+    });
+}

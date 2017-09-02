@@ -96,8 +96,9 @@ app.get("/getPDOptions", function( req, res ) {
 	res.type("application/json");
 
 	const instrumentId = req.query.instrumentId;
+	const groupName = req.query.groupName;
 	
-	res.send( JSON.stringify( matahari.getPDOptions( instrumentId ) ) );
+	res.send( JSON.stringify( matahari.getPDOptions( instrumentId, groupName ) ) );
 } );
 
 
@@ -338,9 +339,9 @@ app.get("/resetStatus", function( req, res ) {
 });
 
 
-app.get("/light.getControllers", function( req, res ) {
+app.get("/light.getController", function( req, res ) {
 
-	matahari.getLightControllers( req.query.instrumentId ).then( ( controllers ) => {
+	matahari.getLightControllers( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
 		
 		res.type("application/json").send( JSON.stringify( controllers ) );	
 		

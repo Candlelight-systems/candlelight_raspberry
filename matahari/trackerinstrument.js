@@ -39,16 +39,20 @@ class TrackerInstrument extends InstrumentController {
 		
 		this._initLightControllers();
 
+		this.groupTemperature = {};
+		this.groupHumidity = {};
+		this.groupLightIntensity = {};
+		this.channelTemperature = {};
+
 		this.preventMPPT = {};
 		this.pdIntensity = {};
-
 		this.cancelTimer = {};
 
 		this.openConnection().then( async () => {
 			
 			await this.query( "RESERVED:SETUP" );
 			await this.normalizeStatus();
-			await this.scheduleLightReading( 10000 );
+			await this.scheduleEnvironmentSensing( 10000 );
 
 		} ).catch( ( e ) => {
 			
@@ -68,6 +72,63 @@ class TrackerInstrument extends InstrumentController {
 		super.kill();
 	}
 
+	getGroupFromChanId( chanId ) {
+
+		const cfg = this.getConfig();
+
+		for( var i = 0; i < cfg.groups.length; i ++ ) {
+
+			for( var j = 0; j < cfg.groups[ i ].channels.length; j ++ ) {
+
+				if( cfg.groups[ i ].channels[ j ].chanId == chanId ) {
+
+					return cfg.groups[ i ];
+				}
+			}
+		}
+	}
+
+	getGroupFromGroupName( groupName ) {
+
+		const cfg = this.getConfig();
+
+		for( var i = 0; i < cfg.groups.length; i ++ ) {
+
+			if( cfg.groups[ i ].groupName == groupName ) {
+
+				return cfg.groups[ i ];
+			}
+		}
+
+		throw "Cannot find the group with group name " + groupName;
+	}
+
+	getConfig( groupName, chanId ) {
+
+		if( groupName === undefined && chanId === undefined ) {
+			return super.getConfig();
+		}
+
+		const cfg = this.getConfig();
+
+		for( var i = 0; i < cfg.groups.length; i ++ ) {
+
+			if( cfg.groups[ i ].groupName == groupName || groupName === undefined ) {
+
+				if( chanId === undefined && cfg.groups[ i ].groupName == groupName ) {
+					return cfg.groups[ i ];
+				}
+
+				for( var j = 0; j < cfg.groups[ i ].channels.length; j ++ ) {
+
+					if( cfg.groups[ i ].channels[ j ].chanId == chanId ) {
+
+						return cfg.groups[ i ].channels[ j ];
+					}
+				}
+			}
+		}
+	}
 
 
 	/**
@@ -525,6 +586,29 @@ class TrackerInstrument extends InstrumentController {
 	//////////////////////////////////////
 
 
+	scheduleEnvironmentSensing( interval ) {
+
+		//if( this.timerExists( "pd" ) ) {
+			this.setTimer("env", undefined, this.measureEnv, interval );
+		//} 
+	}
+
+	async measureEnv() {
+
+		let groups = this.getConfig().groups;
+		let temperature, lights, humidity;
+
+		for( var i = 0, l = groups.length; i < l; i ++ ) {
+			
+			await influx.storeEnvironment( 
+				this.getInstrumentId() + "_" + groups[ i ].groupName,
+				await this.measureGroupTemperature( groups[ i ].groupName ),
+				await this.measureGroupHumidity( groups[ i ].groupName ),
+				await this.measureGroupLightIntensity( groups[ i ].groupName )
+			);
+		}
+	}
+
 	getLightIntensity( lightRef ) {
 
 		return this.pdIntensity[ lightRef ];
@@ -547,31 +631,81 @@ class TrackerInstrument extends InstrumentController {
 		}
 	}
 
-	scheduleLightReading( interval ) {
+	async measureTemperature( chanId ) {
 
-		//if( this.timerExists( "pd" ) ) {
-			this.setTimer("pd", undefined, this.measurePD, interval );
-		//} 
-	}
+		let group = this.getGroupFromChanId( chanId );
+		let chan = this.getConfig( group.groupName, chanId );
 
-	async measurePD( ref ) {
-
-		if( ! ref ) {
-			for( var i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
-				await this._measurePD( this.config.pdRefs[ i ].ref );		
-			}
-			return;
+		if( ! chan.temperatureSensor ) {
+			throw "No temperature sensor linked to channel " + chanId;
 		}
 
-		return await this._measurePD( ref );		
+		var baseTemperature = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelBase( group.i2cSlave, chanId ), 2 ) );
+		var sensorVoltage = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelIR( group.i2cSlave, chanId ), 2 ) );
+
+		return this.temperatures[ chanId ] = baseTemperature + ( sensorVoltage * chan.temperatureSensor.gain + chan.temperatureSensor.offset );
+	}
+
+	async measureGroupTemperature( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		this.groupTemperature[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readTemperature( group.i2cSlave ), 2 ) );
+		return this.getGroupTemperature( groupName );
+	}
+
+	getGroupTemperature( groupName ) {
+
+		return this.groupTemperature[ groupName ];
+	}
+
+	async measureGroupHumidity( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		this.groupHumidity[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readHumidity( group.i2cSlave ), 2 ) );
+		return this.getGroupHumidity( groupName );
+	}
+
+	getGroupHumidity( groupName ) {
+
+		return this.groupHumidity[ groupName ];
+	}
+
+
+	async measureGroupLightIntensity( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName ),
+			vals = [];
+
+		for( var i = 0, l = group.pds; i < l; i ++ ) {
+			vals.push( await this._measurePD( group.pds[ i ] ) );
+		}
+
+		return vals;
 	}
 
 	async _measurePD( ref ) {
 		return this.pdIntensity[ ref ] = parseFloat( await this.query( matahariconfig.specialcommands.readPD[ ref ], 2 ) );
 	}
 
-	getPDOptions() {
-		return this.config.pdRefs;
+	getPDOptions( groupName ) {
+
+		let pds,
+			pdOptions = [];
+
+		const group = this.getGroupFromGroupName( groupName );
+		const pds = group.pds;
+		
+		if( ! pds ) {
+			return [];
+		}
+
+		for( i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
+			if( pds.contains( this.config.pdRefs[ i ].ref ) ) {
+				pdOptions.push( this.config.pdRefs[ i ] );
+			}
+		}
+
+		return pdOptions;
 	}
 
 	getPDData( ref ) {
@@ -583,8 +717,6 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 	getPDValue( ref ) {
-
-		console.log( this.pdIntensity );
 		return this.pdIntensity[ ref ];
 	}
 
@@ -610,20 +742,35 @@ class TrackerInstrument extends InstrumentController {
 		}
 
 		this.lightControllers = {};
+		const groups = this.getConfig().groups;
 
-		if( this.config.lightControllers && Array.isArray( this.config.lightControllers ) ) {
-		
-			for( var i = 0; i < this.config.lightControllers.length; i ++ ) {
-				let controller = new LightController( this.config.lightControllers[ i ] );
+		for( var i = 0; i < groups.length; i ++ ) {
+
+			if( groups[ i ].lightController ) {
+
+				let controller = new LightController( this.config.lightControllers[ i ] )
 				controller.setTracker( this );
-				this.lightControllers[ this.config.lightControllers[ i ].ref ] = controller;
+				this.lightControllers[ groups[ i ].groupName ] = controller;
 			}
 		}
 	}
 
 
-	async getLightControllers() {
-		return this.config.lightControllers;
+	async getLightController( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+
+		if( ! this.hasLightController( groupName ) ) {
+			throw "No light controller for group with name \"" + groupName + "\"";
+		}
+
+		return return group.lightController;
+	}
+
+	hasLightController( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		return  !! group.lightController;
 	}
 
 	saveLightControllers( controllers ) {

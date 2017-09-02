@@ -62,8 +62,8 @@ module.exports = {
 		return returnObject;
 	},
 
-	getPDOptions: ( instrumentId ) => {
-		return getInstrument( instrumentId ).getPDOptions();
+	getPDOptions: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).getPDOptions( groupName );
 	},
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
@@ -125,8 +125,8 @@ module.exports = {
 		return getInstrument( instrumentId ).disableChannel( chanId );
 	},
 
-	getLightControllers: ( instrumentId ) => {
-		return getInstrument( instrumentId ).getLightControllers();
+	getLightController: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).getLightControllers( groupName );
 	},
 
 	saveLightControllers: async ( instrumentId, controllers ) => {

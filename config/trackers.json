@@ -12,7 +12,10 @@
 		"groups": [
 			{
 				"groupName": "Box A",
-				"pd": [ "pd_1"],
+				
+				"pds": [ "pd_1" ],
+				"i2cslave": 8,
+
 				"channels": [
 				{
 					"chanId": 1,

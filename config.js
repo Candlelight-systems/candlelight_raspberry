@@ -34,15 +34,19 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			readPD: {
-				pd_1: "MEASURE:PHOTODIODE1",
-				pd_2: "MEASURE:PHOTODIODE2"
+				pd_1: "ENVIRONMENT:PHOTODIODE1",
+				pd_2: "ENVIRONMENT:PHOTODIODE2"
 			},			
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
-			resumeHardware: "RESERVED:RESUME"
+			resumeHardware: "RESERVED:RESUME",
+			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPERATURE:CH" + chanId + ":BASE" + chanId + "? " + slaveId,
+			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPERATURE:CH" + chanId + ":IR?" + slaveId,
+			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPERATURE:BOX? " + slaveId,
+			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY:BOX? " + slaveId
 		},
 
 		statuscommands: [
