@@ -157,7 +157,9 @@ class TrackerInstrument extends InstrumentController {
 		let instrumentId = cfg.instrumentId, 
 			chanId;
 
-		for( var i = 0, m = groups.length;  i < m ; i ++ ) {
+console.log( groups );
+
+		for( var i = 0, m = groups.length; i < m ; i ++ ) {
 		
 			for( var j = 0, l = groups[ i ].length; j < l; j ++ ) {
 
