@@ -661,7 +661,7 @@ class TrackerInstrument extends InstrumentController {
 	async measureGroupHumidity( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
-		this.groupHumidity[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readHumidity( group.i2cSlave ), 2 ) );
+		this.groupHumidity[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readHumidity( group.i2cSlave ), 1 ) );
 		return this.getGroupHumidity( groupName );
 	}
 
