@@ -126,7 +126,7 @@ module.exports = {
 	},
 
 	getLightController: ( instrumentId, groupName ) => {
-		return getInstrument( instrumentId ).getLightControllers( groupName );
+		return getInstrument( instrumentId ).getLightController( groupName );
 	},
 
 	saveLightControllers: async ( instrumentId, controllers ) => {

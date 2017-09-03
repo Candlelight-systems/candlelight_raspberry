@@ -341,7 +341,7 @@ app.get("/resetStatus", function( req, res ) {
 
 app.get("/light.getController", function( req, res ) {
 
-	matahari.getLightControllers( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
+	matahari.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
 		
 		res.type("application/json").send( JSON.stringify( controllers ) );	
 		
