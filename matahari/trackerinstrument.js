@@ -36,8 +36,7 @@ class TrackerInstrument extends InstrumentController {
 
 		super( ...arguments );
 
-		
-
+	
 		this.groupTemperature = {};
 		this.groupHumidity = {};
 		this.groupLightIntensity = {};
@@ -701,7 +700,7 @@ class TrackerInstrument extends InstrumentController {
 			return [];
 		}
 
-		for( i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
+		for( var i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
 			if( pds.contains( this.config.pdRefs[ i ].ref ) ) {
 				pdOptions.push( this.config.pdRefs[ i ] );
 			}

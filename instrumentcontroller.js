@@ -125,11 +125,19 @@ class InstrumentController {
 			connection.lease = Promise.resolve();
 			connection.queryManager = new queryManager( connection );
 
+			const connectionTimeout = setTimeout( () => {
+
+				// TODO: Reset hardware
+				connection.open();
+
+			}, 1000 );
+
 			connection.on("open", async () => {
-				console.log('Opening the connection');
 				connection.flush();
+				clearTimeout( connectionTimeout );
 				this.open = true;
 				resolver();
+
 			} );
 
 		} );
