@@ -114,7 +114,10 @@ class InstrumentController {
 		} );
 
 		connection.on("close", ( ) => {
+
+			this.open = false;
 			this.waitAndReconnect();
+			console.warn('The serial connection is closing');
 		} );
 
 		return new Promise( ( resolver, rejecter ) => {
@@ -123,7 +126,7 @@ class InstrumentController {
 			connection.queryManager = new queryManager( connection );
 
 			connection.on("open", async () => {
-
+				console.log('Opening the connection');
 				connection.flush();
 				this.open = true;
 				resolver();
