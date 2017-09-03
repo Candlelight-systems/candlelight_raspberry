@@ -34,8 +34,8 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			readPD: {
-				pd_1: "ENVIRONMENT:PHOTODIODE1",
-				pd_2: "ENVIRONMENT:PHOTODIODE2"
+				pd_1: "MEASURE:PHOTODIODE1",
+				pd_2: "MEASURE:PHOTODIODE2"
 			},			
 			getIVData: "DATA:IV",
 			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,

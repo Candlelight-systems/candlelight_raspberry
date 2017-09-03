@@ -640,8 +640,8 @@ class TrackerInstrument extends InstrumentController {
 			throw "No temperature sensor linked to channel " + chanId;
 		}
 
-		var baseTemperature = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelBase( group.i2cSlave, chanId ), 2 ) );
-		var sensorVoltage = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelIR( group.i2cSlave, chanId ), 2 ) );
+		var baseTemperature = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelBase( group.i2cSlave, chanId ), 1 ) );
+		var sensorVoltage = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelIR( group.i2cSlave, chanId ), 1 ) );
 
 		return this.temperatures[ chanId ] = baseTemperature + ( sensorVoltage * chan.temperatureSensor.gain + chan.temperatureSensor.offset );
 	}
@@ -649,7 +649,7 @@ class TrackerInstrument extends InstrumentController {
 	async measureGroupTemperature( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
-		this.groupTemperature[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readTemperature( group.i2cSlave ), 2 ) );
+		this.groupTemperature[ groupName ] = parseFloat( await this.query( matahariconfig.specialcommands.readTemperature( group.i2cSlave ), 1 ) );
 		return this.getGroupTemperature( groupName );
 	}
 
