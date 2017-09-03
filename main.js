@@ -352,9 +352,9 @@ app.get("/light.getController", function( req, res ) {
 	} );
 });
 
-app.post("/light.saveControllers", ( req, res ) => {
+app.post("/light.saveController", ( req, res ) => {
 
-	matahari.saveLightControllers( req.body.instrumentId, req.body.lightControllers ).then( () => {
+	matahari.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightControllers ).then( () => {
 		
 		res.send("");
 
