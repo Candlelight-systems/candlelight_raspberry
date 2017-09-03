@@ -138,6 +138,7 @@ class TrackerInstrument extends InstrumentController {
 	query( command, lines = 1 ) {
 	
 		if( ! this.open ) {
+			console.trace();
 			throw "Cannot write command \"" + command + "\" to the instrument. The instrument communication is closed."
 		}
 
@@ -946,9 +947,9 @@ class TrackerInstrument extends InstrumentController {
 
 			data = data
 				.split(',');
+			
+			data.pop();
 
-
-			data.pop()
 			return data.map( ( value ) => parseFloat( value ) );
 		});
 	}
