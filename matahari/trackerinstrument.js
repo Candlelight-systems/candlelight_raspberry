@@ -37,7 +37,6 @@ class TrackerInstrument extends InstrumentController {
 		super( ...arguments );
 
 		
-		this._initLightControllers();
 
 		this.groupTemperature = {};
 		this.groupHumidity = {};
@@ -53,6 +52,8 @@ class TrackerInstrument extends InstrumentController {
 			await this.query( "RESERVED:SETUP" );
 			await this.normalizeStatus();
 			await this.scheduleEnvironmentSensing( 10000 );
+
+			this._initLightControllers();
 
 		} ).catch( ( e ) => {
 			
