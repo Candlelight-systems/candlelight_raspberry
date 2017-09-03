@@ -773,14 +773,14 @@ class TrackerInstrument extends InstrumentController {
 		return  !! group.lightController;
 	}
 
-	await saveLightController( groupName, controller ) {
+	async saveLightController( groupName, controller ) {
 
 		let controllerCfg = await this.getLightController( groupName );
 
 		if( ! this.lightControllers[ groupName ] ) {
 			return;
 		}
-		
+
 		controllerCfg.setPoint = controllers.setPoint;
 		controllerCfg.scheduling.basis = controllers.schedulingBasis;
 		controllerCfg.scheduling.intensities = controllers.schedulingValues;
