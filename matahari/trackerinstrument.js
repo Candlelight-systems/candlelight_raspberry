@@ -136,9 +136,9 @@ class TrackerInstrument extends InstrumentController {
 	 *	@param {String} command - The command string to send
 	 */
 	query( command, lines = 1 ) {
-
+	
 		if( ! this.open ) {
-			throw "Cannot write the instrument. The instrument communication is closed."
+			throw "Cannot write command \"" + command + "\" to the instrument. The instrument communication is closed."
 		}
 
 		return super.query( command, lines );
