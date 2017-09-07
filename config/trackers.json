@@ -12,7 +12,7 @@
 		"groups": [
 			{
 				"groupName": "Box A",
-				"pds": [ "pd_1" ],
+				"pds": [ "pd_2" ],
 
 				"lightController": {
 
