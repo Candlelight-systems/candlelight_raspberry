@@ -701,7 +701,7 @@ class TrackerInstrument extends InstrumentController {
 		}
 
 		for( var i = 0, l = this.config.pdRefs.length; i < l; i ++ ) {
-			if( pds.contains( this.config.pdRefs[ i ].ref ) ) {
+			if( pds.includes( this.config.pdRefs[ i ].ref ) ) {
 				pdOptions.push( this.config.pdRefs[ i ] );
 			}
 		}
