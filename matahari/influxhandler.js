@@ -112,7 +112,7 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
 
     return influxClient.writePoints( [
       {
-        measurement: measurementName,
+        measurement: "`" + measurementName + "`",
         fields: fields
       }
 
