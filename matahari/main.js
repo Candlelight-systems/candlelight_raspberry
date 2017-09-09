@@ -48,14 +48,22 @@ module.exports = {
 
 		groups.forEach( ( group ) => {
 
-			returnObject[ group.groupName ] = {};
+			returnObject[ group.groupName ] = {
+				channels: {}
+			};
+
+			if( instrument.hasLightController() ) {
+				returnObject[ group.groupName ].lightController = true;
+				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController().getSetpoint();
+			}
+
 			group.channels.forEach( ( channel ) => {
 
 				if( chanId && chanId !== channel.chanId ) {
 					return;
 				}
 
-				returnObject[ group.groupName ][ channel.chanId ] = instrument.getStatus( channel.chanId );
+				returnObject[ group.groupName ].channels[ channel.chanId ] = instrument.getStatus( channel.chanId );
 			});
 		});
 
@@ -125,8 +133,15 @@ module.exports = {
 		return getInstrument( instrumentId ).disableChannel( chanId );
 	},
 
-	getLightController: ( instrumentId, groupName ) => {
-		return getInstrument( instrumentId ).getLightController( groupName );
+	getLightController: async ( instrumentId, groupName ) => {
+		
+		let instrument = getInstrument( instrumentId );
+
+		if( instrument.hasLightController() ) {
+			return getInstrument( instrumentId ).getLightController( groupName );
+		}
+		
+		throw "This instrument has no light controller";
 	},
 
 	saveLightController: async ( instrumentId, groupName, controller ) => {

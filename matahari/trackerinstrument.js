@@ -601,14 +601,14 @@ class TrackerInstrument extends InstrumentController {
 
 		for( var i = 0, l = groups.length; i < l; i ++ ) {
 				await this.measureGroupLightIntensity( groups[ i ].groupName )
-				/*
+				
 			await influx.storeEnvironment( 
 				this.getInstrumentId() + "_" + groups[ i ].groupName,
-				await this.measureGroupTemperature( groups[ i ].groupName ),
-				await this.measureGroupHumidity( groups[ i ].groupName ),
+				null,//await this.measureGroupTemperature( groups[ i ].groupName ),
+				null,//await this.measureGroupHumidity( groups[ i ].groupName ),
 				await this.measureGroupLightIntensity( groups[ i ].groupName )
 			);
-			*/
+			
 		}
 	}
 
