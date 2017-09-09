@@ -604,8 +604,8 @@ class TrackerInstrument extends InstrumentController {
 				
 			await influx.storeEnvironment( 
 				this.getInstrumentId() + "_" + groups[ i ].groupName,
-				null,//await this.measureGroupTemperature( groups[ i ].groupName ),
-				null,//await this.measureGroupHumidity( groups[ i ].groupName ),
+				-1,//await this.measureGroupTemperature( groups[ i ].groupName ),
+				-1,//await this.measureGroupHumidity( groups[ i ].groupName ),
 				await this.measureGroupLightIntensity( groups[ i ].groupName )
 			);
 			
@@ -759,7 +759,7 @@ class TrackerInstrument extends InstrumentController {
 	}
 
 
-	async getLightController( groupName ) {
+	getLightController( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
 
@@ -778,7 +778,7 @@ class TrackerInstrument extends InstrumentController {
 
 	async saveLightController( groupName, controller ) {
 
-		let controllerCfg = await this.getLightController( groupName );
+		let controllerCfg = this.getLightController( groupName );
 
 		if( ! this.lightControllers[ groupName ] ) {
 			return;
