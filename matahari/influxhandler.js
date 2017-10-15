@@ -11,13 +11,14 @@ const influxClient = new Influx.InfluxDB({
 
 module.exports = {};
 
-module.exports.storeIV = function( measurementName, ivData ) {
+module.exports.storeIV = function( measurementName, ivData, sun ) {
 	// Use SQLite ?
   return influxClient.writePoints([
       {
         measurement: measurementName + "_iv",
         fields: { 
-          iv: '"' + ivData + '"'
+          iv: '"' + ivData + '"',
+          sun: sun
         }
       }
 
@@ -48,8 +49,11 @@ module.exports.storeTrack = function( measurementName, trackData ) {
           power_max: trackData.powerMax,
           efficiency: trackData.efficiency,
           sun: trackData.sun,
-          pga: trackData.pga
-        },
+          pga: trackData.pga,
+          temperature_base: trackData.temperature_base,
+          temperature_junction: trackData.temperature_junction,
+          humidity: trackData.humidity
+        }
       }
 
     ]).then( ( result ) => {
@@ -112,7 +116,7 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
 
     return influxClient.writePoints( [
       {
-        measurement: "`" + measurementName + "`",
+        measurement: measurementName,
         fields: fields
       }
 

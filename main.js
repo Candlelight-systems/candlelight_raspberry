@@ -325,7 +325,7 @@ app.get("/resetStatus", function( req, res ) {
 
 	let status = req.query;
 	let instrumentId = status.instrumentId,
-		chanId = status.chanId;
+		chanId = parseInt( status.chanId );
 
 	matahari.resetStatus( instrumentId, chanId, status ).then( () => {
 		
@@ -348,13 +348,14 @@ app.get("/light.getController", function( req, res ) {
 	} ).catch( ( error ) => {
 
 		console.log( error );
-		res.status( 500 ).send("Light controllers could not be retrieved. Error was " + error );
+		console.trace( error );
+		res.status( 500 ).send("Light controllers could not be retrieved. Error was \"" + error + "\"" );
 	} );
 });
 
 app.post("/light.saveController", ( req, res ) => {
 
-	matahari.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightControllers ).then( () => {
+	matahari.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightController ).then( () => {
 		
 		res.send("");
 

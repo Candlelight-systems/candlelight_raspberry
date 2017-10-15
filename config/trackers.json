@@ -7,93 +7,80 @@
 			"params": {
 				"baudRate": 115200
 			},
-			"reconnectTimeout": 1000
+			"reconnectTimeout": 1
 		},
 		"groups": [
 			{
 				"groupName": "Box A",
+				"groupID": "boxa",
 				"pds": [
 					"pd_2"
 				],
-				"lightController": {
-					"label": "Top lamp",
-					"hostAlias": "platform-3f980000.usb-usb-0:1.2:1.0",
-					"pwmChannel": 4,
-					"pd": "pd_2",
-					"automatic": true,
-					"setPoint": 1,
-					"scheduling": {
-						"basis": "1hour",
-						"intensities": [
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0,
-							1,
-							0
-						]
-					}
-				},
 				"i2cSlave": 8,
 				"channels": [
 					{
 						"chanId": 1,
 						"chanName": "Channel 1",
 						"temperatureSensor": {
-							"offset": 0,
-							"gain": 0.001
+							"offset": 845,
+							"gain": -0.01
 						}
 					},
 					{
 						"chanId": 2,
-						"chanName": "Channel 2"
+						"chanName": "Channel 2",
+						"temperatureSensor": {
+							"offset": 2428,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 3,
-						"chanName": "Channel 3"
+						"chanName": "Channel 3",
+						"temperatureSensor": {
+							"offset": 3380,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 4,
-						"chanName": "Channel 4"
+						"chanName": "Channel 4",
+						"temperatureSensor": {
+							"offset": 274,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 5,
-						"chanName": "Channel 5"
+						"chanName": "Channel 5",
+						"temperatureSensor": {
+							"offset": 236,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 6,
-						"chanName": "Channel 6"
+						"chanName": "Channel 6",
+						"temperatureSensor": {
+							"offset": 313,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 7,
-						"chanName": "Channel 7"
+						"chanName": "Channel 7",
+						"temperatureSensor": {
+							"offset": 985,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 8,
-						"chanName": "Channel 8"
+						"chanName": "Channel 8",
+						"temperatureSensor": {
+							"offset": 870,
+							"gain": -0.01
+						}
 					},
 					{
 						"chanId": 9,

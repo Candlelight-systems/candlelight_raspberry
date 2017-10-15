@@ -1,4 +1,4 @@
-'use strict';
+	'use strict';
 const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
@@ -17,12 +17,12 @@ module.exports = {
 	hosts: [
 
 	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-		"alias": "platform-3f980000.usb-usb-0:1.2:1.0",
+		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+		"alias": "platform-3f980000.usb-usb-0:1.4:1.0",
 		"params": {
 			"baudrate": 115200
 		},
-		"reconnectTimeout": 1000
+		"reconnectTimeout": 1 // in seconds
 	}
 
 	],
@@ -34,24 +34,23 @@ module.exports = {
 			getTrackData: "DATA:TRACKER",
 			executeIV: "IV:EXECUTE",
 			readPD: {
-				pd_1: "MEASURE:PHOTODIODE1",
-				pd_2: "MEASURE:PHOTODIODE2"
+				pd_1: "ENVIRONMENT:PHOTODIODE1",
+				pd_2: "ENVIRONMENT:PHOTODIODE2"
 			},			
-			getIVData: "DATA:IV",
-			getIVStatus: ( channel ) => "IV:STATUS? CH" + channel,
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPERATURE:CH" + chanId + ":BASE" + chanId + "? " + slaveId,
-			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPERATURE:CH" + chanId + ":IR?" + slaveId,
-			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPERATURE:BOX? " + slaveId,
-			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY:BOX? " + slaveId
+			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE?:CH" + chanId + " " + slaveId,
+			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR?:CH" + chanId + " " + slaveId,
+			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
+			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
 		},
 
 		statuscommands: [
 
 			[ "IV:START", function( status ) { return status.iv_start || 1; } ],
+			[ "IV:AUTOSTART", function( status ) { return +( !! ( status.iv_autostart || 0 ) ); } ],
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
@@ -68,13 +67,14 @@ module.exports = {
 		],
 
 		defaults: {
-			"tracking_record_interval": 1000,
+			"tracking_record_interval": 10000,
 			"tracking_interval": 100,
 			"tracking_bwfwthreshold": 1,
 			"tracking_fwbwthreshold": 1,
 			"tracking_step": 1,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,
+			"iv_autostart": 0,
 			"iv_stop": 0,
 			"iv_hysteresis": 0,
 			"iv_rate": 0.1,
@@ -89,7 +89,7 @@ module.exports = {
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
 			"cellArea": 0,
-			"lightRef": "pd1",
+			"lightRef": null,
 			"lightRefValue": null,
 			"measurementName": null,
 			"cellName": null

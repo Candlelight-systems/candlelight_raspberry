@@ -6,14 +6,21 @@ class queryManager {
 		this.processing = false;
 	}
 
-	addQuery( q ) {
+	addQuery( q, prepend ) {
 		
 		let done = new Promise( ( resolver, rejecter ) => {
-			this.queue.push( { 
+
+			let o = { 
 				query: q,
 				resolver: resolver,
 				rejecter: rejecter
-			} );
+			};
+
+			if( prepend ) {
+				this.queue.unshift( o );
+			} else {
+				this.queue.push( o );	
+			}
 		} );
 		this.processQueue();
 		return done;
@@ -33,6 +40,12 @@ class queryManager {
 		}
 
 		this.doQuery( this.queue.shift() );
+	}
+
+	emptyQueue() {
+
+		this.queue = [];
+		this.processing = false;
 	}
 
 	doQuery( query ) {

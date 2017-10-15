@@ -52,9 +52,9 @@ module.exports = {
 				channels: {}
 			};
 
-			if( instrument.hasLightController() ) {
+			if( instrument.hasLightController( group.groupName ) ) {
 				returnObject[ group.groupName ].lightController = true;
-				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController().getSetpoint();
+				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint();
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -137,17 +137,17 @@ module.exports = {
 		
 		let instrument = getInstrument( instrumentId );
 
-		if( instrument.hasLightController() ) {
-			return getInstrument( instrumentId ).getLightController( groupName );
+		if( instrument.hasLightController( groupName ) ) {
+			return getInstrument( instrumentId ).getLightControllerConfig( groupName );
 		}
 		
 		throw "This instrument has no light controller";
 	},
 
 	saveLightController: async ( instrumentId, groupName, controller ) => {
-		getInstrument( instrumentId ).saveLightController( groupName, controller );
+		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, controller );
 		fs.writeFileSync('./config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
-		return;
+		return savingPromise;
 	}
 };
 

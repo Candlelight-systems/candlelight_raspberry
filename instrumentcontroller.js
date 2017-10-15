@@ -3,7 +3,7 @@ const serialport 	= require("serialport");
 const queryManager	= require("./matahari/queryhandler")
 
 
-function query( communication, query, linesExpected = 1, executeBefore = () => { return true; } ) {
+function query( communication, query, linesExpected = 1, executeBefore = () => { return true; }, prepend ) {
 
 
 	if( ! communication ) {
@@ -27,6 +27,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 				dataThatMatters, 
 				lineCount = 0;
 
+		//	console.time("q");
 			communication.removeAllListeners( "data" );
 			communication.on( "data", async ( d ) => {
 
@@ -47,6 +48,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 						communication.removeAllListeners( "data" );
 						communication.flush();
 						await delay( 10 );
+		//				console.timeEnd("q");
 						resolver( dataThatMatters );
 						return;
 					}
@@ -56,7 +58,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 			communication.write( query + "\n" );
 			communication.drain( );
 		});
-	});
+	}, prepend );
 }
 
 
@@ -69,8 +71,13 @@ class InstrumentController {
 		this.stateManager = new queryManager();
 	}	
 
-	query( queryString, expectedLines ) {
-		return query( this.getConnection(), queryString, expectedLines )
+	query( queryString, expectedLines = 1, prepend ) {
+		return query( this.getConnection(), queryString, expectedLines, () => { return true; }, prepend )
+	}
+
+	emptyQueryQueue() {
+		this.getConnection().queryManager.emptyQueue();
+		this.stateManager.emptyQueue();
 	}
 
 	/**
@@ -95,7 +102,7 @@ class InstrumentController {
 	}
 
 
-	async openConnection() {
+	async openConnection( callback ) {
 
 		const cfg = this.getConfig();
 
@@ -107,7 +114,6 @@ class InstrumentController {
 		const connection = new serialport( cfg.config.host, cfg.config.params );
 		this.connection = connection;
 
-
 		connection.on("error", ( err ) => {
 			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
@@ -116,8 +122,9 @@ class InstrumentController {
 		connection.on("close", ( ) => {
 
 			this.open = false;
-			this.waitAndReconnect();
 			console.warn('The serial connection is closing');
+			this.waitAndReconnect();
+			
 		} );
 
 		return new Promise( ( resolver, rejecter ) => {
@@ -128,7 +135,7 @@ class InstrumentController {
 			const connectionTimeout = setTimeout( () => {
 
 				// TODO: Reset hardware
-				connection.open();
+				//connection.open();
 
 			}, 1000 );
 
@@ -136,8 +143,8 @@ class InstrumentController {
 				connection.flush();
 				clearTimeout( connectionTimeout );
 				this.open = true;
-				resolver();
 
+				callback();
 			} );
 
 		} );
@@ -146,7 +153,6 @@ class InstrumentController {
 	async waitAndReconnect() {
 
 		let _delay = this.getConfig().config.reconnectTimeout;
-		console.warn("Reconnecting in " + _delay + "s" );
 		await this.delay( _delay * 1000 );
 		return this.connection.open();
 	}
@@ -158,7 +164,7 @@ class InstrumentController {
 
 
 	delay( delayMS = 100 ) {
-		return new Promise( ( resolver ) => { setTimeout( resolver, delayMS ) } );
+		return new Promise( ( resolver ) => { setTimeout( () => { resolver() }, delayMS ) } );
 	}
 }
 

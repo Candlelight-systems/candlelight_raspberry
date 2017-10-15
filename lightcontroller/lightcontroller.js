@@ -14,12 +14,12 @@ class LightController {
 		this.setConfig( config );
 
 		this.host = HostManager.getHost( config.hostAlias );
-		this.host.openConnection().then( async () => {
+		this.host.openConnection( async () => {
 
 			await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
 			await this.turnOn();
 			this.checkLightStatus();
-		});
+		} );
 	}
 
 	setTracker( tracker ) {
@@ -99,7 +99,7 @@ class LightController {
 		return this.setPoint;
 	}
 
-	async checkLightStatus() {
+	async checkLightStatus( pauseChannels = true ) {
 
 		if( this.paused ) {
 			return;
@@ -120,7 +120,6 @@ class LightController {
 			this._timeout = false;
 		}
 
-		console.log( setPoint );
 
 		if( setPoint === 0 ) {
 			await this.turnOff();
@@ -136,7 +135,9 @@ class LightController {
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
-			await this.trackerReference.pauseChannels();
+			if( pauseChannels ) {
+				await this.trackerReference.pauseChannels();
+			}
 
 			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
 			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
@@ -169,7 +170,9 @@ class LightController {
 
 			} while( i < 100 );
 
-			await this.trackerReference.resumeChannels();
+			if( pauseChannels ) {
+				await this.trackerReference.resumeChannels();
+			}
 		}
 
 		this.setTimeout();
