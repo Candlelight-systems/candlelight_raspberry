@@ -1,4 +1,4 @@
-	'use strict';
+'use strict';
 const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
@@ -17,8 +17,8 @@ module.exports = {
 	hosts: [
 
 	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-		"alias": "platform-3f980000.usb-usb-0:1.4:1.0",
+		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+		"alias": "platform-3f980000.usb-usb-0:1.5:1.0",
 		"params": {
 			"baudrate": 115200
 		},
@@ -50,7 +50,7 @@ module.exports = {
 		statuscommands: [
 
 			[ "IV:START", function( status ) { return status.iv_start || 1; } ],
-			[ "IV:AUTOSTART", function( status ) { return +( !! ( status.iv_autostart || 0 ) ); } ],
+			[ "IV:AUTOSTART", function( status ) { return +status.iv_autostart || 0; } ],
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
@@ -89,7 +89,7 @@ module.exports = {
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
 			"cellArea": 0,
-			"lightRef": null,
+			"lightRef": "pd1",
 			"lightRefValue": null,
 			"measurementName": null,
 			"cellName": null

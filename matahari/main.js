@@ -54,7 +54,11 @@ module.exports = {
 
 			if( instrument.hasLightController( group.groupName ) ) {
 				returnObject[ group.groupName ].lightController = true;
-				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint();
+				try {
+					returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint();
+				} catch( e ) {
+					// Do not signal any error
+				}
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -68,6 +72,11 @@ module.exports = {
 		});
 
 		return returnObject;
+	},
+
+	getConfig( instrumentName, chanId ) {
+		
+		return getInstrument( instrumentName ).getConfig( undefined, chanId );
 	},
 
 	getPDOptions: ( instrumentId, groupName ) => {

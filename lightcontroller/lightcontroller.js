@@ -105,6 +105,12 @@ class LightController {
 			return;
 		}
 
+		if( this.config.outputPower !== undefined ) {
+			await this.setCode( Math.round( 255 - this.config.outputPower * 255 ) );
+			return;
+		}
+
+
 		var setPoint = this.getSetPoint();
 
 		if( ! this.trackerReference ) {
@@ -218,8 +224,10 @@ class LightController {
 		this.on = true;
 		await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
 
-		await this.delay( 500 );
-		await this.trackerReference._measurePD( this.config.pd )
+		if( this.config.pd ) {
+			await this.delay( 500 );
+			await this.trackerReference._measurePD( this.config.pd )
+		}
 
 	}
 

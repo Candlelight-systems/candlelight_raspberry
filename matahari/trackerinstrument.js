@@ -638,8 +638,8 @@ console.log( status );
 				
 			await influx.storeEnvironment( 
 				this.getInstrumentId() + "_" + groups[ i ].groupID,
-				await this.measureGroupTemperature( groups[ i ].groupName ),
-				await this.measureGroupHumidity( groups[ i ].groupName ),
+				0, 0,//await this.measureGroupTemperature( groups[ i ].groupName ),
+				//await this.measureGroupHumidity( groups[ i ].groupName ),
 				await this.measureGroupLightIntensity( groups[ i ].groupName )
 			);
 			
@@ -653,6 +653,10 @@ console.log( status );
 	
 	getLightFromChannel( chanId ) {
 
+		let group = this.getGroupFromChanId( chanId );
+
+		return this.getLightIntensity( group.pds[ 0 ] );
+		/*
 		const { lightRef, lightRefValue } = this.getStatus( chanId );
 
 		switch( lightRef ) {
@@ -666,6 +670,7 @@ console.log( status );
 				return lightRefValue;
 			break;
 		}
+		*/
 	}
 
 	async measureTemperature( chanId ) {
@@ -676,7 +681,7 @@ console.log( status );
 		if( ! chan.temperatureSensor ) {
 			throw "No temperature sensor linked to channel " + chanId;
 		}
-
+		return;
 		var baseTemperature = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelBase( group.i2cSlave, chanId ), 2 ) );
 		var sensorVoltage = parseFloat( await this.query( matahariconfig.specialcommands.readTemperatureChannelIR( group.i2cSlave, chanId ), 2 ) );
 console.log( chanId, sensorVoltage );
@@ -717,11 +722,16 @@ console.log( chanId, sensorVoltage );
 		for( var i = 0, l = group.pds.length; i < l; i ++ ) {
 			vals.push( await this._measurePD( group.pds[ i ] ) );
 		}
-
+console.log( vals );
 		return vals;
 	}
 
 	async _measurePD( ref ) {
+		if( ! matahariconfig.specialcommands.readPD[ ref ] ) {
+			console.warn("Photodiode with reference " + ref + " doesn't have an associated command");
+			return;
+		}
+
 		return this.pdIntensity[ ref ] = parseFloat( await this.query( matahariconfig.specialcommands.readPD[ ref ], 2 ) );
 	}
 
@@ -819,7 +829,7 @@ console.log( chanId, sensorVoltage );
 	hasLightController( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
-		return  !! group.lightController && !! this.lightControllers[ groupName ];
+		return  !! group.lightController && !! this.lightControllers && !! this.lightControllers[ groupName ];
 	}
 
 	async saveLightController( groupName, controller ) {
@@ -1071,9 +1081,9 @@ console.log( data );
 			sun: lightRef,
 			efficiency: efficiency,
 			pga: pga,
-			temperature_base: temperature[ 0 ],
-			temperature_junction: temperature[ 2 ],
-			humidity: this.groupHumidity[ group.groupName ]
+			temperature_base: temperature ? temperature[ 0 ] : 0,
+			temperature_junction: temperature ? temperature[ 2 ] : 0,
+			humidity: this.groupHumidity[ group.groupName ] || 0
 			/*,
 			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
 			humidity: EnvironmentalScheduler.getHumidity( status.chanId )*/

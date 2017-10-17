@@ -3,7 +3,7 @@
 		"instrumentId": "matahari1000",
 		"fullScaleCurrent": 0.015,
 		"config": {
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
 			"params": {
 				"baudRate": 115200
 			},
@@ -14,8 +14,14 @@
 				"groupName": "Box A",
 				"groupID": "boxa",
 				"pds": [
-					"pd_2"
+					"pd_2",
+					"pd_1"
 				],
+				"lightController": {
+					"hostAlias": "platform-3f980000.usb-usb-0:1.5:1.0",
+					"pwmChannel": 4,
+					"outputPower": 0.2
+				},
 				"i2cSlave": 8,
 				"channels": [
 					{

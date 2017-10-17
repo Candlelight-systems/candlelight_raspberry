@@ -12,35 +12,36 @@ let delay = ( delay ) => {
 
 serialPort.on('open', async () => {
 console.log('open');
-	serialPort.write( "OUTPUT:ENABLE:CH5 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH5 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH4 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH4 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH3 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH3 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH2 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH2 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH1 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH1 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH6 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH6 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH7 1\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH8 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH8 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH9 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH9 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH10 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH10 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH11 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH11 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH12 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH12 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH13 1\n");
+
+	serialPort.write( "OUTPUT:ENABLE:CH13 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH14 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH14 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH15 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH15 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH16 0\n");
 	await delay( 100 );
@@ -51,11 +52,14 @@ await delay( 1000 );
 
 //serialPort.write( "IV:EXECUTE:CH6\n");
 
-	serialPort.write( "RESERVED:DACVOLTAGE:CH5 2047\n");
-
-	for( var i = 0; i < 100; i ++ ) {
+	
+serialPort.write( "RESERVED:DACVOLTAGE:CH7 2047\n");		
+	for( var i = 0; i < 4000; i +=10 ) {
+		
 		await delay( 100 );
-		serialPort.write( "MEASURE:VOLTAGE:CH5\n");
+		serialPort.write( "MEASURE:VOLTAGE:CH7\n");
+		await delay( 100 );
+		//serialPort.write( "MEASURE:CURRENT:CH5\n");
 	}
 	
 });
@@ -74,3 +78,9 @@ serialPort.on("data", ( d ) => {
 		}
 	}
 })
+/*
+
+We use a single-cycle settling true 16-bit A/D converter, typically running at 80 SPS.
+At the lowest possible gain, the accuracy of the measurement is limited by the non-linearity (INL), as the ENOB approaches 15.9 bit. Assuming a linear calibration, I measured about 105ppm deviation, which is likely to be mainly dominated by the gain non-linearity of the instrument amplifier. That gives us an accuracy of about 6uA.
+With the larger current gain, the system noise dominates.
+*/
