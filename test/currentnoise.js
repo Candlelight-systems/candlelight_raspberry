@@ -14,35 +14,37 @@ serialPort.on('open', async () => {
 console.log('open');
 	serialPort.write( "OUTPUT:ENABLE:CH5 1\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH4 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH4 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH3 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH3 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH2 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH2 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH1 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH1 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH6 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH6 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH7 1\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH8 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH8 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH9 1\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH10 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH10 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH11 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH11 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH12 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH12 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH13 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH13 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH14 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH14 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH15 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH15 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH16 0\n");
+	await delay( 100 );
+	serialPort.write( "TRACKING:GAIN:CH9 128\n");
 	await delay( 100 );
 	serialPort.write( "RESERVED:SETUP\n");
 	await delay( 100 );
@@ -51,11 +53,11 @@ await delay( 1000 );
 
 //serialPort.write( "IV:EXECUTE:CH6\n");
 
-	serialPort.write( "RESERVED:DACVOLTAGE:CH5 2047\n");
+	serialPort.write( "RESERVED:DACVOLTAGE:CH9 2047\n");
 
 	for( var i = 0; i < 100; i ++ ) {
 		await delay( 100 );
-		serialPort.write( "MEASURE:VOLTAGE:CH5\n");
+		serialPort.write( "RESERVED:ADCCURRENT:CH9\n");
 	}
 	
 });

@@ -1,13 +1,16 @@
 
 const Influx = require("influx");
-const config = require('../config');
+const config = require('../config/influx.json');
+console.log( config );
 
 const influxClient = new Influx.InfluxDB({
-  host: config.influx.host,
-  username: config.influx.username,
-  password: config.influx.password,
-  database: config.influx.db
+  host: config.host,
+  username: config.username,
+  password: config.password,
+  database: config.db
 });
+
+
 
 module.exports = {};
 
@@ -36,7 +39,7 @@ module.exports.storeTrack = function( measurementName, trackData ) {
 
     return influxClient.writePoints([
       {
-        measurement: measurementName,
+        measurement: encodeURIComponent( measurementName ),
         fields: { 
           voltage_min: trackData.voltageMin,
           voltage_mean: trackData.voltageMean,
@@ -71,7 +74,7 @@ module.exports.storeVoc = function( measurementName, voc ) {
 
     return influxClient.writePoints([
       {
-        measurement: measurementName + "_voc",
+        measurement: encodeURIComponent( measurementName ) + "_voc",
         fields: { 
           voc: voc
         }
@@ -88,7 +91,7 @@ module.exports.storeJsc = function( measurementName, jsc ) {
 
     return influxClient.writePoints( [
       {
-        measurement: measurementName + "_jsc",
+        measurement: encodeURIComponent( measurementName ) + "_jsc",
         fields: { 
           jsc: jsc
         },
@@ -116,7 +119,7 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
 
     return influxClient.writePoints( [
       {
-        measurement: measurementName,
+        measurement: encodeURIComponent( measurementName ),
         fields: fields
       }
 

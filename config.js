@@ -2,7 +2,11 @@
 const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
-const trackers = require("./config/trackers.json");
+const trackerControllers = require("./config/trackerControllers.json");
+const lightControllers = require("./config/lightControllers.json");
+const relayControllers = require("./config/relayControllers.json");
+const heatControllers = require("./config/heatControllers.json");
+
 
 module.exports = {
 	
@@ -16,19 +20,45 @@ module.exports = {
 
 	hosts: [
 
-	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-		"alias": "platform-3f980000.usb-usb-0:1.4:1.0",
-		"params": {
-			"baudrate": 115200
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
+			"alias": "relay1",
+			"resetPin": 21,
+			"constructorName": "RelayController",
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
 		},
-		"reconnectTimeout": 1 // in seconds
-	}
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+			"alias": "heat1",
+			"resetPin": 22,
+			"constructorName": "HeatController",
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
+			"alias": "Tracker 1",
+			"constructorName": "TrackerController",
+			"resetPin": 12,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		}
 
 	],
 
 
-	matahari: {
+	trackerControllers: {
+
+		hosts: trackerControllers,
 
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
@@ -89,12 +119,22 @@ module.exports = {
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
 			"cellArea": 0,
-			"lightRef": null,
-			"lightRefValue": null,
+			"connection": "group",
+			"lightRefValue": 1000,
 			"measurementName": null,
 			"cellName": null
 		},
-		
-		trackers: trackers
+	},
+
+	heatControllers: {
+		hosts: heatControllers
+	},
+
+	lightControllers: {
+		hosts: lightControllers
+	},
+
+	relayControllers: {
+		hosts: relayControllers
 	}
 };

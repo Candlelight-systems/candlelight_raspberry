@@ -1,22 +1,23 @@
 'use strict';
 
-const HostManager					= require( "../hostmanager" );
+//const HostManager					= require( "../hostmanager" );
 const Waveform						= require( "jsgraph-waveform" );
+const InstrumentController			= require('../instrumentcontroller' );
 
-class LightController {
+class LightController extends InstrumentController {
 
-	constructor( config ) {
+	constructor( ) {
 
-		this.config = config;
+		super( config );
 		this.currentCode = 170;
 		this.on = false;
+	}
 
-		this.setConfig( config );
+	init() {
 
-		this.host = HostManager.getHost( config.hostAlias );
-		this.host.openConnection( async () => {
+		this.openConnection( async () => {
 
-			await this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
+			await this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.getInstrumentConfig().currentCode );
 			await this.turnOn();
 			this.checkLightStatus();
 		} );
@@ -40,31 +41,31 @@ class LightController {
 		this.checkLightStatus();
 	}
 
-	setConfig( config ) {
+	setInstrumentConfig( config ) {
 
-		this.config = config;
+		this.instrumentConfig = config;
 
-		if( this.config.setPoint || this.config.setPoint === 0 ) {
+		if( this.getInstrumentConfig().setPoint || this.getInstrumentConfig().setPoint === 0 ) {
 			
-			this.setPoint = this.config.setPoint;
+			this.setPoint = this.getInstrumentConfig().setPoint;
 			this._scheduling = undefined;
 
-		} else if( this.config.scheduling ) {
+		} else if( this.getInstrumentConfig().scheduling ) {
 
 			let rescalingMS;	
 			this.setPoint = undefined;
 			this._scheduling = {};
 
-			if( this.config.scheduling.basis == '1day' ) {
+			if( this.getInstrumentConfig().scheduling.basis == '1day' ) {
 
 				this._scheduling.msBasis = 3600 * 24 * 1000;
 
-			} else if( this.config.scheduling.basis == '1hour' ) {
+			} else if( this.getInstrumentConfig().scheduling.basis == '1hour' ) {
 
 				this._scheduling.msBasis = 3600 * 1000;
 			}
 
-			let waveform = new Waveform( this.config.scheduling.intensities );
+			let waveform = new Waveform( this.getInstrumentConfig().scheduling.intensities );
 			waveform.rescaleX( 0, this._scheduling.msBasis / waveform.getLength() ); 
 
 			this._scheduling.waveform = waveform;
@@ -87,9 +88,9 @@ class LightController {
 			return this._scheduling.waveform.getY( index );
 		}
 
-		if( this.setPoint > this.config.maxIntensity ) {
+		if( this.setPoint > this.getInstrumentConfig().maxIntensity ) {
 
-			return this.config.maxIntensity;
+			return this.getInstrumentConfig().maxIntensity;
 
 		} else if( this.setPoint > 0 && this.setPoint < 0.01 ) {
 
@@ -111,7 +112,7 @@ class LightController {
 			throw "No MPP Tracker reference from which to read the photodiode input";
 		}
 
-		if( ! this.config.pd ) {
+		if( ! this.getInstrumentConfig().pd ) {
 			throw "No photodiode reference from which to read the light intensity";
 		}
 
@@ -129,8 +130,8 @@ class LightController {
 			await this.turnOn();
 		}
 
-		let pdData = this.trackerReference.getPDData( this.config.pd );
-		let pdValue = this.trackerReference.getPDValue( this.config.pd ) * 1000;
+		let pdData = this.trackerReference.getPDData( this.getInstrumentConfig().pd );
+		let pdValue = this.trackerReference.getPDValue( this.getInstrumentConfig().pd ) * 1000;
 		let sun = pdValue / pdData.scaling_ma_to_sun;
 
 		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
@@ -150,7 +151,7 @@ class LightController {
 
 			do {
 
-				sun = ( await this.trackerReference._measurePD( this.config.pd ) ) * 1000 / pdData.scaling_ma_to_sun;
+				sun = ( await this.trackerReference._measurePD( this.getInstrumentConfig().pd ) ) * 1000 / pdData.scaling_ma_to_sun;
 
 				if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -206,8 +207,7 @@ class LightController {
 
 	setCode( newCode ) {
 		this.currentCode = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
-		console.log( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
-		return this.query( "PWM:VALUE:CH" + this.config.pwmChannel + " " + this.currentCode );
+		return this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.currentCode );
 	}
 
 	async turnOn() {
@@ -216,10 +216,10 @@ class LightController {
 		}
 
 		this.on = true;
-		await this.query( "OUTPUT:ON:CH" + this.config.pwmChannel );
+		await this.query( "OUTPUT:ON:CH" + this.getInstrumentConfig().pwmChannel );
 
 		await this.delay( 500 );
-		await this.trackerReference._measurePD( this.config.pd )
+		await this.trackerReference._measurePD( this.getInstrumentConfig().pd )
 
 	}
 
@@ -229,14 +229,14 @@ class LightController {
 		}
 
 		this.on = false;
-		return this.query( "OUTPUT:OFF:CH" + this.config.pwmChannel );
+		return this.query( "OUTPUT:OFF:CH" + this.getInstrumentConfig().pwmChannel );
 	}
-	
+/*	
 
 	query( ) {
 		return this.host.query( ...arguments );
 	}
-
+*/
 	delay( timeMS = 500 ) {
 		return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, timeMS ) );
 	}
