@@ -27,7 +27,7 @@ module.exports = {
 		if( hosts[ alias ] ) {
 			return hosts[ alias ];
 		}
-
+		console.trace();	
 		throw "Host with alias " + alias + " does not exist.";
 	}
 };

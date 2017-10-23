@@ -1,4 +1,4 @@
-	'use strict';
+'use strict';
 const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
@@ -20,6 +20,7 @@ module.exports = {
 
 	hosts: [
 
+
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
 			"alias": "relay1",
@@ -29,6 +30,7 @@ module.exports = {
 				"baudrate": 57600
 			},
 			"reconnectTimeout": 1 // in seconds
+
 		},
 
 		{	
@@ -80,7 +82,7 @@ module.exports = {
 		statuscommands: [
 
 			[ "IV:START", function( status ) { return status.iv_start || 1; } ],
-			[ "IV:AUTOSTART", function( status ) { return +( !! ( status.iv_autostart || 0 ) ); } ],
+			[ "IV:AUTOSTART", function( status ) { return +status.iv_autostart || 0; } ],
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
@@ -119,8 +121,10 @@ module.exports = {
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
 			"cellArea": 0,
+
 			"connection": "group",
 			"lightRefValue": 1000,
+
 			"measurementName": null,
 			"cellName": null
 		},

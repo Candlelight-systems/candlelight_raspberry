@@ -638,8 +638,8 @@ class TrackerController extends InstrumentController {
 				
 			await influx.storeEnvironment( 
 				this.getInstrumentId() + "_" + groups[ i ].groupID,
-				await this.measureGroupTemperature( groups[ i ].groupName ),
-				await this.measureGroupHumidity( groups[ i ].groupName ),
+				0, 0,//await this.measureGroupTemperature( groups[ i ].groupName ),
+				//await this.measureGroupHumidity( groups[ i ].groupName ),
 				await this.measureGroupLightIntensity( groups[ i ].groupName )
 			);
 			
@@ -654,12 +654,13 @@ class TrackerController extends InstrumentController {
 	getLightFromChannel( chanId ) {
 
 		const { connection, lightRefValue } = this.getStatus( chanId );
-
+		
 		if( connection == 'group' ) {
 			return this.getLightIntensity( this.getGroupFromChanId( chanId ).pds[ 0 ] );
 		}
 
 		return lightRefValue / 1000; // Transform W m-2 into suns
+
 	}
 
 	async measureTemperature( chanId ) {
@@ -673,6 +674,7 @@ class TrackerController extends InstrumentController {
 
 		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
 		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
+
 		return this.temperatures[ chanId ] = [ baseTemperature, sensorVoltage, baseTemperature + ( ( sensorVoltage + chan.temperatureSensor.offset ) * chan.temperatureSensor.gain ) ].map( ( val ) => Math.round( val * 10 ) / 10 );
 	}
 
@@ -716,7 +718,9 @@ class TrackerController extends InstrumentController {
 	}
 
 	async _measurePD( ref ) {
+
 		return this.pdIntensity[ ref ] = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD[ ref ], 2 ) );
+
 	}
 
 	getPDOptions( groupName ) {
@@ -812,7 +816,7 @@ class TrackerController extends InstrumentController {
 	hasLightController( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
-		return  !! group.lightController && !! this.lightControllers[ groupName ];
+		return  !! group.lightController && !! this.lightControllers && !! this.lightControllers[ groupName ];
 	}
 
 	async saveLightController( groupName, controller ) {
@@ -1066,9 +1070,9 @@ class TrackerController extends InstrumentController {
 			sun: lightRef,
 			efficiency: efficiency,
 			pga: pga,
-			temperature_base: temperature[ 0 ],
-			temperature_junction: temperature[ 2 ],
-			humidity: this.groupHumidity[ group.groupName ]
+			temperature_base: temperature ? temperature[ 0 ] : 0,
+			temperature_junction: temperature ? temperature[ 2 ] : 0,
+			humidity: this.groupHumidity[ group.groupName ] || 0
 			/*,
 			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
 			humidity: EnvironmentalScheduler.getHumidity( status.chanId )*/

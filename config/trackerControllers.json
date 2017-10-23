@@ -2,6 +2,7 @@
 	"Tracker 1": {
 
 		"fullScaleCurrent": 0.015,
+
 		"instrumentId": "Tracker 1",
 		"relayController": "relay1",
 
@@ -15,7 +16,8 @@
 				"groupName": "Box A",
 				"groupID": "boxa",
 				"pds": [
-					"pd_2"
+					"pd_2",
+					"pd_1"
 				],
 				"i2cSlave": 8,
 				"channels": [

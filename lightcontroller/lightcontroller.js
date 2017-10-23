@@ -106,6 +106,12 @@ class LightController extends InstrumentController {
 			return;
 		}
 
+		if( this.config.outputPower !== undefined ) {
+			await this.setCode( Math.round( 255 - this.config.outputPower * 255 ) );
+			return;
+		}
+
+
 		var setPoint = this.getSetPoint();
 
 		if( ! this.trackerReference ) {
@@ -217,10 +223,9 @@ class LightController extends InstrumentController {
 
 		this.on = true;
 		await this.query( "OUTPUT:ON:CH" + this.getInstrumentConfig().pwmChannel );
-
+		
 		await this.delay( 500 );
 		await this.trackerReference._measurePD( this.getInstrumentConfig().pd )
-
 	}
 
 	turnOff() {

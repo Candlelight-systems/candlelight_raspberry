@@ -5,7 +5,11 @@ const rpio 			= require("rpio");
 
 function query( communication, query, linesExpected = 1, executeBefore = () => { return true; }, prepend ) {
 
-
+	if( query === undefined ) {
+		console.trace();
+		return;
+	}
+	
 	if( ! communication ) {
 		throw "Could not find communication based on the instrument id";
 	}	
@@ -55,6 +59,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 				}
 			} );	
 			console.log( "query:" + query );
+
 			communication.write( query + "\n" );
 			communication.drain( );
 		});

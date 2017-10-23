@@ -125,6 +125,19 @@ app.get("/getChannelConfig", function( req, res ) {
 } );
 
 
+
+
+app.get("/getConfig", function( req, res ) {
+
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;
+	const chanId = req.query.chanId;
+	
+	res.send( JSON.stringify( matahari.getConfig( instrumentId, chanId ) ) );
+} );
+
+
 app.get("/getPDOptions", function( req, res ) {
 
 	res.type("application/json");

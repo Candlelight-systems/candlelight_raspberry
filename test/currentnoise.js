@@ -12,7 +12,7 @@ let delay = ( delay ) => {
 
 serialPort.on('open', async () => {
 console.log('open');
-	serialPort.write( "OUTPUT:ENABLE:CH5 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH5 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH4 0\n");
 	await delay( 100 );
@@ -28,7 +28,7 @@ console.log('open');
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH8 0\n");
 	await delay( 100 );
-	serialPort.write( "OUTPUT:ENABLE:CH9 1\n");
+	serialPort.write( "OUTPUT:ENABLE:CH9 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH10 0\n");
 	await delay( 100 );
@@ -36,6 +36,7 @@ console.log('open');
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH12 0\n");
 	await delay( 100 );
+
 	serialPort.write( "OUTPUT:ENABLE:CH13 0\n");
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH14 0\n");
@@ -53,11 +54,13 @@ await delay( 1000 );
 
 //serialPort.write( "IV:EXECUTE:CH6\n");
 
+
 	serialPort.write( "RESERVED:DACVOLTAGE:CH9 2047\n");
 
 	for( var i = 0; i < 100; i ++ ) {
 		await delay( 100 );
 		serialPort.write( "RESERVED:ADCCURRENT:CH9\n");
+
 	}
 	
 });
@@ -76,3 +79,9 @@ serialPort.on("data", ( d ) => {
 		}
 	}
 })
+/*
+
+We use a single-cycle settling true 16-bit A/D converter, typically running at 80 SPS.
+At the lowest possible gain, the accuracy of the measurement is limited by the non-linearity (INL), as the ENOB approaches 15.9 bit. Assuming a linear calibration, I measured about 105ppm deviation, which is likely to be mainly dominated by the gain non-linearity of the instrument amplifier. That gives us an accuracy of about 6uA.
+With the larger current gain, the system noise dominates.
+*/
