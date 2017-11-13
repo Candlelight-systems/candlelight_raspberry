@@ -59,7 +59,7 @@
 			"cellName": "CH1",
 			"chanId": 1,
 			"instrumentId": "Tracker 1",
-			"iv_booked": true
+			"iv_booked": false
 		},
 		{
 			"1": {
@@ -547,7 +547,7 @@
 			"cellName": "CH9",
 			"chanId": 9,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false,
+			"iv_booked": true,
 			"voc_booked": false,
 			"jsc_booked": false
 		},
