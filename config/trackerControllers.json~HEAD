@@ -1,23 +1,19 @@
 {
 	"Tracker 1": {
-
 		"fullScaleCurrent": 0.015,
-
 		"instrumentId": "Tracker 1",
-		"relayController": "relay1",
-
 		"groups": [
-			{	
+			{
+				"lightController": "Light",
 				"heatController": {
 					"hostAlias": "heat1",
 					"channel": 1
 				},
-
 				"groupName": "Box A",
 				"groupID": "boxa",
 				"pds": [
-					"pd_2",
-					"pd_1"
+					"pd_1",
+					"pd_2"
 				],
 				"i2cSlave": 8,
 				"channels": [
@@ -27,7 +23,7 @@
 						"temperatureSensor": {
 							"offset": 1499,
 							"gain": -0.01,
-							"channel": 5
+							"channel": 0
 						}
 					},
 					{
@@ -36,7 +32,7 @@
 						"temperatureSensor": {
 							"offset": 377,
 							"gain": -0.01,
-							"channel": 4
+							"channel": 0
 						}
 					},
 					{
@@ -45,7 +41,7 @@
 						"temperatureSensor": {
 							"offset": 1055,
 							"gain": -0.01,
-							"channel": 6
+							"channel": 2
 						}
 					},
 					{
@@ -54,7 +50,7 @@
 						"temperatureSensor": {
 							"offset": 2407,
 							"gain": -0.01,
-							"channel": 3
+							"channel": 2
 						}
 					},
 					{
@@ -63,7 +59,7 @@
 						"temperatureSensor": {
 							"offset": 1132,
 							"gain": -0.01,
-							"channel": 7
+							"channel": 5
 						}
 					},
 					{
@@ -72,7 +68,7 @@
 						"temperatureSensor": {
 							"offset": 1892,
 							"gain": -0.01,
-							"channel": 2
+							"channel": 5
 						}
 					},
 					{
@@ -81,7 +77,7 @@
 						"temperatureSensor": {
 							"offset": 494,
 							"gain": -0.01,
-							"channel": 1
+							"channel": 6
 						}
 					},
 					{
@@ -90,7 +86,7 @@
 						"temperatureSensor": {
 							"offset": 934,
 							"gain": -0.01,
-							"channel": 15
+							"channel": 6
 						}
 					},
 					{
@@ -99,7 +95,7 @@
 						"temperatureSensor": {
 							"offset": 1123,
 							"gain": -0.01,
-							"channel": 8
+							"channel": 9
 						}
 					},
 					{
@@ -108,7 +104,7 @@
 						"temperatureSensor": {
 							"offset": 377,
 							"gain": -0.01,
-							"channel": 0
+							"channel": 9
 						}
 					},
 					{
@@ -117,7 +113,7 @@
 						"temperatureSensor": {
 							"offset": 415,
 							"gain": -0.01,
-							"channel": 9
+							"channel": 10
 						}
 					},
 					{
@@ -126,7 +122,7 @@
 						"temperatureSensor": {
 							"offset": 1473,
 							"gain": -0.01,
-							"channel": 13
+							"channel": 10
 						}
 					},
 					{
@@ -135,7 +131,7 @@
 						"temperatureSensor": {
 							"offset": 1068,
 							"gain": -0.01,
-							"channel": 11
+							"channel": 14
 						}
 					},
 					{
@@ -144,16 +140,26 @@
 						"temperatureSensor": {
 							"offset": 1198,
 							"gain": -0.01,
-							"channel": 10
+							"channel": 14
 						}
 					},
 					{
 						"chanId": 15,
-						"chanName": "Channel 15"
+						"chanName": "Channel 15",
+						"temperatureSensor": {
+							"offset": 1198,
+							"gain": -0.01,
+							"channel": 13
+						}
 					},
 					{
 						"chanId": 16,
-						"chanName": "Channel 16"
+						"chanName": "Channel 16",
+						"temperatureSensor": {
+							"offset": 1198,
+							"gain": -0.01,
+							"channel": 13
+						}
 					}
 				]
 			}
@@ -162,14 +168,14 @@
 			{
 				"name": "Photodiode 1",
 				"ref": "pd_1",
-				"scaling_ma_to_sun": 1000,
-				"factory_scaling_ma_to_sun": 1000
+				"scaling_ma_to_sun": -0.49431537320810676,
+				"factory_scaling_ma_to_sun": -0.5
 			},
 			{
 				"name": "Photodiode 2",
 				"ref": "pd_2",
-				"scaling_ma_to_sun": 1000,
-				"factory_scaling_ma_to_sun": 1000
+				"scaling_ma_to_sun": -0.5,
+				"factory_scaling_ma_to_sun": -0.5
 			}
 		]
 	}

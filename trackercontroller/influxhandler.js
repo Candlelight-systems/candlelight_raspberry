@@ -37,9 +37,6 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
 
 module.exports.saveTrackData = function( trackData ) {
 
-
-    let writeArray = [];
-
   
     return influxClient.writePoints( trackData ).then( ( result ) => {
       

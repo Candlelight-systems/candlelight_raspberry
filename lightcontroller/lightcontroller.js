@@ -6,9 +6,10 @@ const InstrumentController			= require('../instrumentcontroller' );
 
 class LightController extends InstrumentController {
 
-	constructor( config ) {
+	constructor( ) {
 
 		super( config );
+
 		this.currentCode = {};
 		this.on = false;
 		this.processedConfig = {};
@@ -24,6 +25,7 @@ class LightController extends InstrumentController {
 		//	this.checkLightStatus();
 
 			this.setTimeout();
+
 		} );
 
 
@@ -116,6 +118,7 @@ class LightController extends InstrumentController {
 			return this.processedConfig[ groupName ]._scheduling.waveform.getY( index );
 		}
 
+
 		if( cfg.setPoint > cfg.maxIntensity ) {
 
 			return cfg.maxIntensity;
@@ -186,7 +189,7 @@ class LightController extends InstrumentController {
 				let codePerSun = ( 255 - this.getCurrentCode( groupName ) ) / pdValue; // From the current value, get the code / current(PD) ratio
 				let diffSun = pdValue - setPoint; // Calculate difference with target in sun
 				let idealCodeChange = codePerSun * diffSun; // Get the code difference
-console.log( idealCodeChange, this.getCurrentCode( groupName ) );
+
 				await this.setCode( groupName, this.getCurrentCode( groupName ) + idealCodeChange ); // First correction based on linear extrapolation
 				await this.delay( 300 );
 
@@ -194,7 +197,7 @@ console.log( idealCodeChange, this.getCurrentCode( groupName ) );
 
 				do {
 
-					sun = ( await trackerReference._measurePD( pd ) ) * pdData.scaling_ma_to_sun;
+				sun = ( await trackerReference._measurePD( pd ) ) * pdData.scaling_ma_to_sun;
 
 					if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -250,12 +253,10 @@ console.log( idealCodeChange, this.getCurrentCode( groupName ) );
 		return this.getCode( groupName );
 	}
 
-	setCode( groupName, newCode ) {
+	setCode( newCode ) {
+		this.currentCode = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
+		return this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.currentCode );
 
-		const cfg = this.getInstrumentConfig()[ groupName ];
-
-		this.currentCode[ groupName ] = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
-		return this.query( "PWM:VALUE:CH" + cfg.pwmChannel + " " + this.currentCode[ groupName ] );
 	}
 
 	async turnOn( groupName ) {
@@ -273,6 +274,7 @@ console.log( idealCodeChange, this.getCurrentCode( groupName ) );
 		if( this.trackerReference[ groupName ] ) {
 			await this.trackerReference[ groupName ]._measurePD( cfg.pd )
 		}
+
 	}
 
 	turnOff( groupName ) {
@@ -284,6 +286,7 @@ console.log( idealCodeChange, this.getCurrentCode( groupName ) );
 		const cfg = this.getInstrumentConfig()[ groupName ];
 
 		this.on = false;
+
 		return this.query( "OUTPUT:OFF:CH" + cfg.pwmChannel );
 	}
 

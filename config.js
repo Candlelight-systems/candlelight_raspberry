@@ -20,6 +20,7 @@ module.exports = {
 
 	hosts: [
 
+<<<<<<< HEAD
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
 			"alias": "Tracker 1",
@@ -53,6 +54,8 @@ module.exports = {
 			"reconnectTimeout": 1 // in seconds
 		}
 /*
+=======
+>>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
@@ -64,6 +67,7 @@ module.exports = {
 			},
 			"reconnectTimeout": 1 // in seconds
 
+<<<<<<< HEAD
 		},
 
 		{	
@@ -76,6 +80,31 @@ module.exports = {
 			},
 			"reconnectTimeout": 1 // in seconds
 		},
+=======
+		},
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+			"alias": "heat1",
+			"resetPin": 22,
+			"constructorName": "HeatController",
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
+			"alias": "Tracker 1",
+			"constructorName": "TrackerController",
+			"resetPin": 12,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		}
+>>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",

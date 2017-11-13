@@ -442,6 +442,7 @@ app.post("/light.saveController", ( req, res ) => {
 
 app.post("/heat.setPower", function( req, res ) {
 
+
 	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
 		
 		res.send( "" );	

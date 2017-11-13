@@ -4,6 +4,7 @@ const HostManager 				= require("../hostmanager");
 const config					= require("../config");
 const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
+
 let allMeasurements 			= require("./measurements.json");
 const wsconnection				= require('../wsconnection' );
 
@@ -14,6 +15,7 @@ for( var i = 0; i < config.hosts.length; i ++ ) {
 	if( config.hosts[ i ].constructorName == "TrackerController" ) {
 		let host = HostManager.addHost( config.hosts[ i ], undefined, TrackerController );	
 		instrumentInstances[ config.hosts[ i ].alias ] = host;
+
 		host.setInstrumentConfig( trackerControllers.hosts[ config.hosts[ i ].alias ] );
 		host.init();
 	}
@@ -72,8 +74,10 @@ module.exports = {
 
 			if( instrument.hasLightController( group.groupName ) ) {
 				returnObject[ group.groupName ].lightController = true;
+
 				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint( group.groupName );
 				returnObject[ group.groupName ].lightModeAutomatic = instrument.getLightController( group.groupName ).isModeAutomatic( group.groupName );
+
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -116,15 +120,18 @@ module.exports = {
 		return getInstrument( instrumentId ).makeIV( chanId );
 	},
 
+
 	measureVoc: ( instrumentId, chanNumber, extend ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		return getInstrument( instrumentId ).measureVoc( chanId, extend );
+
 	},
 
 	measureJsc: ( instrumentId, chanNumber ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		return getInstrument( instrumentId ).measureJsc( chanId );
 	},
+
 
 	pauseChannels: async ( instrumentId ) => {
 		const instrument = getInstrument( instrumentId );
@@ -207,9 +214,11 @@ module.exports = {
 		throw "This instrument has no light controller";
 	},
 
+
 	saveLightController: async ( instrumentId, groupName, cfg ) => {
 		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, cfg );
 		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
+
 		return savingPromise;
 	},
 
@@ -231,6 +240,7 @@ module.exports = {
 	getHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return instrument.getHeatingPower( groupName );
+
 	},
 
 	getAllMeasurements: () => {
@@ -251,3 +261,4 @@ module.exports = {
 		return instrument.resetSlave( );
 	}
 };
+

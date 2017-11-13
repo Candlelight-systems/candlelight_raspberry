@@ -13,7 +13,6 @@ let instrumentInstances = {};
 for( var i = 0; i < config.hosts.length; i ++ ) {
 	
 	if( config.hosts[ i ].constructorName == "LightController" ) {
-
 		let host = HostManager.addHost( config.hosts[ i ], undefined, LightController );	
 		instrumentInstances[ config.hosts[ i ].alias ] = host;
 
@@ -21,6 +20,7 @@ for( var i = 0; i < config.hosts.length; i ++ ) {
 		host.init();
 	}
 }
+
 
 
 function getInstrument( alias ) {

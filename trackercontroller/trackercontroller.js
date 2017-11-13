@@ -3,6 +3,7 @@
 const fs = require("fs");
 
 let status 							= require("./status.json").channels;
+
 let measurements					= require("./measurements.json");
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
@@ -42,6 +43,9 @@ class TrackerController extends InstrumentController {
 		this.pdIntensity = {};
 
 		this.paused = false;
+	}	
+
+	init() {
 
 		this.trackData = [];
 
@@ -60,7 +64,6 @@ class TrackerController extends InstrumentController {
 
 			// This will take some time as all channels have to be updated
 			this._initLightControllers();
-
 			this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
 
 		} );
@@ -187,7 +190,6 @@ class TrackerController extends InstrumentController {
 	 *	@returns the instrument unique ID
 	 */
 	getInstrumentId() {
-
 		return this.getInstrumentConfig().instrumentId;
 	}
 
@@ -337,6 +339,7 @@ class TrackerController extends InstrumentController {
 	async resetStatus( chanId ) {
 
 		let index = this.getStatusIndex( chanId );
+
 		let status = this.getStatus( chanId );
 		measurementEnd( status.measurementName );
 		this.saveStatus( chanId, globalConfig.trackerControllers.defaults );
@@ -426,12 +429,9 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "lightRefValue", parseFloat( newStatus.lightRefValue ), newStatus );
 
 		
-
 		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
 			possibleNewMeasurement( newStatus.measurementName, newStatus );
 		}
-
-
 
 		let newMode;
 
@@ -547,6 +547,7 @@ class TrackerController extends InstrumentController {
 		if( pauseChannels ) {
 			await this.resumeChannels();	
 		}
+
 
 		if( this.getInstrumentConfig().relayController ) {
 			if( status.connection == "external" ) {
@@ -700,12 +701,14 @@ class TrackerController extends InstrumentController {
 			return this.getLightIntensity( this.getGroupFromChanId( chanId ).pds[ 0 ] );
 		}
 
+
 		return lightRefValue / 1000; // Transform W m-2 into suns
 
 	}
 
 	async resetSlave() {
 		return this.query( globalConfig.trackerControllers.specialcommands.resetSlave );
+
 	}
 
 	async measureTemperature( chanId ) {
@@ -719,7 +722,7 @@ class TrackerController extends InstrumentController {
 
 		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
 		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
-console.log( baseTemperature, sensorVoltage );
+
 		return this.temperatures[ chanId ] = [ baseTemperature, sensorVoltage, baseTemperature + ( ( sensorVoltage + chan.temperatureSensor.offset ) * chan.temperatureSensor.gain ) ].map( ( val ) => Math.round( val * 10 ) / 10 );
 	}
 
@@ -727,6 +730,7 @@ console.log( baseTemperature, sensorVoltage );
 
 		let group = this.getGroupFromGroupName( groupName );
 		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
+
 		return this.getGroupTemperature( groupName );
 	}
 
@@ -760,7 +764,6 @@ console.log( baseTemperature, sensorVoltage );
 			cfg = this.getPDData( group.pds[ i ] );
 			vals.push( await this._measurePD( group.pds[ i ] ) * cfg.scaling_ma_to_sun );
 		}
-
 
 		return vals;
 	}
@@ -830,7 +833,9 @@ console.log( baseTemperature, sensorVoltage );
 			if( groups[ i ].lightController ) {
 
 				this.lightControllers[ groups[ i ].groupName ] = HostManager.getHost( groups[ i ].lightController );
+
 				this.lightControllers[ groups[ i ].groupName ].setTracker( this, groups[ i ].groupName );
+
 			}
 		}
 	}
@@ -1025,6 +1030,7 @@ console.log( baseTemperature, sensorVoltage );
 				let ivcurveData = await this.requestIVCurve( chanId );
 				influx.storeIV( status.measurementName, ivcurveData, this.getLightFromChannel( chanId ) );
 
+
 				wsconnection.send( {
 
 					instrumentId: this.getInstrumentId(),
@@ -1097,6 +1103,7 @@ console.log( baseTemperature, sensorVoltage );
 		const data = await this._getTrackData( chanId );
 		
 		let temperature;
+
 		try {
 			temperature = await this.measureTemperature( chanId );
 		} catch( e ) {
