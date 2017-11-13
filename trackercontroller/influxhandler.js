@@ -1,13 +1,16 @@
 
 const Influx = require("influx");
-const config = require('../config');
+const config = require('../config/influx.json');
+console.log( config );
 
 const influxClient = new Influx.InfluxDB({
-  host: config.influx.host,
-  username: config.influx.username,
-  password: config.influx.password,
-  database: config.influx.db
+  host: config.host,
+  username: config.username,
+  password: config.password,
+  database: config.db
 });
+
+
 
 module.exports = {};
 
@@ -32,31 +35,13 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
     });
 }
 
-module.exports.storeTrack = function( measurementName, trackData ) {
+module.exports.saveTrackData = function( trackData ) {
 
-    return influxClient.writePoints([
-      {
-        measurement: measurementName,
-        fields: { 
-          voltage_min: trackData.voltageMin,
-          voltage_mean: trackData.voltageMean,
-          voltage_max: trackData.voltageMax,
-          current_min: trackData.currentMin,
-          current_mean: trackData.currentMean,
-          current_max: trackData.currentMax,
-          power_min: trackData.powerMin,
-          power_mean: trackData.powerMean,
-          power_max: trackData.powerMax,
-          efficiency: trackData.efficiency,
-          sun: trackData.sun,
-          pga: trackData.pga,
-          temperature_base: trackData.temperature_base,
-          temperature_junction: trackData.temperature_junction,
-          humidity: trackData.humidity
-        }
-      }
 
-    ]).then( ( result ) => {
+    let writeArray = [];
+
+  
+    return influxClient.writePoints( trackData ).then( ( result ) => {
       
       return result; 
 
@@ -71,7 +56,7 @@ module.exports.storeVoc = function( measurementName, voc ) {
 
     return influxClient.writePoints([
       {
-        measurement: measurementName + "_voc",
+        measurement: encodeURIComponent( measurementName ) + "_voc",
         fields: { 
           voc: voc
         }
@@ -88,7 +73,7 @@ module.exports.storeJsc = function( measurementName, jsc ) {
 
     return influxClient.writePoints( [
       {
-        measurement: measurementName + "_jsc",
+        measurement: encodeURIComponent( measurementName ) + "_jsc",
         fields: { 
           jsc: jsc
         },
@@ -116,7 +101,7 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
 
     return influxClient.writePoints( [
       {
-        measurement: measurementName,
+        measurement: encodeURIComponent( measurementName ),
         fields: fields
       }
 

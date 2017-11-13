@@ -1,23 +1,22 @@
 'use strict';
 
 const express = require("express");
+
 const config = require("./config");
+
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
-const hostmanager = require('./hostmanager');
+const HostManager = require('./hostmanager');
 
-for( var i = 0; i < config.hosts.length; i ++ ) {
-	hostmanager.addHost( config.hosts[ i ] );
-}
+const trackerController = require('./trackercontroller/main');
+const lightController = require('./lightcontroller/main');
+const relayController = require('./relaycontroller/main');
+const heatController = require('./heatcontroller/main');
 
-
-const matahari = require('./matahari/main');
 
 var app = express();
 var server = app.listen( config.express.port, function() { /* callback */ } );
-
-
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded( {     // to support URL-encoded bodies
@@ -43,7 +42,7 @@ app.get("/getInstruments", function( req, res ) {
 	res.type("application/json");
 	res.header("Content-Type", "application/json");
 
-	res.send( JSON.stringify( matahari.getInstruments( ) ) );
+	res.send( JSON.stringify( trackerController.getInstruments( ) ) );
 } );
 
 
@@ -56,7 +55,7 @@ app.get("/getChannels", function( req, res ) {
 	const instrumentId = req.query.instrumentId;
 	const groupName = req.query.groupName;
 
-	res.send( JSON.stringify( matahari.getChannels( instrumentId, groupName ) ) );
+	res.send( JSON.stringify( trackerController.getChannels( instrumentId, groupName ) ) );
 } );
 
 
@@ -67,7 +66,7 @@ app.get("/getGroups", function( req, res ) {
 
 	const instrumentId = req.query.instrumentId;
 
-	res.send( JSON.stringify( matahari.getGroups( instrumentId ) ) );
+	res.send( JSON.stringify( trackerController.getGroups( instrumentId ) ) );
 } );
 
 app.post("/setInfluxDB", function( req, res ) {
@@ -75,7 +74,7 @@ app.post("/setInfluxDB", function( req, res ) {
 	let cfg = req.body;
 	config.influx = cfg;
 
-	fs.writeFileSync("influx.json", JSON.stringify( config.influx, undefined, "\t" ) );	
+	fs.writeFileSync("./config/influx.json", JSON.stringify( config.influx, undefined, "\t" ) );	
 	res.send( "" );
 } );
 
@@ -87,7 +86,42 @@ app.get("/getStatus", function( req, res ) {
 	const instrumentId = req.query.instrumentId;
 	const chanId = req.query.chanId;
 	
-	res.send( JSON.stringify( matahari.getStatus( instrumentId, chanId ) ) );
+	res.send( JSON.stringify( trackerController.getStatus( instrumentId, chanId ) ) );
+} );
+
+
+
+
+app.get("/getGroupConfig", function( req, res ) {
+
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;
+	const groupName = req.query.groupName;
+	
+	res.send( JSON.stringify( trackerController.getGroupConfig( instrumentId, groupName ) ) );
+} );
+
+
+app.get("/getInstrumentConfig", function( req, res ) {
+
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;
+	const groupName = req.query.groupName;
+	
+	res.send( JSON.stringify( trackerController.getInstrumentConfig( instrumentId ) ) );
+} );
+
+
+app.get("/getChannelConfig", function( req, res ) {
+
+	res.type("application/json");
+
+	const instrumentId = req.query.instrumentId;
+	const chanId = req.query.chanId;
+	
+	res.send( JSON.stringify( trackerController.getChannelConfig( instrumentId, chanId ) ) );
 } );
 
 
@@ -111,7 +145,7 @@ app.get("/getPDOptions", function( req, res ) {
 	const instrumentId = req.query.instrumentId;
 	const groupName = req.query.groupName;
 	
-	res.send( JSON.stringify( matahari.getPDOptions( instrumentId, groupName ) ) );
+	res.send( JSON.stringify( trackerController.getPDOptions( instrumentId, groupName ) ) );
 } );
 
 
@@ -121,7 +155,7 @@ app.post("/setPDScaling", function( req, res ) {
 
 	const instrumentId = req.body.instrumentId;	
 
-	matahari.setPDScaling( instrumentId, req.body.pdRef, req.body.pdScale ).then( ( ) => {
+	trackerController.setPDScaling( instrumentId, req.body.pdRef, req.body.pdScale ).then( ( ) => {
 
 		res.send("");
 
@@ -138,7 +172,7 @@ app.get("/executeIV", function( req, res ) {
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
 
-	matahari.executeIV( instrumentId, chanId ).then( () => {
+	trackerController.executeIV( instrumentId, chanId ).then( () => {
 		
 		res.send( "" );	
 
@@ -157,7 +191,7 @@ app.get("/recordVoc", function( req, res ) {
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
 
-	matahari.measureVoc( instrumentId, chanId ).then( () => {
+	trackerController.measureVoc( instrumentId, chanId ).then( () => {
 		
 		res.send( "" );	
 
@@ -176,7 +210,7 @@ app.get("/recordJsc", function( req, res ) {
 	var chanId = req.query.chanId;
 	var instrumentId = req.query.instrumentId;
 
-	matahari.measureJsc( instrumentId, chanId ).then( () => {
+	trackerController.measureJsc( instrumentId, chanId ).then( () => {
 		
 		res.send( "" );	
 
@@ -195,7 +229,7 @@ app.get("/measureCurrent", async ( req, res ) => {
 		results = {};
 
 	for( let channel of channels ) {
-		results[ channel ] = await matahari.measureCurrent(  instrumentId, channel );
+		results[ channel ] = await trackerController.measureCurrent(  instrumentId, channel );
 	}
 
 	res.type( "application/json" );
@@ -208,7 +242,7 @@ app.get("/setVoltage", async ( req, res ) => {
 		chanId = req.query.chanId,
 		voltage = parseFloat( req.query.voltage );
 
-	matahari.setVoltage( instrumentId, chanId, voltage ).then( () => {
+	trackerController.setVoltage( instrumentId, chanId, voltage ).then( () => {
 		
 		res.send("");
 
@@ -225,7 +259,7 @@ app.get("/enableChannel", ( req, res ) => {
 	let instrumentId = req.query.instrumentId,
 		chanId = req.query.chanId;
 
-	matahari.enableChannel( instrumentId, chanId ).then( () => {
+	trackerController.enableChannel( instrumentId, chanId ).then( () => {
 		res.send("");
 
 	}).catch( ( error ) => {
@@ -241,7 +275,7 @@ app.get("/disableChannel", ( req, res ) => {
 	let instrumentId = req.query.instrumentId,
 		chanId = req.query.chanId;
 
-	matahari.disableChannel( instrumentId, chanId ).then( () => {
+	trackerController.disableChannel( instrumentId, chanId ).then( () => {
 
 		res.send("");
 
@@ -254,7 +288,7 @@ app.get("/disableChannel", ( req, res ) => {
 
 app.get("/pauseChannels", function( req, res ) {
 
-	matahari.pauseChannels( req.query.instrumentId ).then( () => {
+	trackerController.pauseChannels( req.query.instrumentId ).then( () => {
 
 		res.send( "" );	
 
@@ -271,7 +305,7 @@ app.get("/resumeChannels", function( req, res ) {
 
 	res.type("application/json");
 	
-	matahari.resumeChannels( req.query.instrumentId ).then( () => {
+	trackerController.resumeChannels( req.query.instrumentId ).then( () => {
 
 		res.send( "" );
 
@@ -290,7 +324,7 @@ app.post("/setStatus", function( req, res ) {
 	let instrumentId = status.instrumentId,
 		chanId = status.chanId;
 
-	matahari.saveStatus( instrumentId, chanId, status ).then( () => {
+	trackerController.saveStatus( instrumentId, chanId, status ).then( () => {
 		
 		res.send("");	
 		
@@ -313,7 +347,7 @@ app.post("/setStatuses", ( req, res ) => {
 	new Promise( async ( resolver, rejecter ) => {
 
 		for( let chanId of chanIds ) {
-			await matahari.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
+			await trackerController.saveStatus( instrumentId, chanId, req.body.chanStatuses[ chanId ] );
 		}
 
 		resolver();
@@ -329,10 +363,8 @@ app.post("/setStatuses", ( req, res ) => {
 		res
 		  .status( 500 )
 		  .send( "Channel " + chanId + " could not be updated. Error was " + error );	
-	});
+	} );
 } );
-
-
 
 app.get("/resetStatus", function( req, res ) {
 
@@ -340,7 +372,7 @@ app.get("/resetStatus", function( req, res ) {
 	let instrumentId = status.instrumentId,
 		chanId = parseInt( status.chanId );
 
-	matahari.resetStatus( instrumentId, chanId, status ).then( () => {
+	trackerController.resetStatus( instrumentId, chanId, status ).then( () => {
 		
 		res.send("");	
 		
@@ -351,10 +383,36 @@ app.get("/resetStatus", function( req, res ) {
 	 });
 });
 
+app.get("/getAllMeasurements", function( req, res ) {
+
+	res.type( "application/json" ).send( JSON.stringify( trackerController.getAllMeasurements( ) ) );
+});
+
+app.get("/dropMeasurement", function( req, res ) {
+
+	try {
+		trackerController.dropMeasurement( req.query.measurementName );
+		res.send("");
+	} catch( e ) {
+		res.status( 500 ).send( e )
+	}
+});
+
+app.get("/resetSlave", ( req, res ) => {
+
+	trackerController.resetSlave( req.query.instrumentId ).then( ( ) => {
+
+		res.send("");
+
+	}).catch( ( error ) => {
+		res.status( 500 ).send("Cannot reset slave. Error was " + error );
+	})
+
+} );
 
 app.get("/light.getController", function( req, res ) {
 
-	matahari.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
+	trackerController.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
 		
 		res.type("application/json").send( JSON.stringify( controllers ) );	
 		
@@ -368,7 +426,7 @@ app.get("/light.getController", function( req, res ) {
 
 app.post("/light.saveController", ( req, res ) => {
 
-	matahari.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightController ).then( () => {
+	trackerController.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightController ).then( () => {
 		
 		res.send("");
 
@@ -378,6 +436,64 @@ app.post("/light.saveController", ( req, res ) => {
 		res.status( 500 ).send("Cannot save light controllers. Error was " + error );
 
 	});
-})
+});
 
 
+
+app.post("/heat.setPower", function( req, res ) {
+
+	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
+		
+		res.send( "" );	
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating power could not be set. Error was \"" + error + "\"" );
+	} );
+});
+
+app.get("/heat.getPower", function( req, res ) {
+
+	trackerController.getHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		
+		res.send( power );	
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+	} );
+} );
+
+
+app.get("/heat.increasePower", function( req, res ) {
+
+	trackerController.increaseHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		console.log( power );
+		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+	} );
+} );
+
+
+app.get("/heat.decreasePower", function( req, res ) {
+
+	trackerController.decreaseHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		console.log( power );
+		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+	} );
+} );

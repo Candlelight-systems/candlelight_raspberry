@@ -1,7 +1,7 @@
 
 const serialport 	= require("serialport");
-const queryManager	= require("./matahari/queryhandler")
-
+const queryManager	= require("./queryhandler")
+const rpio 			= require("rpio");
 
 function query( communication, query, linesExpected = 1, executeBefore = () => { return true; }, prepend ) {
 
@@ -52,7 +52,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 						communication.removeAllListeners( "data" );
 						communication.flush();
 						await delay( 10 );
-		//				console.timeEnd("q");
+						console.log("end");
 						resolver( dataThatMatters );
 						return;
 					}
@@ -72,9 +72,24 @@ class InstrumentController {
 	
 	
 	constructor( config ) {
-		this.config = config;
+
+		this.communicationConfig = config;
 		this.stateManager = new queryManager();
+
+		if( this.communicationConfig.resetPin ) {
+			console.log('Preparing', this.communicationConfig.resetPin);
+			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
+
+		}
 	}	
+
+	setInstrumentConfig( config ) {
+		this.instrumentConfig = config;
+	}
+
+	getInstrumentConfig( ) {
+		return this.instrumentConfig;
+	}
 
 	query( queryString, expectedLines = 1, prepend ) {
 		return query( this.getConnection(), queryString, expectedLines, () => { return true; }, prepend )
@@ -103,7 +118,7 @@ class InstrumentController {
 	 *	@returns the configuration object
 	 */
 	getConfig() {
-		return this.config;
+		return this.communicationConfig;
 	}
 
 
@@ -116,10 +131,19 @@ class InstrumentController {
 			return;
 		}
 
-		const connection = new serialport( cfg.config.host, cfg.config.params );
+		const connection = new serialport( cfg.host, cfg.params );
 		this.connection = connection;
 
 		connection.on("error", ( err ) => {
+
+			if( this.communicationConfig.resetPin ) {
+				console.log("Resetting with pin " + this.communicationConfig.resetPin );
+				rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
+				rpio.sleep( 2 );
+				rpio.write( this.communicationConfig.resetPin, rpio.LOW );
+				rpio.sleep( 1 );
+			}
+
 			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );
@@ -157,7 +181,7 @@ class InstrumentController {
 
 	async waitAndReconnect() {
 
-		let _delay = this.getConfig().config.reconnectTimeout;
+		let _delay = this.getConfig().reconnectTimeout;
 		await this.delay( _delay * 1000 );
 		return this.connection.open();
 	}
@@ -172,7 +196,6 @@ class InstrumentController {
 		return new Promise( ( resolver ) => { setTimeout( () => { resolver() }, delayMS ) } );
 	}
 }
-
 
 function delay( time ) {
 	return new Promise( ( resolver ) => setTimeout( () => { resolver(); }, time ) );

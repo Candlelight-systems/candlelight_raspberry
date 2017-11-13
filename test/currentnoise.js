@@ -45,6 +45,8 @@ console.log('open');
 	await delay( 100 );
 	serialPort.write( "OUTPUT:ENABLE:CH16 0\n");
 	await delay( 100 );
+	serialPort.write( "TRACKING:GAIN:CH9 128\n");
+	await delay( 100 );
 	serialPort.write( "RESERVED:SETUP\n");
 	await delay( 100 );
 	
@@ -52,14 +54,13 @@ await delay( 1000 );
 
 //serialPort.write( "IV:EXECUTE:CH6\n");
 
-	
-serialPort.write( "RESERVED:DACVOLTAGE:CH7 2047\n");		
-	for( var i = 0; i < 4000; i +=10 ) {
-		
+
+	serialPort.write( "RESERVED:DACVOLTAGE:CH9 2047\n");
+
+	for( var i = 0; i < 100; i ++ ) {
 		await delay( 100 );
-		serialPort.write( "MEASURE:VOLTAGE:CH7\n");
-		await delay( 100 );
-		//serialPort.write( "MEASURE:CURRENT:CH5\n");
+		serialPort.write( "RESERVED:ADCCURRENT:CH9\n");
+
 	}
 	
 });

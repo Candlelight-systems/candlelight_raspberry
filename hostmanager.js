@@ -1,10 +1,11 @@
 
-const InstrumentController = require("./instrumentcontroller");
+const InstrumentController 		= require("./instrumentcontroller");
+
 let hosts = {};
 
 module.exports = {
 
-	addHost: ( config, alias ) => {
+	addHost: ( config, alias, constructor ) => {
 
 		if( ! alias && config.alias ) {
 			alias = config.alias;
@@ -14,15 +15,19 @@ module.exports = {
 			return hosts[ alias ];
 		}
 
-		hosts[ alias ] = new InstrumentController( { config: config } );
+		let controller;
+
+		controller = new constructor( config )
+		hosts[ alias ] = controller;
 		return hosts[ alias ];
 	},
 
 	getHost: ( alias ) => {
+
 		if( hosts[ alias ] ) {
 			return hosts[ alias ];
 		}
-
+		console.trace();	
 		throw "Host with alias " + alias + " does not exist.";
 	}
 };

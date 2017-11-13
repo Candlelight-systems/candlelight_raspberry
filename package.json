@@ -1,4 +1,5 @@
 {
+  "version": "0.0.1",
   "devDependencies": {
     "express": "^4.15.2",
     "influx": "^5.0.7",
@@ -7,6 +8,9 @@
   "dependencies": {
     "body-parser": "^1.17.1",
     "extend": "^3.0.1",
-    "jsgraph-waveform": "0.0.1"
+    "jsgraph-waveform": "0.0.3",
+    "rpi-gpio": "^0.9.1",
+    "rpio": "^0.9.19",
+    "ws": "^3.3.0"
   }
 }

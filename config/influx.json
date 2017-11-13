@@ -1,7 +1,7 @@
 {
+	"db": "matahari",
 	"host": "influxdb2.epfl.ch",
-	"port": "80",
-	"username":"lpi",
 	"password": "lpi77",
-	"db": "matahari"
+	"port": "80",
+	"username": "lpi"
 }
