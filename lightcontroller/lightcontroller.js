@@ -6,7 +6,7 @@ const InstrumentController			= require('../instrumentcontroller' );
 
 class LightController extends InstrumentController {
 
-	constructor( ) {
+	constructor( config ) {
 
 		super( config );
 

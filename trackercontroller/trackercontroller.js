@@ -42,6 +42,7 @@ class TrackerController extends InstrumentController {
 		this.preventMPPT = {};
 		this.pdIntensity = {};
 
+		this.trackData = [];
 		this.paused = false;
 	}	
 
@@ -351,7 +352,7 @@ class TrackerController extends InstrumentController {
 			chanId: chanId,
 
 			action: {
-				update: true
+				stopped: true
 			}
 		} );
 	}
@@ -667,7 +668,7 @@ class TrackerController extends InstrumentController {
 	scheduleEnvironmentSensing( interval ) {
 
 		//if( this.timerExists( "pd" ) ) {
-			this.setTimer("env", undefined, this.measureEnvironment, interval );
+		//	this.setTimer("env", undefined, this.measureEnvironment, interval );
 		//} 
 	}
 
@@ -697,7 +698,7 @@ class TrackerController extends InstrumentController {
 
 		const { connection, lightRefValue } = this.getStatus( chanId );
 		
-		if( connection == 'group' ) {
+		if( connection == 'group' && this.getGroupFromChanId( chanId ).pds[ 0 ] ) {
 			return this.getLightIntensity( this.getGroupFromChanId( chanId ).pds[ 0 ] );
 		}
 
@@ -1175,6 +1176,7 @@ class TrackerController extends InstrumentController {
 			  chanId: chanId,
 			  influx: {
 		        measurement: encodeURIComponent( status.measurementName ),
+		        timestamp: Date.now() * 1000000, // nano seconds
 		        fields: { 
 		          voltage_min: voltageMin,
 		          voltage_mean: voltageMean,
