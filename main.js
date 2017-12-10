@@ -124,9 +124,6 @@ app.get("/getChannelConfig", function( req, res ) {
 	res.send( JSON.stringify( trackerController.getChannelConfig( instrumentId, chanId ) ) );
 } );
 
-
-
-
 app.get("/getConfig", function( req, res ) {
 
 	res.type("application/json");
@@ -135,35 +132,6 @@ app.get("/getConfig", function( req, res ) {
 	const chanId = req.query.chanId;
 	
 	res.send( JSON.stringify( matahari.getConfig( instrumentId, chanId ) ) );
-} );
-
-
-app.get("/getPDOptions", function( req, res ) {
-
-	res.type("application/json");
-
-	const instrumentId = req.query.instrumentId;
-	const groupName = req.query.groupName;
-	
-	res.send( JSON.stringify( trackerController.getPDOptions( instrumentId, groupName ) ) );
-} );
-
-
-app.post("/setPDScaling", function( req, res ) {
-
-	res.type("application/json");
-
-	const instrumentId = req.body.instrumentId;	
-
-	trackerController.setPDScaling( instrumentId, req.body.pdRef, req.body.pdScale ).then( ( ) => {
-
-		res.send("");
-
-	}).catch( ( error ) => {
-
-		console.error( error );
-		res.status( 500 ).send("Photodiode scaling could not be set. Error was " + error );
-	});
 } );
 
 
@@ -441,35 +409,28 @@ app.get("/light.setScaling", ( req, res ) => {
 	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
 });
 
-app.get("/light.getController", function( req, res ) {
-
-	trackerController.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
-		
-		res.type("application/json").send( JSON.stringify( controllers ) );	
-		
-	} ).catch( ( error ) => {
-
-		console.log( error );
-		console.trace( error );
-		res.status( 500 ).send("Light controllers could not be retrieved. Error was \"" + error + "\"" );
-	} );
+app.get("/lightGetControl", function( req, res ) {
+	try {
+		let control = trackerController.lightGetControl( req.query.instrumentId, req.query.groupName );
+		res.type("application/json").send( JSON.stringify( control ) );	
+	} catch( e ) {
+		res.status( 500 ).send(`Light control could not be retrieved. Error was ${error}`);
+	}
 });
 
-app.post("/light.saveController", ( req, res ) => {
+app.post("/lightSaveControl", ( req, res ) => {
 
-	trackerController.saveLightController( req.body.instrumentId, req.body.groupName, req.body.lightController ).then( () => {
-		
+	trackerController.lightSetControl( req.body.instrumentId, req.body.groupName, req.body.control ).then( () => {	
+	
 		res.send("");
-
+	
 	}).catch( ( error ) => {
 
 		console.error( error );
-		res.status( 500 ).send("Cannot save light controllers. Error was " + error );
+		res.status( 500 ).send(`Cannot save light control. Error was ${error}`);
 
 	});
 });
-
-
 
 app.post("/heat.setPower", function( req, res ) {
 

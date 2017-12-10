@@ -109,13 +109,28 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
-			ivExecute: "IV:EXECUTE",
-			ivData: "IV:DATA",
-			ivStatus: "IV:STATUS",
+
+			iv: {
+				execute: "IV:EXECUTE",
+				data: "IV:DATA",
+				status: "IV:STATUS",
+			},
+
+			light: {
+				enable: 'LIGHT:ENABLE',
+				disable: 'LIGHT:DISABLE',
+				isEnabled: 'LIGHT:ENABLED?',
+				isAutomatic: 'LIGHT:AUTOMATIC?',
+				setSetpoint: 'LIGHT:SETPOINT',
+				setScaling: 'LIGHT:SCALING'
+			},
+
+
 			readPD: {
-				pd_1: "ENVIRONMENT:PHOTODIODE1",
-				pd_2: "ENVIRONMENT:PHOTODIODE2"
-			},			
+				current: "ENVIRONMENT:PHOTODIODE",
+				sun: "ENVIRONMENT:SUNPHOTODIODE"
+			},		
+				
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			resetSlave: "RESERVED:RESETSLAVE",

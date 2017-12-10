@@ -7,7 +7,20 @@
 			{	
 				"groupName": "Box A",
 				"groupID": "boxa",
-				"pds": [],
+				
+
+				"light": {
+					"on": true,
+					"scaling": 6.9,
+					"factory_scaling": 6.9,
+					"scheduling": {
+						"enabled": false,
+						"msBasis": 3600,
+						"waveform": [ 0, 1, 0 ]
+					},
+					"setPoint": 1
+				},
+
 				"i2cSlave": 8,
 				"channels": [
 					{

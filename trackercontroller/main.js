@@ -36,6 +36,10 @@ function lookupChanId( instrumentId, chanNumber ) {
 	return getInstrument( instrumentId ).lookupChanId( chanNumber );
 }
 
+function save() {
+	fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
+}
+
 module.exports = {
 
 	getInstruments() {
@@ -178,16 +182,19 @@ module.exports = {
 		await getInstrument( instrumentId ).setVoltage( chanId, voltage );
 	},
 
-	measureCurrent: ( instrumentId, chanNumber, voltage ) => {
+	measureCurrent: ( instrumentId, groupName, chanNumber ) => {
 
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		let instrument = getInstrument( instrumentId );
-		if( chanId.indexOf( 'pd' ) > -1 ) {
+		let group = instument.getGroupFromGroupName( groupName );
+		
+		if( ! group.light ) {
+			throw "This group has no light";
+		}
 
-			return instrument._measurePD( chanId );
-
+		if( chanNumber.indexOf( '_pd' ) > -1 ) {
+			return instrument.measurePDCurrent( group.light.channelId );
 		} else {
-
 			return instrument.measureCurrent( chanId );
 		}
 	},
@@ -202,24 +209,6 @@ module.exports = {
 		return getInstrument( instrumentId ).disableChannel( chanId );
 	},
 
-	getLightController: async ( instrumentId, groupName ) => {
-		
-		let instrument = getInstrument( instrumentId );
-
-		if( instrument.hasLightController( groupName ) ) {
-			return getInstrument( instrumentId ).getLightControllerConfig( groupName );
-		}
-		
-		throw "This instrument has no light controller";
-	},
-
-
-	saveLightController: async ( instrumentId, groupName, cfg ) => {
-		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, cfg );
-		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
-
-		return savingPromise;
-	},
 
 	setHeatingPower: async( instrumentId, groupName, power ) => {
 		let instrument = getInstrument( instrumentId );
@@ -260,12 +249,26 @@ module.exports = {
 		return instrument.resetSlave( );
 	},
 
+
+	getLightControl: async ( instrumentId, groupName ) => {
+		let instrument = getInstrument( instrumentId );
+		return instrument.lightGetControl( groupName );		
+	},
+
+	setLightControl: async ( instrumentId, groupName, cfg ) => {
+		let savingPromise = getInstrument( instrumentId ).setLightControl( groupName, cfg );
+		save();
+		return savingPromise;
+	},
+
 	lightDisable( instrumentId, groupName ) {
 		getInstrument( instrumentId ).lightDisable( groupName );
+		save();
 	},
 
 	lightEnable( instrumentId, groupName ) {
 		getInstrument( instrumentId ).lightEnable( groupName );
+		save();
 	},
 
 	lightIsEnabled( instrumentId, groupName ) {
@@ -274,10 +277,12 @@ module.exports = {
 
 	lightSetSetpoint( instrumentId, groupName, setpoint ) {
 		getInstrument( instrumentId ).lightSetSetpoint( groupName, setpoint );
+		save();
 	},
 
 	lightSetScaling( instrumentId, groupName, scaling ) {
 		getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
+		save();
 	}
 };
 

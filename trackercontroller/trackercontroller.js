@@ -60,8 +60,8 @@ class TrackerController extends InstrumentController {
 			await this.resumeChannels();
 			await this.scheduleEnvironmentSensing( 10000 );
 			await this.scheduleLightSensing( 10000 );
-						// This will take some time as )all channels have to be updated
-			this._initLightControllers();
+			await this.lightSensing(); // Normalize the light sensing
+
 			this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
 
 		} );
@@ -298,7 +298,6 @@ class TrackerController extends InstrumentController {
 
 
 	setVoltage( chanId, voltageValue ) {
-
 		return this.query( globalConfig.trackerControllers.specialcommands.setVoltage( chanId, voltageValue ) );
 	}
 
@@ -658,16 +657,47 @@ class TrackerController extends InstrumentController {
 		let groups = this.getInstrumentConfig().groups;
 		let temperature, lights, humidity;
 
-		for( var i = 0, l = groups.length; i < l; i ++ ) {
-				
-			await influx.storeEnvironment( 
-				this.getInstrumentId() + "_" + groups[ i ].groupID,
-				await this.measureGroupTemperature( groups[ i ].groupName ),
-				await this.measureGroupHumidity( groups[ i ].groupName ),
-				await this.measureGroupLightIntensity( groups[ i ].groupName )
-			);
-			
+		for( let group of groups ) {
+					
+			wsconnection.send( {
+				instrumentId: this.getInstrumentId(),
+				groupName: group.groupName,
+				data: {
+					lightOnOff: group.light.on,
+					lightOnOffButton: await this.lightIsEnabled( group.groupName ),
+					lightMode: await this.lightIsAutomatic( group.groupName ) ? 'auto' : 'manual',
+					lightSetpoint: this.lightSetpoint[ group.groupName ],
+					lightValue: await this.measureGroupLightIntensity( group.groupName ),
+					temperature: this.measureGroupTemperature( groups.groupName ),
+					humidity: this.measureGroupHumidity( groups.groupName ),
+				}
+			});
 		}
+	}
+
+
+	async lightSetControl( groupName, control ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+
+		if( ! group.light ) {
+			throw "Cannot update the light controller for this group: a light control must pre-exist."
+		}
+
+		Object.assign( group.light, control );
+		// Push the new control values to the uC
+		await this.lightSensing();
+		await this.measureEnvironment(); // Re-measure the light values, setpoint, and so on
+	}
+
+	lightGetControl( groupName ) {
+		
+		let group = this.getGroupFromGroupName( groupName );
+		if( ! group.light ) {
+			throw "Cannot retrieve the light controller for this group: no light control exists."
+		}
+
+		Object.assign( group.light, control );
 	}
 
 	async lightSensing() {
@@ -680,12 +710,22 @@ class TrackerController extends InstrumentController {
 				continue;
 			}
 
-			if( group.light.scheduling ) { // Scheduling mode, let's check for new setpoint ?
+			if( group.light.on ) { // Normalisation of the light status
+				this.lightEnable();
+			} else {
+				this.lightDisable();
+			}
+
+			// Set the mA to sun scaling value
+			this.lightSetScaling( group.light.scaling );
+
+			if( group.light.scheduling && group.light.scheduling.enabled ) { // Scheduling mode, let's check for new setpoint ?
 
 				// this._scheduling.startDate = Date.now();
-				const ellapsed = ( Date.now() - this._creation ) % group.light.scheduling.msBasis;
-				const index = group.light.scheduling.waveform.getIndexFromX( ellapsed );
-				const intensityValue = group.light.scheduling.waveform.getY( index );
+				const ellapsed = ( Date.now() - this._creation ) % group.light.scheduling.basis;
+				const waveform = new Waveform().setData( group.light.scheduling.intensities );
+				const index = waveform.getIndexFromX( ellapsed );
+				const intensityValue = waveform.getY( index );
 
 				if( intensityValue !== this.lightSetpoint[ group.groupName ] ) {
 
@@ -696,7 +736,7 @@ class TrackerController extends InstrumentController {
 			} else if ( group.light.setPoint !== this.lightSetpoint[ group.groupName ] ) {
 
 				this.changeLightSetpoint( group.light.channelId, group.light.setPoint );
-				this.lightSetpoint[ group.groupName ] = group.light.setPoint;§
+				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 		}
 	}
@@ -711,10 +751,14 @@ class TrackerController extends InstrumentController {
 	}
 
 	async lightEnable( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.on = true;
 		return this._lightCommand( groupName, 'enable' );
 	}
 
 	async lightDisable( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.on = false;
 		return this._lightCommand( groupName, 'disable' );
 	}
 
@@ -722,20 +766,20 @@ class TrackerController extends InstrumentController {
 		return this._lightCommand( groupName, 'isEnabled' );
 	}
 
+	async lightIsAutomatic( groupName ) {
+		return this._lightCommand( groupName, 'isAutomatic' );
+	}
+	
 	async lightSetSetpoint( groupName, setpoint ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.setPoint = setpoint;
 		return this._lightCommand( groupName, 'setSetpoint', setpoint );
 	}
 
 	async lightSetScaling( groupName, scaling ) {
-		return this._lightCommand( groupName, 'setScaling', scaling );
-	}
-
-	async lightDisable( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );
-		if( group.light.channelId ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.light.disable + ":CH" + group.light.channelId );	
-		}	
-		throw "No light for this group";
+		group.light.scaling = setpoint;
+		return this._lightCommand( groupName, 'setScaling', scaling );
 	}
 
 	async measureGroupLightIntensity( groupName ) {
@@ -769,7 +813,11 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measurePD( channelId ) {
-		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD[ channelId ], 2 ) );
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD.sun + ":CH" + channelId, 2 ) );
+	}
+
+	async measurePDCurrent( channelId ) {
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD.current + ":CH" + channelId, 2 ) );	
 	}
 
 	async resetSlave() {
@@ -816,29 +864,6 @@ class TrackerController extends InstrumentController {
 
 		return this.groupHumidity[ groupName ];
 	}
-
-
-	getPDOptions( groupName ) {
-
-		
-		let pdOptions = [];
-
-		const group = this.getGroupFromGroupName( groupName );
-		const pds = group.pds;
-		
-		if( ! pds ) {
-			return [];
-		}
-
-		for( var i = 0, l = this.getInstrumentConfig().pdRefs.length; i < l; i ++ ) {
-			if( pds.includes( this.getInstrumentConfig().pdRefs[ i ].ref ) ) {
-				pdOptions.push( this.getInstrumentConfig().pdRefs[ i ] );
-			}
-		}
-
-		return pdOptions;
-	}
-
 
 	//////////////////////////////////////
 	// IV CURVES
@@ -1101,9 +1126,10 @@ class TrackerController extends InstrumentController {
 			voltageMax = parseFloat( data[ 6 ] ),
 			currentMax = parseFloat( data[ 7 ] ),
 			powerMax = parseFloat( data[ 8 ] ),
-			sun = parseFloat( data[ 9 ] ),
-			nb = parseInt( data[ 10 ] ),
-			pga = parseInt( data[ 11 ] );
+			sun1 = parseFloat( data[ 9 ] ),
+			sun2 = parseFloat( data[ 10 ] ),
+			nb = parseInt( data[ 11 ] ),
+			pga = parseInt( data[ 12 ] );
 
 		if( nb == 0 ) {
 			return;
@@ -1113,10 +1139,10 @@ class TrackerController extends InstrumentController {
 		// W cm-2
 
 		
-		const group = this.getGroupFromChanId( chanId );
-
-		sun = this.getChannelLightIntensity( chanId, sun );
-		let efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
+		const group 		= this.getGroupFromChanId( chanId );
+		const lightChannel 	= group.light.channelId;
+		const sun 			= this.getChannelLightIntensity( chanId, lightChannel == 1 ? sun1 : sun2 );
+		const efficiency 	= ( powerMean / ( status.cellArea ) ) / ( sun * 100 ) * 100;
 
 		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
 			console.error("Efficiency has the wrong format. Check lightRef value: " + lightRef );
