@@ -410,6 +410,18 @@ app.get("/resetSlave", ( req, res ) => {
 
 } );
 
+app.get("/light.enable", ( req, res ) => {
+	trackerController.lightEnable( req.query.instrumentId, req.query.groupName ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.disable", ( req, res ) => {
+	trackerController.lightDisable( req.query.instrumentId, req.query.groupName ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
 
 app.get("/light.getController", function( req, res ) {
 

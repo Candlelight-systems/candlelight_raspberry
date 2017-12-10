@@ -3,18 +3,13 @@
 const fs = require("fs");
 
 let status 							= require("./status.json").channels;
-
-
 let measurements					= require("./measurements.json");
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
 const InstrumentController			= require("../instrumentcontroller");
 const HostManager					= require("../hostmanager");
-const LightController				= require("../lightcontroller/lightcontroller");
 const waveform						= require("jsgraph-waveform");
-const lightControllerMain			= require('../lightcontroller/main');
 const wsconnection					= require('../wsconnection' );
-
 
 let connections = {};
 let intervals = {};
@@ -48,14 +43,11 @@ class TrackerController extends InstrumentController {
 		this.trackData = [];
 		this.paused = false;
 
-		this._creation = Date.now()
+		this._creation = Date.now();
 	}	
 
 	init() {
-
-		this.trackData = [];
-
-		
+		this.trackData = [];		
 	}	
 
 	init() {
@@ -288,20 +280,7 @@ class TrackerController extends InstrumentController {
 
 	getGroups() {
 
-		return this.getInstrumentConfig().groups;/*.map( ( group ) => { 
-
-			group.channels.map( ( channel ) => {
-
-// We should check if this is legacy code ?
-
-//				channel.instrumentId = this.getInstrumentId(); 
-//				channel.busy = this.isBusy( channel.chanId ); 
-				return channel; 
-
-			} );
-
-			return group;
-		} );*/
+		return this.getInstrumentConfig().groups;
 	}
 
 	getChannels( groupName = "" ) {
@@ -315,24 +294,6 @@ class TrackerController extends InstrumentController {
 		}
 
 		return [];
-	}
-
-
-
-	/**
-	 *	Checks if a channel is busy
-	 *	@param {Number} chanId - The channel ID
-	 *	@returns true if the relay is enabled and if the tracking mode is set to other than idle (0)
-	 */
-	isBusy( chanId ) {
-
-		if( ! this.statusExists( chanId ) ) {
-			return false;
-		}
-		
-		let status = this.getStatus( chanId );
-
-		return status.tracking_mode && status.enable == 1;
 	}
 
 
@@ -670,10 +631,6 @@ class TrackerController extends InstrumentController {
 	}
 
 
-
-
-
-
 	scheduleEnvironmentSensing( interval ) {
 
 		//if( this.timerExists( "pd" ) ) {
@@ -682,35 +639,9 @@ class TrackerController extends InstrumentController {
 	}
 
 
-
-
 	//////////////////////////////////////
 	// LIGHT MANAGEMENT
 	//////////////////////////////////////
-
-	async saveLightController( groupName, controller ) {
-
-		let controllerCfg = this.getLightControllerConfig( groupName );
-
-		if( ! this.lightControllers || ! this.lightControllers[ groupName ] ) {
-			return;
-		}
-
-		controllerCfg.setPoint = controller.setPoint;
-		controllerCfg.scheduling.basis = controller.schedulingBasis;
-		controllerCfg.scheduling.intensities = controller.schedulingValues;
-
-		this.emptyQueryQueue();
-
-		await this.lightControllers[ groupName ].setConfig( controllerCfg );	// Updates the config of the controller
-
-		await this.pauseChannels();
-		await this.lightControllers[ groupName ].checkLightStatus( false );	// Force an update of the light controller
-		await this.measureEnvironment(); // Wait until the new point is stored in influxDB
-
-		await this.resumeChannels();
-	}
-
 
 
 	scheduleLightSensing( interval ) {
@@ -770,10 +701,47 @@ class TrackerController extends InstrumentController {
 		}
 	}
 
+	async _lightCommand( groupName, command ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.light.channelId ) {
+			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ] + ":CH" + group.light.channelId );	
+		}	
+		throw "No light for this group";	
+	}
+
+	async lightEnable( groupName ) {
+		return this._lightCommand( groupName, 'enable' );
+	}
+
+	async lightDisable( groupName ) {
+		return this._lightCommand( groupName, 'disable' );
+	}
+
+	async lightIsEnabled( groupName ) {
+		return this._lightCommand( groupName, 'isEnabled' );
+	}
+
+	async lightSetSetpoint( groupName ) {
+		return this._lightCommand( groupName, 'setSetpoint' );
+	}
+
+	async lightSetScaling( groupName ) {
+		return this._lightCommand( groupName, 'setScaling' );
+	}
+
+	async lightDisable( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.light.channelId ) {
+			return this.query( globalConfig.trackerControllers.specialcommands.light.disable + ":CH" + group.light.channelId );	
+		}	
+		throw "No light for this group";
+	}
+
+
 
 	async measureGroupLightIntensity( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
+		const group = this.getGroupFromGroupName( groupName );
 		if( group.light.channelId ) {
 			return this.measurePD( group.light.channelId );	
 		}
@@ -1048,7 +1016,7 @@ class TrackerController extends InstrumentController {
 
 	requestIVCurve( chanId ) {
 		
-		return this.query( globalConfig.trackerControllers.specialcommands.ivExecute + ":CH" + chanId, 2 ).then( ( data ) => {
+		return this.query( globalConfig.trackerControllers.specialcommands.iv.execute + ":CH" + chanId, 2 ).then( ( data ) => {
 
 			data = data
 				.split(',');			
@@ -1062,7 +1030,7 @@ class TrackerController extends InstrumentController {
 
 	requestIVCurvePolling( chanId ) {
 		
-		return this.query( globalConfig.trackerControllers.specialcommands.ivStatus, 2 ).then( ( data ) => {
+		return this.query( globalConfig.trackerControllers.specialcommands.iv.status, 2 ).then( ( data ) => {
 
 			data = parseInt( data );
 			if( data == 1 ) {
@@ -1074,7 +1042,7 @@ class TrackerController extends InstrumentController {
 
 	requestIVCurveData( chanId ) {
 		
-		return this.query( globalConfig.trackerControllers.specialcommands.ivData, 2 ).then( ( data ) => {
+		return this.query( globalConfig.trackerControllers.specialcommands.iv.data, 2 ).then( ( data ) => {
 
 			data = data
 				.split(',');			

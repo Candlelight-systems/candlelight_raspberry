@@ -258,6 +258,26 @@ module.exports = {
 	resetSlave( instrumentId ) {
 		let instrument = getInstrument( instrumentId );
 		return instrument.resetSlave( );
+	},
+
+	lightDisable( instrumentId, groupName ) {
+		getInstrument( instrumentId ).lightDisable( groupName );
+	},
+
+	lightEnable( instrumentId, groupName ) {
+		getInstrument( instrumentId ).lightEnable( groupName );
+	},
+
+	lightIsEnabled( instrumentId, groupName ) {
+		getInstrument( instrumentId ).lightIsEnabled( groupName );
+	},
+
+	lightSetSetpoint( instrumentId, groupName ) {
+		getInstrument( instrumentId ).lightSetSetpoint( groupName );
+	},
+
+	lightSetScaling( instrumentId, groupName ) {
+		getInstrument( instrumentId ).lightSetScaling( groupName );
 	}
 };
 
