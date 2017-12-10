@@ -6,6 +6,9 @@ const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
 let allMeasurements 			= require("./measurements.json");
 
+let allMeasurements 			= require("./measurements.json");
+const wsconnection				= require('../wsconnection' );
+
 let instrumentInstances = {};
 
 for( var i = 0; i < config.hosts.length; i ++ ) {
@@ -72,7 +75,10 @@ module.exports = {
 
 			if( instrument.hasLightController( group.groupName ) ) {
 				returnObject[ group.groupName ].lightController = true;
-				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint();
+
+				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint( group.groupName );
+				returnObject[ group.groupName ].lightModeAutomatic = instrument.getLightController( group.groupName ).isModeAutomatic( group.groupName );
+
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -94,7 +100,7 @@ module.exports = {
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
 		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
-		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
 	},
 
 	getInstrumentConfig: ( instrumentId ) => {
@@ -125,12 +131,35 @@ module.exports = {
 		return getInstrument( instrumentId ).measureJsc( chanId );
 	},
 
-	pauseChannels: ( instrumentId ) => {
-		return getInstrument( instrumentId ).pauseChannels();
+
+	pauseChannels: async ( instrumentId ) => {
+		const instrument = getInstrument( instrumentId );
+		await instrument.pauseChannels();
+		let groups = instrument.getInstrumentConfig().groups;
+		for( var i = 0, l = groups.length; i < l; i ++ ) {
+			await wsconnection.send( { 
+				instrumentId: instrumentId, 
+				groupName: groups[ i ].groupName,
+				state: {
+					paused: true
+				} 
+			} );	
+		}
 	},
 
-	resumeChannels: ( instrumentId ) => {
-		return getInstrument( instrumentId ).resumeChannels();
+	resumeChannels: async ( instrumentId ) => {
+		const instrument = getInstrument( instrumentId );
+		await instrument.resumeChannels();
+		let groups = instrument.getInstrumentConfig().groups;
+		for( var i = 0, l = groups.length; i < l; i ++ ) {
+			await wsconnection.send( { 
+				instrumentId: instrumentId, 
+				groupName: groups[ i ].groupName,
+				state: {
+					paused: false
+				} 
+			} );	
+		}
 	},
 
 	saveStatus: ( instrumentId, chanNumber, status ) => {
@@ -184,9 +213,11 @@ module.exports = {
 		throw "This instrument has no light controller";
 	},
 
-	saveLightController: async ( instrumentId, groupName, controller ) => {
-		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, controller );
-		fs.writeFileSync('./config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
+
+	saveLightController: async ( instrumentId, groupName, cfg ) => {
+		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, cfg );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
+
 		return savingPromise;
 	},
 
@@ -208,11 +239,12 @@ module.exports = {
 	getHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return instrument.getHeatingPower( groupName );
+
 	},
 
 	getAllMeasurements: () => {
 		return allMeasurements;
-	}
+	},
 
 	dropMeasurement: ( measurementName ) => {
 		if( ! allMeasurements[ measurementName ] ) {
@@ -221,6 +253,11 @@ module.exports = {
 
 		delete allMeasurements[ measurementName ];
 		fs.writeFileSync("./trackercontroller/measurement.json");
+	},
+
+	resetSlave( instrumentId ) {
+		let instrument = getInstrument( instrumentId );
+		return instrument.resetSlave( );
 	}
 };
 

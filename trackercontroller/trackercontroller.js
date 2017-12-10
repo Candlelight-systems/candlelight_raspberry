@@ -3,6 +3,8 @@
 const fs = require("fs");
 
 let status 							= require("./status.json").channels;
+
+
 let measurements					= require("./measurements.json");
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
@@ -10,6 +12,8 @@ const InstrumentController			= require("../instrumentcontroller");
 const HostManager					= require("../hostmanager");
 const LightController				= require("../lightcontroller/lightcontroller");
 const waveform						= require("jsgraph-waveform");
+const lightControllerMain			= require('../lightcontroller/main');
+const wsconnection					= require('../wsconnection' );
 
 
 let connections = {};
@@ -41,9 +45,17 @@ class TrackerController extends InstrumentController {
 		this.preventMPPT = {};
 		this.pdIntensity = {};
 
+		this.trackData = [];
 		this.paused = false;
 
 		this._creation = Date.now()
+	}	
+
+	init() {
+
+		this.trackData = [];
+
+		
 	}	
 
 	init() {
@@ -58,6 +70,7 @@ class TrackerController extends InstrumentController {
 			await this.scheduleLightSensing( 10000 );
 						// This will take some time as )all channels have to be updated
 			this._initLightControllers();
+			this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
 
 		} );
 	}
@@ -339,6 +352,15 @@ class TrackerController extends InstrumentController {
 		this.saveStatus( chanId, globalConfig.trackerControllers.defaults );
 		status[ index ] = Object.assign( {}, globalConfig.trackerControllers.defaults, { chanId: chanId, instrumentId: this.getInstrumentId() } );
 
+		wsconnection.send( {
+
+			instrumentId: this.getInstrumentId(),
+			chanId: chanId,
+
+			action: {
+				stopped: true
+			}
+		} );
 	}
 
 
@@ -414,6 +436,9 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "lightRefValue", parseFloat( newStatus.lightRefValue ), newStatus );
 
 		
+		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
+			possibleNewMeasurement( newStatus.measurementName, newStatus );
+		}
 
 		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
 			possibleNewMeasurement( newStatus.measurementName, newStatus );
@@ -450,6 +475,18 @@ class TrackerController extends InstrumentController {
 		if( ! noSave ) {
 			saveStatus();
 		}
+		
+		console.log('update it');
+		
+		wsconnection.send( {
+
+			instrumentId: this.getInstrumentId(),
+			chanId: chanId,
+
+			action: {
+				update: true
+			}
+		} );
 	}
 
 	enableChannel( chanId ) {
@@ -524,12 +561,15 @@ class TrackerController extends InstrumentController {
 			await this.resumeChannels();	
 		}
 
-		if( status.connection == "external" && this.getInstrumentConfig().relayController ) {
 
-			HostManager.getHost( this.getInstrumentConfig().relayController ).enableRelay( chanId );
-		} else {
+		if( this.getInstrumentConfig().relayController ) {
+			if( status.connection == "external" ) {
 
-			HostManager.getHost( this.getInstrumentConfig().relayController ).disableRelay( chanId );
+				HostManager.getHost( this.getInstrumentConfig().relayController ).enableRelay( chanId );
+			} else {
+
+				HostManager.getHost( this.getInstrumentConfig().relayController ).disableRelay( chanId );
+			}
 		}
 
 		if( status.enable !== 0 ) {
@@ -676,7 +716,9 @@ class TrackerController extends InstrumentController {
 	scheduleLightSensing( interval ) {
 
 		//if( this.timerExists( "pd" ) ) {
+
 			this.setTimer("light", undefined, this.lightSensing, interval );
+
 		//} 
 	}
 
@@ -748,6 +790,7 @@ class TrackerController extends InstrumentController {
 
 		const status = this.getStatus( chanId );
 		
+
 		if( status.lightRefValue ) { // If the value is forces
 			return status.lightRefValue;
 		}
@@ -761,6 +804,11 @@ class TrackerController extends InstrumentController {
 
 	async measurePD( channelId ) {
 		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD[ channelId ], 2 ) );
+	}
+
+	async resetSlave() {
+		return this.query( globalConfig.trackerControllers.specialcommands.resetSlave );
+
 	}
 
 	async measureTemperature( chanId ) {
@@ -782,6 +830,7 @@ class TrackerController extends InstrumentController {
 
 		let group = this.getGroupFromGroupName( groupName );
 		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
+
 		return this.getGroupTemperature( groupName );
 	}
 
@@ -823,7 +872,6 @@ class TrackerController extends InstrumentController {
 
 		return pdOptions;
 	}
-
 
 
 	//////////////////////////////////////
@@ -879,6 +927,40 @@ class TrackerController extends InstrumentController {
 			callback: callback
 		}
 	}
+
+	getTimerNext( timerName, chanId ) {
+
+		const intervalId = this.getIntervalName( timerName, chanId );
+
+		if( ! intervals[ intervalId ] ) {
+			return undefined;
+		}
+
+		return intervals[ intervalId ].interval + intervals[ intervalId ].lastTime - Date.now();
+	}
+
+
+	async saveTrackData( ) {
+
+		let chans = new Set();
+
+		await influx.saveTrackData( this.trackData.map( ( data ) => { chans.add( data.chanId ); return data.influx; } ) );
+
+		chans.forEach( chan => {
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				chanId: chan,
+				action: {
+					saved: true
+				}
+			} );
+		} );
+
+		this.trackData = [];
+	}
+
 
 
 	getIntervalName( timerName, chanId ) {
@@ -942,16 +1024,23 @@ class TrackerController extends InstrumentController {
 				let ivcurveData = this.requestIVCurveData();
 				influx.storeIV( status.measurementName, ivcurveData, light );
 
-				this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
-				const wave = new waveform();
-				for( let i = 0; i < ivcurveData.length; i += 2 ) {
-					wave.append( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
-				}
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					chanId: chanId,
+
+					action: {
+						ivCurve: true
+					}
+				} );
+
+				this.preventMPPT[ chanId ] = false;
+
+				this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
 				await delay( 5000 ); // Post j-V curve re-equilibration.
 				this.preventMPPT[ chanId ] = false;
-
 				return wave;
 			} );
 	}
@@ -1024,11 +1113,11 @@ class TrackerController extends InstrumentController {
 		const status = this.getStatus( chanId );
 
 		if( this.preventMPPT[ chanId ] ) {
-			
 			return;
 		}
 
 		const data = await this._getTrackData( chanId );
+		
 		let temperature;
 
 		try {
@@ -1068,27 +1157,61 @@ class TrackerController extends InstrumentController {
 			return;
 		}
 
-		await influx.storeTrack( status.measurementName, {
+		wsconnection.send( {
 
-			voltageMean: voltageMean,
-			currentMean: currentMean,
-			powerMean: powerMean,
-			voltageMin: voltageMin,
-			currentMin: currentMin,
-			powerMin: powerMin,
-			voltageMax: voltageMax,
-			currentMax: currentMax,
-			powerMax: powerMax,
-			sun: lightRef,
-			efficiency: efficiency,
-			pga: pga,
-			temperature_base: temperature ? temperature[ 0 ] : 0,
-			temperature_junction: temperature ? temperature[ 2 ] : 0,
-			humidity: this.groupHumidity[ group.groupName ] || 0
-			/*,
-			temperature: EnvironmentalScheduler.getTemperature( status.chanId ),
-			humidity: EnvironmentalScheduler.getHumidity( status.chanId )*/
+			instrumentId: this.getInstrumentId(),
+			chanId: chanId,
+
+			state: {
+				voltage: voltageMean,
+				current: currentMean,
+				power: powerMean,
+				efficiency: efficiency,
+				sun: sun,
+				temperature: temperature ? temperature[ 2 ] : -1,
+				humidity: this.groupHumidity[ group.groupName ] || -1
+			},
+
+			action: {
+				data: efficiency
+			},
+
+			timer: {
+				iv: this.getTimerNext( 'iv', chanId ),
+				voc: this.getTimerNext( 'voc', chanId ),
+				jsc: this.getTimerNext( 'jsc', chanId ),
+				aquisition: 0,
+				ellapsed: Date.now() - measurements[ status.measurementName ].startDate
+			}
+
 		} );
+
+		this.trackData.push( 
+			{
+			  chanId: chanId,
+			  influx: {
+		        measurement: encodeURIComponent( status.measurementName ),
+		        timestamp: Date.now() * 1000000, // nano seconds
+		        fields: { 
+		          voltage_min: voltageMin,
+		          voltage_mean: voltageMean,
+		          voltage_max: voltageMax,
+		          current_min: currentMin,
+		          current_mean: currentMean,
+		          current_max: currentMax,
+		          power_min: powerMin,
+		          power_mean: powerMean,
+		          power_max: powerMax,
+		          efficiency: efficiency,
+		          sun: lightRef,
+		          pga: pga,
+				  temperature_base: temperature ? temperature[ 0 ] : 0,
+				  temperature_junction: temperature ? temperature[ 2 ] : 0,
+				  humidity: this.groupHumidity[ group.groupName ] || 0
+		        }
+		      }
+			}
+    	);
 	}
 
 	async measureVoc( chanId, extend ) {
@@ -1123,6 +1246,16 @@ class TrackerController extends InstrumentController {
 				// Set back the tracking mode to the previous one
 				// Update the channel. Make it synchronous.
 				await this.saveStatus( chanId, { tracking_mode: statusSaved, tracking_interval: intervalSaved, tracking_gain: gainSaved } );
+
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					chanId: chanId,
+					state: {
+						voc: voc
+					}
+				} );
 
 				await delay( 5000 ); // Re equilibration
 
@@ -1162,6 +1295,16 @@ class TrackerController extends InstrumentController {
 								// Set back the tracking mode to the previous one
 				// Update the channel. Make it synchronous.
 				await this.saveStatus( chanId, { tracking_mode: statusSaved, tracking_interval: intervalSaved } );
+
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					chanId: chanId,
+					state: {
+						jsc: jsc
+					}
+				} );
 
 
 				await delay( 5000 ); // Re equilibration
@@ -1288,9 +1431,12 @@ function possibleNewMeasurement( measurementName, status ) {
 			},
 			startDate: Date.now()
 		};
+
+		fs.writeFileSync("./trackercontroller/measurements.json", JSON.stringify( measurements, undefined, "\t" ) );
+		return Date.now();
 	}
 
-	fs.writeFileSync("./trackercontroller/measurements.json", JSON.stringify( measurements, undefined, "\t" ) );
+	return -1;
 }
 
 

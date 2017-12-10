@@ -77,8 +77,10 @@ class InstrumentController {
 		this.stateManager = new queryManager();
 
 		if( this.communicationConfig.resetPin ) {
-		//	rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
-			
+
+			console.log('Preparing', this.communicationConfig.resetPin);
+			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
+
 		}
 	}	
 
@@ -138,9 +140,9 @@ class InstrumentController {
 			if( this.communicationConfig.resetPin ) {
 				console.log("Resetting with pin " + this.communicationConfig.resetPin );
 				rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
-				rpio.sleep( 10 );
+				rpio.sleep( 2 );
 				rpio.write( this.communicationConfig.resetPin, rpio.LOW );
-				rpio.sleep( 3 );
+				rpio.sleep( 1 );
 			}
 
 			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.

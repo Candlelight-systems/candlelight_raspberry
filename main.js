@@ -398,6 +398,17 @@ app.get("/dropMeasurement", function( req, res ) {
 	}
 });
 
+app.get("/resetSlave", ( req, res ) => {
+
+	trackerController.resetSlave( req.query.instrumentId ).then( ( ) => {
+
+		res.send("");
+
+	}).catch( ( error ) => {
+		res.status( 500 ).send("Cannot reset slave. Error was " + error );
+	})
+
+} );
 
 
 app.get("/light.getController", function( req, res ) {
@@ -431,6 +442,7 @@ app.post("/light.saveController", ( req, res ) => {
 
 
 app.post("/heat.setPower", function( req, res ) {
+
 
 	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
 		
