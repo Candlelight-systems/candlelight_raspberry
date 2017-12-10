@@ -35,31 +35,10 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
     });
 }
 
-module.exports.storeTrack = function( measurementName, trackData ) {
+module.exports.saveTrackData = function( trackData ) {
 
-    return influxClient.writePoints([
-      {
-        measurement: encodeURIComponent( measurementName ),
-        fields: { 
-          voltage_min: trackData.voltageMin,
-          voltage_mean: trackData.voltageMean,
-          voltage_max: trackData.voltageMax,
-          current_min: trackData.currentMin,
-          current_mean: trackData.currentMean,
-          current_max: trackData.currentMax,
-          power_min: trackData.powerMin,
-          power_mean: trackData.powerMean,
-          power_max: trackData.powerMax,
-          efficiency: trackData.efficiency,
-          sun: trackData.sun,
-          pga: trackData.pga,
-          temperature_base: trackData.temperature_base,
-          temperature_junction: trackData.temperature_junction,
-          humidity: trackData.humidity
-        }
-      }
-
-    ]).then( ( result ) => {
+  
+    return influxClient.writePoints( trackData ).then( ( result ) => {
       
       return result; 
 

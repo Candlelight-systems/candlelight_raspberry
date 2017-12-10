@@ -363,10 +363,8 @@ app.post("/setStatuses", ( req, res ) => {
 		res
 		  .status( 500 )
 		  .send( "Channel " + chanId + " could not be updated. Error was " + error );	
-	});
+	} );
 } );
-
-
 
 app.get("/resetStatus", function( req, res ) {
 
@@ -385,6 +383,32 @@ app.get("/resetStatus", function( req, res ) {
 	 });
 });
 
+app.get("/getAllMeasurements", function( req, res ) {
+
+	res.type( "application/json" ).send( JSON.stringify( trackerController.getAllMeasurements( ) ) );
+});
+
+app.get("/dropMeasurement", function( req, res ) {
+
+	try {
+		trackerController.dropMeasurement( req.query.measurementName );
+		res.send("");
+	} catch( e ) {
+		res.status( 500 ).send( e )
+	}
+});
+
+app.get("/resetSlave", ( req, res ) => {
+
+	trackerController.resetSlave( req.query.instrumentId ).then( ( ) => {
+
+		res.send("");
+
+	}).catch( ( error ) => {
+		res.status( 500 ).send("Cannot reset slave. Error was " + error );
+	})
+
+} );
 
 app.get("/light.getController", function( req, res ) {
 
@@ -417,6 +441,7 @@ app.post("/light.saveController", ( req, res ) => {
 
 
 app.post("/heat.setPower", function( req, res ) {
+
 
 	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
 		

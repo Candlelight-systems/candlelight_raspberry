@@ -20,6 +20,39 @@ module.exports = {
 
 	hosts: [
 
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"alias": "Tracker 1",
+			"constructorName": "TrackerController",
+			"resetPin": 40,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		}/*,
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+			"alias": "Light",
+			"constructorName": "LightController",
+			
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"alias": "heat1",
+			"constructorName": "HeatController",
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		}*/
+/*
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
@@ -54,7 +87,19 @@ module.exports = {
 			},
 			"reconnectTimeout": 1 // in seconds
 		}
+>>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
 
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
+			"alias": "Tracker 1",
+			"constructorName": "TrackerController",
+			"resetPin": 12,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		}
+*/
 	],
 
 
@@ -71,6 +116,7 @@ module.exports = {
 			},			
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
+			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
 			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE?:CH" + chanId + " " + slaveId,
@@ -122,7 +168,7 @@ module.exports = {
 			"tracking_mode": 0,
 			"cellArea": 0,
 
-			"connection": "group",
+			"connection": "external",
 			"lightRefValue": 1000,
 
 			"measurementName": null,
@@ -142,3 +188,4 @@ module.exports = {
 		hosts: relayControllers
 	}
 };
+

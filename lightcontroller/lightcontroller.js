@@ -6,26 +6,52 @@ const InstrumentController			= require('../instrumentcontroller' );
 
 class LightController extends InstrumentController {
 
-	constructor( ) {
+	constructor( config ) {
 
 		super( config );
-		this.currentCode = 170;
+
+		this.currentCode = {};
 		this.on = false;
+		this.processedConfig = {};
+		this.trackerReference = {};
 	}
 
 	init() {
 
 		this.openConnection( async () => {
 
-			await this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.getInstrumentConfig().currentCode );
-			await this.turnOn();
-			this.checkLightStatus();
+		//	await this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.getInstrumentConfig().currentCode );
+			//await this.turnOn();
+		//	this.checkLightStatus();
+
+			this.setTimeout();
+
 		} );
+
+
 	}
 
-	setTracker( tracker ) {
-		this.trackerReference = tracker;
+	async setTracker( tracker, groupName ) {
+		this.trackerReference[ groupName ] = tracker;
+		let cfg = this.getInstrumentConfig()[ groupName ];
+		await this.query( "PWM:VALUE:CH" + cfg.pwmChannel + " " + this.currentCode[ groupName ] );
+		await this.turnOn( groupName );
 	}
+
+	setGroupConfig( groupName, config ) {
+		Object.assign( this.instrumentConfig[ groupName ], config ); // Extend it
+		this.processConfig( groupName );
+	}
+
+	setInstrumentConfig( cfg ) {
+
+		this.instrumentConfig = cfg;
+		for( var i in cfg ) {
+			this.processedConfig[ i ] = {};
+			this.processConfig( i );
+		}
+	}
+
 
 	pause() {
 		if( this._timeout ) {
@@ -41,63 +67,68 @@ class LightController extends InstrumentController {
 		this.checkLightStatus();
 	}
 
-	setInstrumentConfig( config ) {
+	async processConfig( groupName ) {
 
-		this.instrumentConfig = config;
+		const cfg = this.getInstrumentConfig()[ groupName ];
 
-		if( this.getInstrumentConfig().setPoint || this.getInstrumentConfig().setPoint === 0 ) {
+		this.currentCode[ groupName ] = 170;
+
+		if( cfg.setPoint || cfg.setPoint === 0 ) {
 			
-			this.setPoint = this.getInstrumentConfig().setPoint;
+			this.setPoint = cfg.setPoint;
 			this._scheduling = undefined;
 
-		} else if( this.getInstrumentConfig().scheduling ) {
+		} else if( cfg.scheduling ) {
 
 			let rescalingMS;	
 			this.setPoint = undefined;
-			this._scheduling = {};
+			this.processedConfig[ groupName ]._scheduling = {};
 
-			if( this.getInstrumentConfig().scheduling.basis == '1day' ) {
+			if( cfg.scheduling.basis == '1day' ) {
 
-				this._scheduling.msBasis = 3600 * 24 * 1000;
+				this.processedConfig[ groupName ]._scheduling.msBasis = 3600 * 24 * 1000;
 
-			} else if( this.getInstrumentConfig().scheduling.basis == '1hour' ) {
+			} else if( cfg.scheduling.basis == '1hour' ) {
 
-				this._scheduling.msBasis = 3600 * 1000;
+				this.processedConfig[ groupName ]._scheduling.msBasis = 3600 * 1000;
 			}
 
-			let waveform = new Waveform( this.getInstrumentConfig().scheduling.intensities );
+			let waveform = new Waveform( cfg.scheduling.intensities );
 			waveform.rescaleX( 0, this._scheduling.msBasis / waveform.getLength() ); 
 
-			this._scheduling.waveform = waveform;
-			this._scheduling.startDate = Date.now();
+			this.processedConfig[ groupName ]._scheduling.waveform = waveform;
+			this.processedConfig[ groupName ]._scheduling.startDate = Date.now();
 		}
 	}
 
-	getSetPoint() {
+	getSetPoint( groupName ) {
 
-		if( ! this.setPoint && this.setPoint !== 0 ) {
+		const cfg = this.getInstrumentConfig()[ groupName ];
+
+		if( ! cfg.setPoint && cfg.setPoint !== 0 ) {
 			
-			if( ! this._scheduling ) {
+			if( ! this.processedConfig[ groupName ]._scheduling ) {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
 			}
 
-			let ellapsed = ( Date.now() - this._scheduling.startDate ) % this._scheduling.msBasis;
+			let ellapsed = ( Date.now() - this.processedConfig[ groupName ]._scheduling.startDate ) % this.processedConfig[ groupName ]._scheduling.msBasis;
 
-			const index = this._scheduling.waveform.getIndexFromX( ellapsed );
+			const index = this.processedConfig[ groupName ]._scheduling.waveform.getIndexFromX( ellapsed );
 			
-			return this._scheduling.waveform.getY( index );
+			return this.processedConfig[ groupName ]._scheduling.waveform.getY( index );
 		}
 
-		if( this.setPoint > this.getInstrumentConfig().maxIntensity ) {
 
-			return this.getInstrumentConfig().maxIntensity;
+		if( cfg.setPoint > cfg.maxIntensity ) {
 
-		} else if( this.setPoint > 0 && this.setPoint < 0.01 ) {
+			return cfg.maxIntensity;
+
+		} else if( cfg.setPoint > 0 && cfg.setPoint < 0.01 ) {
 
 			return 0;
 		}
 
-		return this.setPoint;
+		return cfg.setPoint;
 	}
 
 	async checkLightStatus( pauseChannels = true ) {
@@ -106,82 +137,93 @@ class LightController extends InstrumentController {
 			return;
 		}
 
-		if( this.config.outputPower !== undefined ) {
-			await this.setCode( Math.round( 255 - this.config.outputPower * 255 ) );
-			return;
-		}
+		for( var i in this.getInstrumentConfig() ) {
 
+			let groupName = i;
 
-		var setPoint = this.getSetPoint();
-
-		if( ! this.trackerReference ) {
-			throw "No MPP Tracker reference from which to read the photodiode input";
-		}
-
-		if( ! this.getInstrumentConfig().pd ) {
-			throw "No photodiode reference from which to read the light intensity";
-		}
-
-		if( this._timeout ) {
-			clearTimeout( this._timeout );
-			this._timeout = false;
-		}
-
-
-		if( setPoint === 0 ) {
-			await this.turnOff();
-			this.setTimeout();
-			return;
-		} else {
-			await this.turnOn();
-		}
-
-		let pdData = this.trackerReference.getPDData( this.getInstrumentConfig().pd );
-		let pdValue = this.trackerReference.getPDValue( this.getInstrumentConfig().pd ) * 1000;
-		let sun = pdValue / pdData.scaling_ma_to_sun;
-
-		if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
-
-			if( pauseChannels ) {
-				await this.trackerReference.pauseChannels();
+			if( ! this.getInstrumentConfig()[ i ].modeAutomatic ) {
+				return;
+			}
+			
+			if( this.getInstrumentConfig()[ i ].outputPower !== undefined ) {
+				await this.setCode( groupName, Math.round( 255 - this.getInstrumentConfig()[ i ].outputPower * 255 ) );
+				return;
 			}
 
-			let codePerMa = ( 255 - this.getCurrentCode() ) / pdValue; // From the current value, get the code / current(PD) ratio
-			let diffmA = pdValue - setPoint * pdData.scaling_ma_to_sun; // Calculate difference with target in mA
-			let idealCodeChange = codePerMa * diffmA; // Get the code difference
+			let setPoint = this.getSetPoint( i );
+			let pd = this.getInstrumentConfig()[ i ].pd;
+			let trackerReference = this.trackerReference[ groupName ];
 
-			await this.setCode( this.getCurrentCode() + idealCodeChange ); // First correction based on linear extrapolation
-			await this.delay( 300 );
+			if( ! trackerReference ) {
+				throw "No MPP Tracker reference from which to read the photodiode input";
+			}
 
-			let i = 0;
+			if( ! pd ) {
+				throw "No photodiode reference from which to read the light intensity";
+			}
 
-			do {
+			if( this._timeout ) {
+				clearTimeout( this._timeout );
+				this._timeout = false;
+			}
 
-				sun = ( await this.trackerReference._measurePD( this.getInstrumentConfig().pd ) ) * 1000 / pdData.scaling_ma_to_sun;
+			if( setPoint === 0 ) {
+				await this.turnOff( i );
+				this.setTimeout();
+				return;
+			} else {
+				await this.turnOn( i );
+			}
 
-				if( Math.abs( sun - setPoint ) > 0.01 ) {
+			let pdData = trackerReference.getPDData( pd );
+			let pdValue = trackerReference.getLightIntensity( pd );
 
-					if( sun < setPoint ) {
-						await this.increaseCode();	
-					}
-					
-					if( sun > setPoint ) {
-						await this.decreaseCode();
-					}
+			let sun = pdValue;
 
-					i++;
+			if( Math.abs( sun - setPoint ) > 0.01 ) { // Above 1% deviation
 
-				} else {
-					break;
+				if( pauseChannels ) {
+					await trackerReference.pauseChannels();
 				}
 
-			} while( i < 100 );
+				let codePerSun = ( 255 - this.getCurrentCode( groupName ) ) / pdValue; // From the current value, get the code / current(PD) ratio
+				let diffSun = pdValue - setPoint; // Calculate difference with target in sun
+				let idealCodeChange = codePerSun * diffSun; // Get the code difference
 
-			if( pauseChannels ) {
-				await this.trackerReference.resumeChannels();
+				await this.setCode( groupName, this.getCurrentCode( groupName ) + idealCodeChange ); // First correction based on linear extrapolation
+				await this.delay( 300 );
+
+				let i = 0;
+
+				do {
+
+				sun = ( await trackerReference._measurePD( pd ) ) * pdData.scaling_ma_to_sun;
+
+					if( Math.abs( sun - setPoint ) > 0.01 ) {
+
+						if( sun < setPoint ) {
+							await this.increaseCode( groupName );	
+						}
+						
+						if( sun > setPoint ) {
+							await this.decreaseCode( groupName );
+						}
+
+						i++;
+
+					} else {
+						break;
+					}
+
+				} while( i < 100 );
+
+				if( pauseChannels ) {
+					await trackerReference.resumeChannels();
+				}
 			}
-		}
 
+
+			}
 		this.setTimeout();
 	}
 
@@ -195,47 +237,65 @@ class LightController extends InstrumentController {
 		this._timeout = setTimeout( () => { this.checkLightStatus() }, 20000 );
 	}
 
-	increaseCode() {
-		return this.setCode( this.getCurrentCode() - 1 );
+	increaseCode( groupName ) {
+		return this.setCode( groupName, this.getCurrentCode( groupName ) - 1 );
 	}
 
-	decreaseCode() {
-		return this.setCode( this.getCurrentCode() + 1 );
+	decreaseCode( groupName ) {
+		return this.setCode( groupName, this.getCurrentCode( groupName ) + 1 );
 	}
 
-	getCode() {
-		return this.currentCode;
+	getCode( groupName ) {
+		return this.currentCode[ groupName ];
 	}
 
-	getCurrentCode() {
-		return this.getCode();
+	getCurrentCode( groupName ) {
+		return this.getCode( groupName );
 	}
 
 	setCode( newCode ) {
 		this.currentCode = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
 		return this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.currentCode );
+
 	}
 
-	async turnOn() {
+	async turnOn( groupName ) {
 		if( this.on ) {
 			return;
 		}
 
+		const cfg = this.getInstrumentConfig()[ groupName ];
+
 		this.on = true;
-		await this.query( "OUTPUT:ON:CH" + this.getInstrumentConfig().pwmChannel );
+		await this.query( "OUTPUT:ON:CH" + cfg.pwmChannel );
 		
 		await this.delay( 500 );
-		await this.trackerReference._measurePD( this.getInstrumentConfig().pd )
+
+		if( this.trackerReference[ groupName ] ) {
+			await this.trackerReference[ groupName ]._measurePD( cfg.pd )
+		}
+
 	}
 
-	turnOff() {
+	turnOff( groupName ) {
+
 		if( ! this.on ) {
 			return;
 		}
 
+		const cfg = this.getInstrumentConfig()[ groupName ];
+
 		this.on = false;
-		return this.query( "OUTPUT:OFF:CH" + this.getInstrumentConfig().pwmChannel );
+
+		return this.query( "OUTPUT:OFF:CH" + cfg.pwmChannel );
 	}
+
+	isModeAutomatic( groupName ) {
+		const cfg = this.getInstrumentConfig()[ groupName ];
+		return cfg.modeAutomatic;
+	}
+
+
 /*	
 
 	query( ) {
