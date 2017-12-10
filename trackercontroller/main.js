@@ -4,6 +4,7 @@ const HostManager 				= require("../hostmanager");
 const config					= require("../config");
 const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
+let allMeasurements 			= require("./measurements.json");
 
 let instrumentInstances = {};
 
@@ -93,7 +94,7 @@ module.exports = {
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
 		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
-		fs.writeFileSync('./config/trackers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( matahari.trackers, undefined, "\t" ) );
 	},
 
 	getInstrumentConfig: ( instrumentId ) => {
@@ -114,9 +115,9 @@ module.exports = {
 		return getInstrument( instrumentId ).makeIV( chanId );
 	},
 
-	measureVoc: ( instrumentId, chanNumber ) => {
+	measureVoc: ( instrumentId, chanNumber, extend ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
-		return getInstrument( instrumentId ).measureVoc( chanId );
+		return getInstrument( instrumentId ).measureVoc( chanId, extend );
 	},
 
 	measureJsc: ( instrumentId, chanNumber ) => {
@@ -207,6 +208,19 @@ module.exports = {
 	getHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return instrument.getHeatingPower( groupName );
+	},
+
+	getAllMeasurements: () => {
+		return allMeasurements;
+	}
+
+	dropMeasurement: ( measurementName ) => {
+		if( ! allMeasurements[ measurementName ] ) {
+			throw `No measurement with the nme ${measurementName} exist`;
+		}
+
+		delete allMeasurements[ measurementName ];
+		fs.writeFileSync("./trackercontroller/measurement.json");
 	}
 };
 

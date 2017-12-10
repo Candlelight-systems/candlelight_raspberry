@@ -363,10 +363,8 @@ app.post("/setStatuses", ( req, res ) => {
 		res
 		  .status( 500 )
 		  .send( "Channel " + chanId + " could not be updated. Error was " + error );	
-	});
+	} );
 } );
-
-
 
 app.get("/resetStatus", function( req, res ) {
 
@@ -384,6 +382,22 @@ app.get("/resetStatus", function( req, res ) {
 		res.status( 500 ).send("Channel " + chanId + " could not be reset. Error was " + error );
 	 });
 });
+
+app.get("/getAllMeasurements", function( req, res ) {
+
+	res.type( "application/json" ).send( JSON.stringify( trackerController.getAllMeasurements( ) ) );
+});
+
+app.get("/dropMeasurement", function( req, res ) {
+
+	try {
+		trackerController.dropMeasurement( req.query.measurementName );
+		res.send("");
+	} catch( e ) {
+		res.status( 500 ).send( e )
+	}
+});
+
 
 
 app.get("/light.getController", function( req, res ) {

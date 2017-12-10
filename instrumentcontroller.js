@@ -77,7 +77,7 @@ class InstrumentController {
 		this.stateManager = new queryManager();
 
 		if( this.communicationConfig.resetPin ) {
-			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
+		//	rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
 			
 		}
 	}	

@@ -3,12 +3,14 @@
 const fs = require("fs");
 
 let status 							= require("./status.json").channels;
+let measurements					= require("./measurements.json");
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
 const InstrumentController			= require("../instrumentcontroller");
 const HostManager					= require("../hostmanager");
 const LightController				= require("../lightcontroller/lightcontroller");
 const waveform						= require("jsgraph-waveform");
+
 
 let connections = {};
 let intervals = {};
@@ -34,11 +36,14 @@ class TrackerController extends InstrumentController {
 		this.groupHumidity = {};
 		this.groupLightIntensity = {};
 		this.temperatures = {};
+		this.lightSetpoint = {};
 
 		this.preventMPPT = {};
 		this.pdIntensity = {};
 
 		this.paused = false;
+
+		this._creation = Date.now()
 	}	
 
 	init() {
@@ -50,8 +55,8 @@ class TrackerController extends InstrumentController {
 			await this.normalizeStatus();
 			await this.resumeChannels();
 			await this.scheduleEnvironmentSensing( 10000 );
-
-			// This will take some time as all channels have to be updated
+			await this.scheduleLightSensing( 10000 );
+						// This will take some time as )all channels have to be updated
 			this._initLightControllers();
 
 		} );
@@ -327,6 +332,10 @@ class TrackerController extends InstrumentController {
 	async resetStatus( chanId ) {
 
 		let index = this.getStatusIndex( chanId );
+		let status = this.getStatus( chanId );
+
+		measurementEnd( status.measurementName );
+
 		this.saveStatus( chanId, globalConfig.trackerControllers.defaults );
 		status[ index ] = Object.assign( {}, globalConfig.trackerControllers.defaults, { chanId: chanId, instrumentId: this.getInstrumentId() } );
 
@@ -405,6 +414,12 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "lightRefValue", parseFloat( newStatus.lightRefValue ), newStatus );
 
 		
+
+		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
+			possibleNewMeasurement( newStatus.measurementName, newStatus );
+		}
+
+
 
 		let newMode;
 
@@ -617,9 +632,6 @@ class TrackerController extends InstrumentController {
 
 
 
-	//////////////////////////////////////
-	// LIGHT MANAGEMENT
-	//////////////////////////////////////
 
 
 	scheduleEnvironmentSensing( interval ) {
@@ -629,195 +641,12 @@ class TrackerController extends InstrumentController {
 		//} 
 	}
 
-	async measureEnvironment() {
-
-		let groups = this.getInstrumentConfig().groups;
-		let temperature, lights, humidity;
-
-		for( var i = 0, l = groups.length; i < l; i ++ ) {
-				
-			await influx.storeEnvironment( 
-				this.getInstrumentId() + "_" + groups[ i ].groupID,
-				0, 0,//await this.measureGroupTemperature( groups[ i ].groupName ),
-				//await this.measureGroupHumidity( groups[ i ].groupName ),
-				await this.measureGroupLightIntensity( groups[ i ].groupName )
-			);
-			
-		}
-	}
-
-	getLightIntensity( lightRef ) {
-
-		return this.pdIntensity[ lightRef ];
-	}
-	
-	getLightFromChannel( chanId ) {
-
-		const { connection, lightRefValue } = this.getStatus( chanId );
-		
-		if( connection == 'group' ) {
-			return this.getLightIntensity( this.getGroupFromChanId( chanId ).pds[ 0 ] );
-		}
-
-		return lightRefValue / 1000; // Transform W m-2 into suns
-
-	}
-
-	async measureTemperature( chanId ) {
-
-		let group = this.getGroupFromChanId( chanId );
-		let chan = this.getInstrumentConfig( group.groupName, chanId );
-
-		if( ! chan.temperatureSensor ) {
-			throw "No temperature sensor linked to channel " + chanId;
-		}
-
-		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
-		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
-
-		return this.temperatures[ chanId ] = [ baseTemperature, sensorVoltage, baseTemperature + ( ( sensorVoltage + chan.temperatureSensor.offset ) * chan.temperatureSensor.gain ) ].map( ( val ) => Math.round( val * 10 ) / 10 );
-	}
-
-	async measureGroupTemperature( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
-		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
-		console.log( this.groupTemperature[ groupName ] );
-		return this.getGroupTemperature( groupName );
-	}
-
-	getGroupTemperature( groupName ) {
-
-		return this.groupTemperature[ groupName ];
-	}
-
-	async measureGroupHumidity( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
-		this.groupHumidity[ groupName ] = Math.round( 1000 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.i2cSlave ), 2 ) ) ) / 10 ;
-		console.log( this.groupHumidity[ groupName ] );
-		return this.getGroupHumidity( groupName );
-	}
-
-	getGroupHumidity( groupName ) {
-
-		return this.groupHumidity[ groupName ];
-	}
 
 
-	async measureGroupLightIntensity( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName ),
-			vals = [];
-
-		for( var i = 0, l = group.pds.length; i < l; i ++ ) {
-			vals.push( await this._measurePD( group.pds[ i ] ) );
-		}
-
-		return vals;
-	}
-
-	async _measurePD( ref ) {
-
-		return this.pdIntensity[ ref ] = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD[ ref ], 2 ) );
-
-	}
-
-	getPDOptions( groupName ) {
-
-		
-		let pdOptions = [];
-
-		const group = this.getGroupFromGroupName( groupName );
-		const pds = group.pds;
-		
-		if( ! pds ) {
-			return [];
-		}
-
-		for( var i = 0, l = this.getInstrumentConfig().pdRefs.length; i < l; i ++ ) {
-			if( pds.includes( this.getInstrumentConfig().pdRefs[ i ].ref ) ) {
-				pdOptions.push( this.getInstrumentConfig().pdRefs[ i ] );
-			}
-		}
-
-		return pdOptions;
-	}
-
-	getPDData( ref ) {
-		for( var i = 0, l = this.getInstrumentConfig().pdRefs.length; i < l; i ++ ) {
-			if( ref == this.getInstrumentConfig().pdRefs[ i ].ref ) {
-				return this.getInstrumentConfig().pdRefs[ i ];
-			}
-		}
-	}
-
-	getPDValue( ref ) {
-		return this.pdIntensity[ ref ];
-	}
-
-
-	async setPDScaling( pdRef, pdScale ) {
-		for( var i = 0; i < this.getInstrumentConfig().pdRefs.length; i ++ ) {
-
-			if( this.getInstrumentConfig().pdRefs[ i ].ref === pdRef ) {
-				this.getInstrumentConfig().pdRefs[ i ].scaling_ma_to_sun = pdScale;	
-			}
-		}
-	}
 
 	//////////////////////////////////////
-	// LIGHT MANAGER
+	// LIGHT MANAGEMENT
 	//////////////////////////////////////
-
-
-	_initLightControllers() {
-
-		if( this.lightControllers ) {
-			return;
-		}
-
-		this.lightControllers = {};
-		const groups = this.getInstrumentConfig().groups;
-
-		for( var i = 0; i < groups.length; i ++ ) {
-
-			if( groups[ i ].lightController ) {
-
-				this.lightControllers[ groups[ i ].groupName ] = HostManager.getHost( groups[ i ].lightController );
-				this.lightControllers[ groups[ i ].groupName ].setTracker( this );
-			}
-		}
-	}
-
-
-	getLightControllerConfig( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
-
-		if( ! this.hasLightController( groupName ) ) {
-			throw "No light controller for group with name \"" + groupName + "\"";
-		}
-
-		return group.lightController;
-	}
-
-
-
-	getLightController( groupName ) {
-
-		if( ! this.hasLightController( groupName ) ) {
-			throw "No light controller for group with name \"" + groupName + "\"";	
-		}
-
-		return this.lightControllers[ groupName ];
-	}
-
-	hasLightController( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
-		return  !! group.lightController && !! this.lightControllers && !! this.lightControllers[ groupName ];
-	}
 
 	async saveLightController( groupName, controller ) {
 
@@ -841,6 +670,160 @@ class TrackerController extends InstrumentController {
 
 		await this.resumeChannels();
 	}
+
+
+
+	scheduleLightSensing( interval ) {
+
+		//if( this.timerExists( "pd" ) ) {
+			this.setTimer("light", undefined, this.lightSensing, interval );
+		//} 
+	}
+
+	async measureEnvironment() {
+
+		let groups = this.getInstrumentConfig().groups;
+		let temperature, lights, humidity;
+
+		for( var i = 0, l = groups.length; i < l; i ++ ) {
+				
+			await influx.storeEnvironment( 
+				this.getInstrumentId() + "_" + groups[ i ].groupID,
+				await this.measureGroupTemperature( groups[ i ].groupName ),
+				await this.measureGroupHumidity( groups[ i ].groupName ),
+				await this.measureGroupLightIntensity( groups[ i ].groupName )
+			);
+			
+		}
+	}
+
+	async lightSensing() {
+
+		let groups = this.getInstrumentConfig().groups;
+
+		for( let group of groups ) {
+
+			if( ! group.light ) {
+				continue;
+			}
+
+			if( group.light.scheduling ) { // Scheduling mode, let's check for new setpoint ?
+
+				// this._scheduling.startDate = Date.now();
+				const ellapsed = ( Date.now() - this._creation ) % group.light.scheduling.msBasis;
+				const index = group.light.scheduling.waveform.getIndexFromX( ellapsed );
+				const intensityValue = group.light.scheduling.waveform.getY( index );
+
+				if( intensityValue !== this.lightSetpoint[ group.groupName ] ) {
+
+					this.changeSetpoint( group.light.channelId, intensityValue );
+					this.lightSetpoint[ group.groupName ] = intensityValue;
+				}
+
+			} else if ( group.light.setPoint !== this.lightSetpoint[ group.groupName ] ) {
+
+				this.changeLightSetpoint( group.light.channelId, group.light.setPoint );
+				this.lightSetpoint[ group.groupName ] = group.light.setPoint;§
+			}
+		}
+	}
+
+
+	async measureGroupLightIntensity( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		if( group.light.channelId ) {
+			return this.measurePD( group.light.channelId );	
+		}
+		return -1;
+	}
+
+	async measureChannelLightIntensity( channelId ) {
+		const group = this.getGroupFromChanId( channelId );
+		const channelIdPD = group.light.channelId;
+		return this.measurePD( channelIdPD );
+	}
+
+	async getChannelLightIntensity( chanId, defaultValue ) {
+
+		const status = this.getStatus( chanId );
+		
+		if( status.lightRefValue ) { // If the value is forces
+			return status.lightRefValue;
+		}
+
+		if( defaultValue ) { // If there's already a default value
+			return defaultValue;
+		}
+		
+		return this.measureChannelLightIntensity( chanId );
+	}
+
+	async measurePD( channelId ) {
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD[ channelId ], 2 ) );
+	}
+
+	async measureTemperature( chanId ) {
+
+		let group = this.getGroupFromChanId( chanId );
+		let chan = this.getInstrumentConfig( group.groupName, chanId );
+
+		if( ! chan.temperatureSensor ) {
+			throw "No temperature sensor linked to channel " + chanId;
+		}
+
+		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
+		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
+
+		return this.temperatures[ chanId ] = [ baseTemperature, sensorVoltage, baseTemperature + ( ( sensorVoltage + chan.temperatureSensor.offset ) * chan.temperatureSensor.gain ) ].map( ( val ) => Math.round( val * 10 ) / 10 );
+	}
+
+	async measureGroupTemperature( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
+		return this.getGroupTemperature( groupName );
+	}
+
+	getGroupTemperature( groupName ) {
+
+		return this.groupTemperature[ groupName ];
+	}
+
+	async measureGroupHumidity( groupName ) {
+
+		let group = this.getGroupFromGroupName( groupName );
+		this.groupHumidity[ groupName ] = Math.round( 1000 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.i2cSlave ), 2 ) ) ) / 10 ;
+		return this.getGroupHumidity( groupName );
+	}
+
+	getGroupHumidity( groupName ) {
+
+		return this.groupHumidity[ groupName ];
+	}
+
+
+	getPDOptions( groupName ) {
+
+		
+		let pdOptions = [];
+
+		const group = this.getGroupFromGroupName( groupName );
+		const pds = group.pds;
+		
+		if( ! pds ) {
+			return [];
+		}
+
+		for( var i = 0, l = this.getInstrumentConfig().pdRefs.length; i < l; i ++ ) {
+			if( pds.includes( this.getInstrumentConfig().pdRefs[ i ].ref ) ) {
+				pdOptions.push( this.getInstrumentConfig().pdRefs[ i ] );
+			}
+		}
+
+		return pdOptions;
+	}
+
 
 
 	//////////////////////////////////////
@@ -939,7 +922,7 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
 		return this
-			.getStateManager()
+			.getStateManager() // State manager for non parallel querying (i.e. no 2 parallel iv curve, no parallel voc and jsc measurement)
 			.addQuery( async () => {
 
 				var status = this.getStatus( chanId );
@@ -950,30 +933,59 @@ class TrackerController extends InstrumentController {
 					throw "Channel not enabled";
 				}
 
-				let ivcurveData = await this.requestIVCurve( chanId );
-				influx.storeIV( status.measurementName, ivcurveData, this.getLightFromChannel( chanId ) );
+				let light = this.getChannelLightIntensity( chanId );
+				await this.requestIVCurve( chanId );
+				while( await this.requestIVCurvePolling( ) ) {
+					await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
+				}
 
-				this.preventMPPT[ chanId ] = false;
+				let ivcurveData = this.requestIVCurveData();
+				influx.storeIV( status.measurementName, ivcurveData, light );
+
 				this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
 				const wave = new waveform();
-
 				for( let i = 0; i < ivcurveData.length; i += 2 ) {
 					wave.append( ivcurveData[ i ], ivcurveData[ i + 1 ] );	
 				}
 
-									
-				await delay( 5000 ); // Re equilibration
+				await delay( 5000 ); // Post j-V curve re-equilibration.
+				this.preventMPPT[ chanId ] = false;
 
 				return wave;
-
 			} );
 	}
 
 
 	requestIVCurve( chanId ) {
 		
-		return this.query( globalConfig.trackerControllers.specialcommands.executeIV + ":CH" + chanId, 2 ).then( ( data ) => {
+		return this.query( globalConfig.trackerControllers.specialcommands.ivExecute + ":CH" + chanId, 2 ).then( ( data ) => {
+
+			data = data
+				.split(',');			
+			data.pop();
+
+			return data.map( ( value ) => parseFloat( value ) );
+		});
+	}
+	
+
+
+	requestIVCurvePolling( chanId ) {
+		
+		return this.query( globalConfig.trackerControllers.specialcommands.ivStatus, 2 ).then( ( data ) => {
+
+			data = parseInt( data );
+			if( data == 1 ) {
+				return true;
+			}
+			return false;
+		});
+	}
+
+	requestIVCurveData( chanId ) {
+		
+		return this.query( globalConfig.trackerControllers.specialcommands.ivData, 2 ).then( ( data ) => {
 
 			data = data
 				.split(',');			
@@ -1045,10 +1057,10 @@ class TrackerController extends InstrumentController {
 		//results[9] in sun
 		// W cm-2
 
-		const lightRef = this.getLightFromChannel( chanId ); // In sun
+		
 		const group = this.getGroupFromChanId( chanId );
 
-
+		sun = this.getChannelLightIntensity( chanId, sun );
 		let efficiency = ( powerMean / ( status.cellArea ) ) / ( lightRef * 0.1 ) * 100;
 
 		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
@@ -1079,7 +1091,7 @@ class TrackerController extends InstrumentController {
 		} );
 	}
 
-	async measureVoc( chanId ) {
+	async measureVoc( chanId, extend ) {
 
 		this._setStatus( chanId, 'voc_booked', true, undefined, true );
 
@@ -1100,7 +1112,7 @@ class TrackerController extends InstrumentController {
 				// Update the cell status. Wait for it to be done
 				await this.saveStatus( chanId, { tracking_mode: 2, tracking_interval: 10, tracking_gain: 128 } );
 				
-				await delay( status.tracking_measure_voc_time ); // Go towards the Voc
+				await delay( status.tracking_measure_voc_time * ( extend ? 5 : 1 ) ); // Go towards the Voc
 
 				let trackingData = await this._getTrackData( chanId );
 				const voc = trackingData[ 0 ];
@@ -1265,6 +1277,31 @@ async function requestHumidity( instrumentId ) {
 	} );
 }*/
 
+
+function possibleNewMeasurement( measurementName, status ) {
+
+	if( ! measurements[ measurementName ] ) {
+		measurements[ measurementName ] = {
+			cellInfo: {
+				cellName: status.cellName,
+				cellArea: status.cellArea
+			},
+			startDate: Date.now()
+		};
+	}
+
+	fs.writeFileSync("./trackercontroller/measurements.json", JSON.stringify( measurements, undefined, "\t" ) );
+}
+
+
+function measurementEnd( measurementName ) {
+
+	if( measurements[ measurementName ] ) {
+		
+		measurements[ measurementName ].endDate = Date.now();
+		fs.writeFileSync("./trackercontroller/measurements.json", JSON.stringify( measurements, undefined, "\t" ) );
+	}
+}
 
 /**
  *	Verifies if a collection of objects has changed between two states
