@@ -1,0 +1,17 @@
+{
+	"a": {
+		"cellInfo": {
+			"cellName": "Hello",
+			"cellArea": 0.57
+		},
+		"startDate": 10000000000,
+		"endDate": 20000000000
+	},
+	"b": {
+		"cellInfo": {
+			"cellName": "Hello2",
+			"cellArea": 0.3
+		},
+		"startDate": 30000000000
+	}
+}
