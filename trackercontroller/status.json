@@ -700,7 +700,7 @@
 				"instrumentId": "Tracker 1"
 			},
 			"tracking_record_interval": 60000,
-			"tracking_interval": 100,
+			"tracking_interval": 0,
 			"tracking_bwfwthreshold": 0.0004,
 			"tracking_fwbwthreshold": 0.0004,
 			"tracking_step": null,
@@ -727,7 +727,9 @@
 			"cellName": "Yiming_Y351S_PW_08",
 			"chanId": 15,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": false,
+			"jsc_booked": false,
+			"voc_booked": false
 		},
 		{
 			"tracking_record_interval": 10000,
