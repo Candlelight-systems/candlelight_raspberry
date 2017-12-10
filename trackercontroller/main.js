@@ -272,12 +272,12 @@ module.exports = {
 		getInstrument( instrumentId ).lightIsEnabled( groupName );
 	},
 
-	lightSetSetpoint( instrumentId, groupName ) {
-		getInstrument( instrumentId ).lightSetSetpoint( groupName );
+	lightSetSetpoint( instrumentId, groupName, setpoint ) {
+		getInstrument( instrumentId ).lightSetSetpoint( groupName, setpoint );
 	},
 
-	lightSetScaling( instrumentId, groupName ) {
-		getInstrument( instrumentId ).lightSetScaling( groupName );
+	lightSetScaling( instrumentId, groupName, scaling ) {
+		getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
 	}
 };
 

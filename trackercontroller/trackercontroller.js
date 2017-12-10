@@ -701,11 +701,11 @@ class TrackerController extends InstrumentController {
 		}
 	}
 
-	async _lightCommand( groupName, command ) {
+	async _lightCommand( groupName, command, value ) {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.light.channelId ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ] + ":CH" + group.light.channelId );	
+			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ] + ":CH" + group.light.channelId + ( value !== undefined ? ' ' + value : '' ) );	
 		}	
 		throw "No light for this group";	
 	}
@@ -722,12 +722,12 @@ class TrackerController extends InstrumentController {
 		return this._lightCommand( groupName, 'isEnabled' );
 	}
 
-	async lightSetSetpoint( groupName ) {
-		return this._lightCommand( groupName, 'setSetpoint' );
+	async lightSetSetpoint( groupName, setpoint ) {
+		return this._lightCommand( groupName, 'setSetpoint', setpoint );
 	}
 
-	async lightSetScaling( groupName ) {
-		return this._lightCommand( groupName, 'setScaling' );
+	async lightSetScaling( groupName, scaling ) {
+		return this._lightCommand( groupName, 'setScaling', scaling );
 	}
 
 	async lightDisable( groupName ) {
@@ -737,8 +737,6 @@ class TrackerController extends InstrumentController {
 		}	
 		throw "No light for this group";
 	}
-
-
 
 	async measureGroupLightIntensity( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );

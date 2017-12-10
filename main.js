@@ -423,6 +423,24 @@ app.get("/light.disable", ( req, res ) => {
 });
 
 
+app.get("/light.isEnabled", ( req, res ) => {
+	trackerController.lightIsEnabled( req.query.instrumentId, req.query.groupName ).then( ( value ) => {
+		res.send( value );
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.setSetpoint", ( req, res ) => {
+	trackerController.lightSetSetpoint( req.query.instrumentId, req.query.groupName, req.query.setPoint ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.setScaling", ( req, res ) => {
+	trackerController.lightEnable( req.query.instrumentId, req.query.groupName, req.query.scaling ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
 app.get("/light.getController", function( req, res ) {
 
 	trackerController.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
