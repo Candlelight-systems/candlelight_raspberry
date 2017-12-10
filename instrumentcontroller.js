@@ -77,8 +77,10 @@ class InstrumentController {
 		this.stateManager = new queryManager();
 
 		if( this.communicationConfig.resetPin ) {
+
 			console.log('Preparing', this.communicationConfig.resetPin);
 			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
+
 		}
 	}	
 

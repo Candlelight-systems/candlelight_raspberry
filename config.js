@@ -109,7 +109,9 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
-			executeIV: "IV:EXECUTE",
+			ivExecute: "IV:EXECUTE",
+			ivData: "IV:DATA",
+			ivStatus: "IV:STATUS",
 			readPD: {
 				pd_1: "ENVIRONMENT:PHOTODIODE1",
 				pd_2: "ENVIRONMENT:PHOTODIODE2"
@@ -147,8 +149,8 @@ module.exports = {
 		defaults: {
 			"tracking_record_interval": 10000,
 			"tracking_interval": 100,
-			"tracking_bwfwthreshold": 1,
-			"tracking_fwbwthreshold": 1,
+			"tracking_bwfwthreshold": 0,
+			"tracking_fwbwthreshold": 0,
 			"tracking_step": 1,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,

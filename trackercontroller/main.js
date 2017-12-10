@@ -4,6 +4,7 @@ const HostManager 				= require("../hostmanager");
 const config					= require("../config");
 const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
+let allMeasurements 			= require("./measurements.json");
 
 let allMeasurements 			= require("./measurements.json");
 const wsconnection				= require('../wsconnection' );
@@ -120,11 +121,9 @@ module.exports = {
 		return getInstrument( instrumentId ).makeIV( chanId );
 	},
 
-
 	measureVoc: ( instrumentId, chanNumber, extend ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		return getInstrument( instrumentId ).measureVoc( chanId, extend );
-
 	},
 
 	measureJsc: ( instrumentId, chanNumber ) => {
