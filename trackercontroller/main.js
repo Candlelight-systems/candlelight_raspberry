@@ -5,8 +5,6 @@ const config					= require("../config");
 const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
 let allMeasurements 			= require("./measurements.json");
-
-let allMeasurements 			= require("./measurements.json");
 const wsconnection				= require('../wsconnection' );
 
 let instrumentInstances = {};
@@ -37,7 +35,8 @@ function lookupChanId( instrumentId, chanNumber ) {
 }
 
 function save() {
-	fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
+	console.log( config.hosts );
+	//fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
 }
 
 module.exports = {
@@ -73,16 +72,13 @@ module.exports = {
 				channels: {}
 			};
 
-			if( group.heatController ) {
-				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
+			if( group.heat ) {
+				returnObject[ group.groupName ].heatController = true;
+//				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
 			}
 
-			if( instrument.hasLightController( group.groupName ) ) {
+			if( group.light ) {
 				returnObject[ group.groupName ].lightController = true;
-
-				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint( group.groupName );
-				returnObject[ group.groupName ].lightModeAutomatic = instrument.getLightController( group.groupName ).isModeAutomatic( group.groupName );
-
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -261,14 +257,16 @@ module.exports = {
 		return savingPromise;
 	},
 
-	lightDisable( instrumentId, groupName ) {
-		getInstrument( instrumentId ).lightDisable( groupName );
-		save();
+	async lightDisable( instrumentId, groupName ) {
+		await getInstrument( instrumentId ).lightDisable( groupName );
+		await getInstrument( instrumentId ).lightSensing();
+		await save();
 	},
 
-	lightEnable( instrumentId, groupName ) {
-		getInstrument( instrumentId ).lightEnable( groupName );
-		save();
+	async lightEnable( instrumentId, groupName ) {
+		await getInstrument( instrumentId ).lightEnable( groupName );
+		await getInstrument( instrumentId ).lightSensing();
+		await save();
 	},
 
 	lightIsEnabled( instrumentId, groupName ) {

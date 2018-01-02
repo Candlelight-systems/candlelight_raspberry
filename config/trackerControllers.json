@@ -2,15 +2,18 @@
 	"Tracker 1": {
 
 		"fullScaleCurrent": 0.015,
-		"instrumentId": "Tracker 1",
+		"instrumentId": "Small cells",
+		"relayController": "relay1",
+
 		"groups": [
 			{	
-				"groupName": "Box A",
+				"groupName": "Slot A",
 				"groupID": "boxa",
 				
 
 				"light": {
 					"on": true,
+					"channelId": 1,
 					"scaling": 6.9,
 					"factory_scaling": 6.9,
 					"scheduling": {
@@ -18,7 +21,8 @@
 						"msBasis": 3600,
 						"waveform": [ 0, 1, 0 ]
 					},
-					"setPoint": 1
+					"setPoint": 1,
+					"sensing": {}
 				},
 
 				"i2cSlave": 8,
@@ -54,7 +58,31 @@
 					{
 						"chanId": 8,
 						"chanName": "Channel 8"
+					}
+				]
+			},
+
+
+			{	
+				"groupName": "Slot B",
+				"groupID": "boxb",
+
+				"light": {
+					"on": true,
+					"scaling": 6.9,
+					"channelId": 2,
+					"factory_scaling": 6.9,
+					"scheduling": {
+						"enabled": false,
+						"msBasis": 3600,
+						"waveform": [ 0, 1, 0 ]
 					},
+					"setPoint": 1,
+					"sensing": {}
+				},
+
+				"i2cSlave": 8,
+				"channels": [
 					{
 						"chanId": 9,
 						"chanName": "Channel 9"
@@ -86,6 +114,53 @@
 					{
 						"chanId": 16,
 						"chanName": "Channel 16"
+					}
+				]
+			}
+		],
+		"pdRefs": []
+	},
+
+
+	"Small modules": {
+		"fullScaleCurrent": 0.100,
+		"instrumentId": "Small modules",
+		"groups": [
+			{	
+				"groupName": "Modules",
+				"groupID": "modules",
+				"channels": [
+					{
+						"chanId": 1,
+						"chanName": "Module 1"
+					},
+					{
+						"chanId": 2,
+						"chanName": "Module 2"
+					},
+					{
+						"chanId": 3,
+						"chanName": "Module 3"
+					},
+					{
+						"chanId": 4,
+						"chanName": "Module 4"
+					},
+					{
+						"chanId": 5,
+						"chanName": "Module 5"
+					},
+					{
+						"chanId": 6,
+						"chanName": "Module 6"
+					},
+					{
+						"chanId": 7,
+						"chanName": "Module 7"
+					},
+					{
+						"chanId": 8,
+						"chanName": "Module 8"
 					}
 				]
 			}

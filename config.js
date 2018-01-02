@@ -3,9 +3,7 @@ const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
 const trackerControllers = require("./config/trackerControllers.json");
-const lightControllers = require("./config/lightControllers.json");
 const relayControllers = require("./config/relayControllers.json");
-const heatControllers = require("./config/heatControllers.json");
 
 
 module.exports = {
@@ -21,9 +19,29 @@ module.exports = {
 	hosts: [
 
 		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
 			"alias": "Tracker 1",
 			"constructorName": "TrackerController",
+			"resetPin": 40,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"alias": "Small modules",
+			"constructorName": "TrackerController",
+			"resetPin": 40,
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+			"alias": "relay1",
+			"constructorName": "RelayController",
 			"resetPin": 40,
 			"params": {
 				"baudrate": 57600
@@ -191,14 +209,6 @@ module.exports = {
 			"measurementName": null,
 			"cellName": null
 		},
-	},
-
-	heatControllers: {
-		hosts: heatControllers
-	},
-
-	lightControllers: {
-		hosts: lightControllers
 	},
 
 	relayControllers: {

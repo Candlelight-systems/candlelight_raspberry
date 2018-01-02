@@ -104,6 +104,7 @@ class TrackerController extends InstrumentController {
 			}
 		}
 
+		console.trace();
 		throw "Cannot find the group with group name " + groupName;
 	}
 
@@ -658,19 +659,27 @@ class TrackerController extends InstrumentController {
 		let temperature, lights, humidity;
 
 		for( let group of groups ) {
-					
-			wsconnection.send( {
-				instrumentId: this.getInstrumentId(),
-				groupName: group.groupName,
-				data: {
+			
+			let data = {
+				temperature: this.measureGroupTemperature( group.groupName ),
+				humidity: this.measureGroupHumidity( group.groupName ),
+			};
+
+			if( group.light ) {
+
+				Object.assign( data, {
 					lightOnOff: group.light.on,
 					lightOnOffButton: await this.lightIsEnabled( group.groupName ),
 					lightMode: await this.lightIsAutomatic( group.groupName ) ? 'auto' : 'manual',
 					lightSetpoint: this.lightSetpoint[ group.groupName ],
 					lightValue: await this.measureGroupLightIntensity( group.groupName ),
-					temperature: this.measureGroupTemperature( groups.groupName ),
-					humidity: this.measureGroupHumidity( groups.groupName ),
-				}
+				} );
+			}
+
+			wsconnection.send( {
+				instrumentId: this.getInstrumentId(),
+				groupName: group.groupName,
+				data: data
 			});
 		}
 	}
@@ -711,13 +720,14 @@ class TrackerController extends InstrumentController {
 			}
 
 			if( group.light.on ) { // Normalisation of the light status
-				this.lightEnable();
+				await this.lightEnable( group.groupName );
 			} else {
-				this.lightDisable();
+				await this.lightDisable( group.groupName );
 			}
 
 			// Set the mA to sun scaling value
-			this.lightSetScaling( group.light.scaling );
+			await this.lightSetScaling( group.groupName, group.light.scaling );
+
 
 			if( group.light.scheduling && group.light.scheduling.enabled ) { // Scheduling mode, let's check for new setpoint ?
 
@@ -729,13 +739,13 @@ class TrackerController extends InstrumentController {
 
 				if( intensityValue !== this.lightSetpoint[ group.groupName ] ) {
 
-					this.changeSetpoint( group.light.channelId, intensityValue );
+					await this.lightSetSetpoint( group.groupName, intensityValue );
 					this.lightSetpoint[ group.groupName ] = intensityValue;
 				}
 
 			} else if ( group.light.setPoint !== this.lightSetpoint[ group.groupName ] ) {
 
-				this.changeLightSetpoint( group.light.channelId, group.light.setPoint );
+				await this.lightSetSetpoint( group.groupName, group.light.setPoint );
 				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 		}
@@ -744,22 +754,32 @@ class TrackerController extends InstrumentController {
 	async _lightCommand( groupName, command, value ) {
 
 		const group = this.getGroupFromGroupName( groupName );
+
+		if( ! groupName ) {
+			throw new Error(`No light configuration for the group ${ groupName }` );
+		}
+
+
 		if( group.light.channelId ) {
 			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ] + ":CH" + group.light.channelId + ( value !== undefined ? ' ' + value : '' ) );	
-		}	
-		throw "No light for this group";	
+		}
+
+		
+		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
 	}
 
 	async lightEnable( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );
 		group.light.on = true;
-		return this._lightCommand( groupName, 'enable' );
+		const returnValue = this._lightCommand( groupName, 'enable' );
+		return returnValue;
 	}
 
 	async lightDisable( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );
 		group.light.on = false;
-		return this._lightCommand( groupName, 'disable' );
+		const returnValue = this._lightCommand( groupName, 'disable' );
+		return returnValue;
 	}
 
 	async lightIsEnabled( groupName ) {
@@ -778,7 +798,7 @@ class TrackerController extends InstrumentController {
 
 	async lightSetScaling( groupName, scaling ) {
 		const group = this.getGroupFromGroupName( groupName );
-		group.light.scaling = setpoint;
+		group.light.scaling = scaling;
 		return this._lightCommand( groupName, 'setScaling', scaling );
 	}
 
@@ -826,7 +846,7 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measureTemperature( chanId ) {
-
+		return;
 		let group = this.getGroupFromChanId( chanId );
 		let chan = this.getInstrumentConfig( group.groupName, chanId );
 
@@ -841,10 +861,14 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measureGroupTemperature( groupName ) {
-
+		return;
 		let group = this.getGroupFromGroupName( groupName );
-		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
 
+		if( ! group.i2cSlave ) {
+			return;
+		}
+
+		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
 		return this.getGroupTemperature( groupName );
 	}
 
@@ -854,8 +878,13 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measureGroupHumidity( groupName ) {
-
+		return;
 		let group = this.getGroupFromGroupName( groupName );
+
+		if( ! group.i2cSlave ) {
+			return;
+		}
+
 		this.groupHumidity[ groupName ] = Math.round( 1000 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.i2cSlave ), 2 ) ) ) / 10 ;
 		return this.getGroupHumidity( groupName );
 	}
@@ -881,8 +910,9 @@ class TrackerController extends InstrumentController {
 			if( now - intervals[ i ].lastTime > intervals[ i ].interval && intervals[ i ].activated ) {
 
 				try {
-				
+					
 					if( ! this.paused ) {
+						intervals[ i ].lastTime = Date.now();
 						await intervals[ i ].callback( intervals[ i ].chanId ); // This must not fail !
 					}
 					
@@ -1314,56 +1344,6 @@ class TrackerController extends InstrumentController {
 	}
 
 
-	async setHeatingPower( groupName, power ) {
-
-		const config = this.getInstrumentConfig( groupName );
-		if( config.heatController ) {
-			const controller = HostManager.getHost( config.heatController.hostAlias );
-			await controller.setPower( config.heatController.channel, power );
-			return;
-		}
-
-		throw `No heating controller associated to the group name ${ groupName }`;
-	}
-
-
-
-	async increaseHeatingPower( groupName ) {
-
-		const config = this.getInstrumentConfig( groupName );
-		if( config.heatController ) {
-			const controller = HostManager.getHost( config.heatController.hostAlias );
-			await controller.increasePower( config.heatController.channel );
-			return this.getHeatingPower( groupName );
-		}
-
-		throw `No heating controller associated to the group name ${ groupName }`;
-	}
-
-
-	async decreaseHeatingPower( groupName ) {
-
-		const config = this.getInstrumentConfig( groupName );
-		if( config.heatController ) {
-			const controller = HostManager.getHost( config.heatController.hostAlias );
-			await controller.decreasePower( config.heatController.channel );
-			return this.getHeatingPower( groupName );
-		}
-
-		throw `No heating controller associated to the group name ${ groupName }`;
-	}
-
-
-	getHeatingPower( groupName ) {
-
-		const config = this.getInstrumentConfig( groupName );
-		if( config.heatController ) {
-			const controller = HostManager.getHost( config.heatController.hostAlias );
-			return controller.getPower( config.heatController.channel );
-		}
-
-		throw `No heating controller associated to the group name ${ groupName }`;
-	}
 
 }
 

@@ -10,9 +10,7 @@ const fs = require('fs');
 const HostManager = require('./hostmanager');
 
 const trackerController = require('./trackercontroller/main');
-const lightController = require('./lightcontroller/main');
 const relayController = require('./relaycontroller/main');
-const heatController = require('./heatcontroller/main');
 
 
 var app = express();

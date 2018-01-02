@@ -93,6 +93,7 @@ class InstrumentController {
 	}
 
 	query( queryString, expectedLines = 1, prepend ) {
+		console.log( this.getConfig().host );
 		return query( this.getConnection(), queryString, expectedLines, () => { return true; }, prepend )
 	}
 
