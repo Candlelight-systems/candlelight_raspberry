@@ -410,6 +410,7 @@ app.get("/resetSlave", ( req, res ) => {
 
 } );
 
+
 app.get("/light.getController", function( req, res ) {
 
 	trackerController.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
