@@ -347,7 +347,8 @@ class TrackerController extends InstrumentController {
 			chanId: chanId,
 
 			action: {
-				update: true
+				update: true,
+				stopped: true
 			}
 		} );
 	}
