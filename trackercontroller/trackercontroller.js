@@ -46,11 +46,10 @@ class TrackerController extends InstrumentController {
 		this._creation = Date.now();
 	}	
 
-	init() {
-		this.trackData = [];		
-	}	
 
 	init() {
+
+		this.trackData = [];		
 
 		this.openConnection( async () => {
 
@@ -401,11 +400,6 @@ class TrackerController extends InstrumentController {
 			possibleNewMeasurement( newStatus.measurementName, newStatus );
 		}
 
-		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
-			possibleNewMeasurement( newStatus.measurementName, newStatus );
-		}
-
-
 
 		let newMode;
 
@@ -431,13 +425,10 @@ class TrackerController extends InstrumentController {
 		}
 
 		this._setStatus( chanId, "tracking_mode", newMode, newStatus );
-		await this.updateInstrumentStatusChanId( chanId, previousStatus );
-
+		
 		if( ! noSave ) {
 			saveStatus();
 		}
-		
-		console.log('update it');
 		
 		wsconnection.send( {
 
@@ -448,6 +439,8 @@ class TrackerController extends InstrumentController {
 				update: true
 			}
 		} );
+
+		await this.updateInstrumentStatusChanId( chanId, previousStatus );
 	}
 
 	enableChannel( chanId ) {
@@ -615,10 +608,10 @@ class TrackerController extends InstrumentController {
 
 						
 					if( ! isNaN( maxEffVoltage ) ) {
-						console.log( "Error in finding the maximum voltage" );
 						await this.setVoltage( chanId, maxEffVoltage );
 						setTrackTimer();
 					} else {
+						console.log( "Error in finding the maximum voltage" );
 						setTrackTimer();
 					}
 
@@ -965,6 +958,10 @@ class TrackerController extends InstrumentController {
 
 		let chans = new Set();
 
+		if( ! Array.isArray( this.trackData ) || this.trackData.length == 0 ) {
+			return;
+		}
+		
 		await influx.saveTrackData( this.trackData.map( ( data ) => { chans.add( data.chanId ); return data.influx; } ) );
 
 		chans.forEach( chan => {

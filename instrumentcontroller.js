@@ -51,7 +51,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 
 						communication.removeAllListeners( "data" );
 						communication.flush();
-						await delay( 10 );
+						await delay( 5 );
 						console.log("end");
 						resolver( dataThatMatters );
 						return;
