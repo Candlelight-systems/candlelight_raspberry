@@ -8,7 +8,7 @@ class LightController extends InstrumentController {
 
 	constructor( ) {
 
-		super( config );
+		super( ...arguments );
 
 		this.currentCode = {};
 		this.on = false;
@@ -32,13 +32,18 @@ class LightController extends InstrumentController {
 	}
 
 	async setTracker( tracker, groupName ) {
+
 		this.trackerReference[ groupName ] = tracker;
+		
 		let cfg = this.getInstrumentConfig()[ groupName ];
 		await this.query( "PWM:VALUE:CH" + cfg.pwmChannel + " " + this.currentCode[ groupName ] );
 		await this.turnOn( groupName );
+
+		await this.checkLightStatus();
 	}
 
 	setGroupConfig( groupName, config ) {
+
 		Object.assign( this.instrumentConfig[ groupName ], config ); // Extend it
 		this.processConfig( groupName );
 	}
@@ -215,15 +220,18 @@ class LightController extends InstrumentController {
 						break;
 					}
 
+					if( this.getCurrentCode( groupName ) == 255 || this.getCurrentCode( groupName ) == 0 ) {
+						break;
+					}
+
 				} while( i < 100 );
+
 
 				if( pauseChannels ) {
 					await trackerReference.resumeChannels();
 				}
 			}
-
-
-			}
+		}
 		this.setTimeout();
 	}
 
@@ -253,9 +261,9 @@ class LightController extends InstrumentController {
 		return this.getCode( groupName );
 	}
 
-	setCode( newCode ) {
-		this.currentCode = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
-		return this.query( "PWM:VALUE:CH" + this.getInstrumentConfig().pwmChannel + " " + this.currentCode );
+	setCode( groupName, newCode ) {
+		this.currentCode[ groupName ] = Math.min( Math.max( 0, Math.round( newCode ) ), 255 );
+		return this.query( "PWM:VALUE:CH" + this.getInstrumentConfig()[ groupName ].pwmChannel + " " + this.currentCode[ groupName ] );
 
 	}
 

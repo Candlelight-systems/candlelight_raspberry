@@ -20,7 +20,6 @@ module.exports = {
 
 	hosts: [
 
-<<<<<<< HEAD
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
 			"alias": "Tracker 1",
@@ -34,7 +33,7 @@ module.exports = {
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "Light",
+			"alias": "light1",
 			"constructorName": "LightController",
 			
 			"params": {
@@ -136,8 +135,8 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE?:CH" + chanId + " " + slaveId,
-			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR?:CH" + chanId + " " + slaveId,
+			readTemperatureChannelBase: ( slaveId ) => "ENVIRONMENT:TEMPBASE? " + slaveId,
+			readTemperatureChannelIR: ( slaveId ) => "ENVIRONMENT:TEMPIR? " + slaveId,
 			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
 			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
 		},
@@ -153,8 +152,8 @@ module.exports = {
 			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
 			[ "TRACKING:GAIN", function( status ) { return status.tracking_gain || -1; } ],
 			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
-			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold || 0.99; } ],
-			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold || 0.99; } ],
+			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold; } ],
+			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold; } ],
 			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
 			[ "TRACKING:SWITCHDELAY", function( status ) { return status.tracking_switch_delay || 1; } ],
 
@@ -164,8 +163,8 @@ module.exports = {
 		defaults: {
 			"tracking_record_interval": 10000,
 			"tracking_interval": 100,
-			"tracking_bwfwthreshold": 1,
-			"tracking_fwbwthreshold": 1,
+			"tracking_bwfwthreshold": 0,
+			"tracking_fwbwthreshold": 0,
 			"tracking_step": 1,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,

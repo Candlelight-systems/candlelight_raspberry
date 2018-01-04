@@ -99,6 +99,7 @@ module.exports = {
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
 		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
+		
 		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
 	},
 
@@ -217,7 +218,7 @@ module.exports = {
 
 	saveLightController: async ( instrumentId, groupName, cfg ) => {
 		let savingPromise = getInstrument( instrumentId ).saveLightController( groupName, cfg );
-		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( config.hosts, undefined, "\t" ) );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
 
 		return savingPromise;
 	},

@@ -1,1 +1,14 @@
-{"Light":{"Box A":{"pd":"pd_1","pwmChannel":4,"setPoint":1,"scheduling":{"basis":[],"intensities":[]},"modeAutomatic":false}}}
+{
+	"light1": {
+		"Box A": {
+			"pd": "pd_1",
+			"pwmChannel": 4,
+			"setPoint": 1,
+			"scheduling": {
+				"basis": [],
+				"intensities": []
+			},
+			"modeAutomatic": true
+		}
+	}
+}

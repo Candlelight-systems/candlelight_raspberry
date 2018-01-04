@@ -450,5 +450,68 @@
 			"cellArea": 0.57
 		},
 		"startDate": 1510246095767
+	},
+	"D3_1515083715517": {
+		"cellInfo": {
+			"cellName": "D3",
+			"cellArea": 0.57
+		},
+		"startDate": 1515083715540,
+		"endDate": 1515084632443
+	},
+	"D1_1515084662110": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515084662130,
+		"endDate": 1515086265891
+	},
+	"D2_1515086433225": {
+		"cellInfo": {
+			"cellName": "D2",
+			"cellArea": 0.57
+		},
+		"startDate": 1515086433244
+	},
+	"testdevice2_1515086928202": {
+		"cellInfo": {
+			"cellName": "testdevice2",
+			"cellArea": 0.57
+		},
+		"startDate": 1515086928222,
+		"endDate": 1515087168358
+	},
+	"D5_1515087980883": {
+		"cellInfo": {
+			"cellName": "D5",
+			"cellArea": 0.57
+		},
+		"startDate": 1515087980899,
+		"endDate": 1515090784167
+	},
+	"D6_1515087982191": {
+		"cellInfo": {
+			"cellName": "D6",
+			"cellArea": 0.57
+		},
+		"startDate": 1515087982205,
+		"endDate": 1515090783067
+	},
+	"D9_1515087983754": {
+		"cellInfo": {
+			"cellName": "D9",
+			"cellArea": 0.57
+		},
+		"startDate": 1515087983766,
+		"endDate": 1515090782162
+	},
+	"D10_1515088947710": {
+		"cellInfo": {
+			"cellName": "D10",
+			"cellArea": 0.57
+		},
+		"startDate": 1515088947724,
+		"endDate": 1515090781188
 	}
 }

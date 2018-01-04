@@ -43,16 +43,12 @@ class TrackerController extends InstrumentController {
 		this.pdIntensity = {};
 
 		this.paused = false;
+			
 	}	
 
 	init() {
 
 		this.trackData = [];
-
-		
-	}	
-
-	init() {
 
 		this.openConnection( async () => {
 
@@ -457,14 +453,12 @@ class TrackerController extends InstrumentController {
 		}
 
 		this._setStatus( chanId, "tracking_mode", newMode, newStatus );
-		await this.updateInstrumentStatusChanId( chanId, previousStatus );
+
 
 		if( ! noSave ) {
 			saveStatus();
 		}
-		
-		console.log('update it');
-		
+
 		wsconnection.send( {
 
 			instrumentId: this.getInstrumentId(),
@@ -474,6 +468,9 @@ class TrackerController extends InstrumentController {
 				update: true
 			}
 		} );
+
+		await this.updateInstrumentStatusChanId( chanId, previousStatus );
+		
 	}
 
 	enableChannel( chanId ) {
@@ -638,7 +635,7 @@ class TrackerController extends InstrumentController {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 
-
+					
 						
 					if( ! isNaN( maxEffVoltage ) ) {
 						console.log( "Error in finding the maximum voltage" );
@@ -673,18 +670,35 @@ class TrackerController extends InstrumentController {
 
 	async measureEnvironment() {
 
+
 		let groups = this.getInstrumentConfig().groups;
 		let temperature, lights, humidity;
 
-		for( var i = 0, l = groups.length; i < l; i ++ ) {
+		for( let group of groups ) {
 				
-			await influx.storeEnvironment( 
-				this.getInstrumentId() + "_" + groups[ i ].groupID,
-				await this.measureGroupTemperature( groups[ i ].groupName ),
-				await this.measureGroupHumidity( groups[ i ].groupName ),
-				await this.measureGroupLightIntensity( groups[ i ].groupName )
-			);
-			
+			let humidity = await this.measureGroupHumidityTemperature( group.groupName );
+			console.log( humidity );
+			let data = {
+				//temperature: this.measureGroupTemperature( group.groupName ),
+				//humidity: this.measureGroupHumidity( group.groupName ),
+			};
+
+			if( group.lightController ) {
+
+				let controllerConfig = this.getLightController( group.groupName ).getInstrumentConfig()[ group.groupName ];
+				
+				Object.assign( data, {
+					lightAutomatic: controllerConfig.modeAutomatic,
+					lightSetpoint: controllerConfig.setPoint,
+					lightValue: await this.measureGroupLightIntensity( group.groupName ),
+				} );
+			}
+
+			wsconnection.send( {
+				instrumentId: this.getInstrumentId(),
+				groupName: group.groupName,
+				data: data
+			});
 		}
 	}
 
@@ -720,31 +734,25 @@ class TrackerController extends InstrumentController {
 			throw "No temperature sensor linked to channel " + chanId;
 		}
 
-		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
-		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.i2cSlave, chan.temperatureSensor.channel ), 2 ) );
+		var baseTemperature = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( chan.temperatureSensor.channel ), 2 ) );
+		var sensorVoltage = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( chan.temperatureSensor.channel ), 2 ) );
 
 		return this.temperatures[ chanId ] = [ baseTemperature, sensorVoltage, baseTemperature + ( ( sensorVoltage + chan.temperatureSensor.offset ) * chan.temperatureSensor.gain ) ].map( ( val ) => Math.round( val * 10 ) / 10 );
 	}
 
-	async measureGroupTemperature( groupName ) {
+	async measureGroupHumidityTemperature( groupName ) {
 
 		let group = this.getGroupFromGroupName( groupName );
-		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
 
-		return this.getGroupTemperature( groupName );
-	}
+		let data = await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.humiditySensor.address ), 3 )
 
-	getGroupTemperature( groupName ) {
+		this.groupHumidity[ groupName ] = Math.round( 1000 * parseFloat( data[ 1 ] ) ) / 10 ;
+		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( data[ 0 ] ) ) / 10;
 
-		return this.groupTemperature[ groupName ];
-	}
-
-	async measureGroupHumidity( groupName ) {
-
-		let group = this.getGroupFromGroupName( groupName );
-		this.groupHumidity[ groupName ] = Math.round( 1000 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.i2cSlave ), 2 ) ) ) / 10 ;
-		console.log( this.groupHumidity[ groupName ] );
-		return this.getGroupHumidity( groupName );
+		return {
+			humidity: this.groupHumidity[ groupName ],
+			temperature: this.groupTemperature[ groupName ]
+		};
 	}
 
 	getGroupHumidity( groupName ) {
@@ -762,6 +770,7 @@ class TrackerController extends InstrumentController {
 
 		for( var i = 0, l = group.pds.length; i < l; i ++ ) {
 			cfg = this.getPDData( group.pds[ i ] );
+
 			vals.push( await this._measurePD( group.pds[ i ] ) * cfg.scaling_ma_to_sun );
 		}
 
@@ -956,6 +965,9 @@ class TrackerController extends InstrumentController {
 
 		let chans = new Set();
 
+		if( ! Array.isArray( this.trackData ) || ! this.trackData ) {
+			return;
+		}
 		await influx.saveTrackData( this.trackData.map( ( data ) => { chans.add( data.chanId ); return data.influx; } ) );
 
 		chans.forEach( chan => {
@@ -1110,6 +1122,8 @@ class TrackerController extends InstrumentController {
 			temperature = [ -1, 0, -1 ];
 		}
 
+		console.log( temperature );
+
 		const voltageMean = parseFloat( data[ 0 ] ),
 			currentMean = parseFloat( data[ 1 ] ),
 			powerMean = parseFloat( data[ 2 ] ),
@@ -1152,7 +1166,7 @@ class TrackerController extends InstrumentController {
 				power: powerMean,
 				efficiency: efficiency,
 				sun: sun,
-				temperature: temperature ? temperature[ 2 ] : -1,
+				temperature: temperature ? temperature[ 0 ] : -1,
 				humidity: this.groupHumidity[ group.groupName ] || -1
 			},
 

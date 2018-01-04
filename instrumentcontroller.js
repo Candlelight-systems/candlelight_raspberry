@@ -28,7 +28,7 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 		return communication.lease = new Promise( ( resolver, rejecter ) => {
 
 			let data = "", 
-				dataThatMatters, 
+				dataThatMatters = [], 
 				lineCount = 0;
 
 		//	console.time("q");
@@ -41,9 +41,9 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 					
 					lineCount++;
 					
-					if( lineCount == 1 ) {
+					if( lineCount < linesExpected ) {
 
-						dataThatMatters = data.substr( 0, data.indexOf("\r\n") );
+						dataThatMatters.push( data.substr( 0, data.indexOf("\r\n") ) );
 						data = data.substr( data.indexOf("\r\n") + 2 );
 					}
 
@@ -52,8 +52,12 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 						communication.removeAllListeners( "data" );
 						communication.flush();
 						await delay( 10 );
-						console.log("end");
-						resolver( dataThatMatters );
+
+						if( dataThatMatters.length == 1 ) {
+							resolver( dataThatMatters[ 0 ] );
+						} else {
+							resolver( dataThatMatters );
+						}
 						return;
 					}
 				}
