@@ -21,7 +21,7 @@ module.exports = {
 	hosts: [
 
 		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
 			"alias": "Tracker 1",
 			"constructorName": "TrackerController",
 			"resetPin": 40,
@@ -29,7 +29,7 @@ module.exports = {
 				"baudrate": 57600
 			},
 			"reconnectTimeout": 1 // in seconds
-		}/*,
+		},
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
@@ -51,8 +51,10 @@ module.exports = {
 				"baudrate": 57600
 			},
 			"reconnectTimeout": 1 // in seconds
-		}*/
+		}
 /*
+=======
+>>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
@@ -64,6 +66,20 @@ module.exports = {
 			},
 			"reconnectTimeout": 1 // in seconds
 
+<<<<<<< HEAD
+		},
+
+		{	
+			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
+			"alias": "heat1",
+			"resetPin": 22,
+			"constructorName": "HeatController",
+			"params": {
+				"baudrate": 57600
+			},
+			"reconnectTimeout": 1 // in seconds
+		},
+=======
 		},
 
 		{	
@@ -109,9 +125,7 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: "DATA:TRACKER",
-			ivExecute: "IV:EXECUTE",
-			ivData: "IV:DATA",
-			ivStatus: "IV:STATUS",
+			executeIV: "IV:EXECUTE",
 			readPD: {
 				pd_1: "ENVIRONMENT:PHOTODIODE1",
 				pd_2: "ENVIRONMENT:PHOTODIODE2"
@@ -170,7 +184,7 @@ module.exports = {
 			"tracking_mode": 0,
 			"cellArea": 0,
 
-			"connection": "external",
+			"connection": "group",
 			"lightRefValue": 1000,
 
 			"measurementName": null,
@@ -190,4 +204,3 @@ module.exports = {
 		hosts: relayControllers
 	}
 };
-

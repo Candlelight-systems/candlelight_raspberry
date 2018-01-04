@@ -5,8 +5,6 @@ const config					= require("../config");
 const { trackerControllers } 	= require("../config");
 const TrackerController 		= require("./trackercontroller");
 let allMeasurements 			= require("./measurements.json");
-
-let allMeasurements 			= require("./measurements.json");
 const wsconnection				= require('../wsconnection' );
 
 let instrumentInstances = {};

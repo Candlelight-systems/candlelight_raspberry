@@ -144,7 +144,6 @@
 							"gain": -0.01,
 							"channel": 71
 						}
-
 					},
 					{
 						"chanId": 15,
@@ -157,7 +156,6 @@
 				]
 			}
 		],
-
 		"pdRefs": [
 			{
 				"name": "Photodiode 1",
