@@ -1187,7 +1187,7 @@ class TrackerController extends InstrumentController {
 				power: powerMean,
 				efficiency: efficiency,
 				sun: sun,
-				temperature: temperature ? temperature[ 2 ] : -1,
+				temperature_junction: temperature ? temperature[ 2 ] : -1,
 				humidity: this.groupHumidity[ group.groupName ] || -1
 			},
 
