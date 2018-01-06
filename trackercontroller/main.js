@@ -258,14 +258,16 @@ module.exports = {
 	},
 
 	async lightDisable( instrumentId, groupName ) {
+	
 		await getInstrument( instrumentId ).lightDisable( groupName );
-		await getInstrument( instrumentId ).lightSensing();
+		await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
 
 	async lightEnable( instrumentId, groupName ) {
+	
 		await getInstrument( instrumentId ).lightEnable( groupName );
-		await getInstrument( instrumentId ).lightSensing();
+		await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
 

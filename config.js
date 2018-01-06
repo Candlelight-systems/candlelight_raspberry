@@ -20,7 +20,7 @@ module.exports = {
 
 		{	
 			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
+			"alias": "Small cells",
 			"constructorName": "TrackerController",
 			"resetPin": 40,
 			"params": {

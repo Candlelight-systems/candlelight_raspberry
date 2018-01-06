@@ -783,7 +783,7 @@ class TrackerController extends InstrumentController {
 	}
 
 	async lightIsEnabled( groupName ) {
-		return this._lightCommand( groupName, 'isEnabled' );
+		return this._lightCommand( groupName, 'isEnabled' ).then( value => value == "1" );
 	}
 
 	async lightIsAutomatic( groupName ) {
