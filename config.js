@@ -154,8 +154,8 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE?:CH" + chanId + " " + slaveId,
-			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR?:CH" + chanId + " " + slaveId,
+			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE? " + slaveId,
+			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR? " + slaveId,
 			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
 			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
 		},
@@ -171,8 +171,8 @@ module.exports = {
 			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
 			[ "TRACKING:GAIN", function( status ) { return status.tracking_gain || -1; } ],
 			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
-			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold || 0.99; } ],
-			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold || 0.99; } ],
+			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold; } ],
+			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold; } ],
 			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
 			[ "TRACKING:SWITCHDELAY", function( status ) { return status.tracking_switch_delay || 1; } ],
 
