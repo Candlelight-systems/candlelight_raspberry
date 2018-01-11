@@ -140,15 +140,31 @@ module.exports = {
 				isEnabled: 'LIGHT:ENABLED?',
 				isAutomatic: 'LIGHT:AUTOMATIC?',
 				setSetpoint: 'LIGHT:SETPOINT',
-				setScaling: 'LIGHT:SCALING'
+				setScaling: 'LIGHT:SCALING',
+				check: 'LIGHT:CHECK'
 			},
 
+			acquisition: {
+				speed: ( speed ) => "ACQUISITION:SPEED " + speed
+			},
 
 			readPD: {
 				current: "ENVIRONMENT:PHOTODIODE",
 				sun: "ENVIRONMENT:SUNPHOTODIODE"
 			},		
-				
+
+			voc: {
+				trigger: "MEASURE:VOC",
+				status: "MEASURE:VOCSTATUS",
+				data: "MEASURE:VOCDATA"
+			},
+
+			jsc: {
+				trigger: "MEASURE:JSC",
+				status: "MEASURE:JSCSTATUS",
+				data: "MEASURE:JSCDATA"
+			},
+
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			resetSlave: "RESERVED:RESETSLAVE",
@@ -158,6 +174,7 @@ module.exports = {
 			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR? " + slaveId,
 			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
 			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
+			
 		},
 
 		statuscommands: [
@@ -167,15 +184,14 @@ module.exports = {
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
-
-			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
 			[ "TRACKING:GAIN", function( status ) { return status.tracking_gain || -1; } ],
-			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
 			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold; } ],
 			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold; } ],
-			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
 			[ "TRACKING:SWITCHDELAY", function( status ) { return status.tracking_switch_delay || 1; } ],
-
+			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
+			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
+			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
+			[ "TRACKING:PHOTODIODE", function( status, groupConfig ) { return groupConfig ? ( groupConfig.light ? -1 || -1 : -1 ) : -1; } ], // groupConfig.light.channelId
 			[ "OUTPUT:ENABLE", function( status ) { return status.enable || 0; } ]
 		],
 

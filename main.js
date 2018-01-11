@@ -488,3 +488,15 @@ app.get("/heat.decreasePower", function( req, res ) {
 		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
 	} );
 } );
+
+app.get("instrument.setAcquisitionSpeed", ( req, res ) => {
+
+	trackerController.setAcquisitionSpeed( req.query.instrumentId, req.query.groupName ).then( ( speed ) => {
+		res.send( speed );
+	} ).catch( ( error ) => {
+
+		console.error( error );
+		console.trace( error );
+		res.status( 500 ).send(`Cannot update the tracking power. Error was "${error}"`);
+	} );
+} );

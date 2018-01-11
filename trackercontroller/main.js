@@ -64,11 +64,13 @@ module.exports = {
 		
 		let instrument = getInstrument( instrumentId ),
 			groups = instrument.getGroups(),
-			returnObject = {};
+			returnObject = {
+			};
 
 		groups.forEach( ( group ) => {
 
 			returnObject[ group.groupName ] = {
+				acquisitionSpeed: instrument.getAcquisitionSpeed(),
 				channels: {}
 			};
 
@@ -205,6 +207,9 @@ module.exports = {
 		return getInstrument( instrumentId ).disableChannel( chanId );
 	},
 
+	setAcquisitionSpeed( instrumentId, speed ) {
+		return getInstrument( instrumentId ).setAcquisitionSpeed( speed );
+	},
 
 	setHeatingPower: async( instrumentId, groupName, power ) => {
 		let instrument = getInstrument( instrumentId );

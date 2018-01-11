@@ -51,14 +51,15 @@ function query( communication, query, linesExpected = 1, executeBefore = () => {
 
 						communication.removeAllListeners( "data" );
 						communication.flush();
-						await delay( 5 );
-						console.log("end");
+						console.timeEnd( "query:" + query );
+						await delay( 20 );
+						
 						resolver( dataThatMatters );
 						return;
 					}
 				}
 			} );	
-			console.log( "query:" + query );
+			console.time( "query:" + query );
 
 			communication.write( query + "\n" );
 			communication.drain( );
@@ -93,7 +94,7 @@ class InstrumentController {
 	}
 
 	query( queryString, expectedLines = 1, prepend ) {
-		console.log( this.getConfig().host );
+		console.log( this.getConfig().host, queryString );
 		return query( this.getConnection(), queryString, expectedLines, () => { return true; }, prepend )
 	}
 

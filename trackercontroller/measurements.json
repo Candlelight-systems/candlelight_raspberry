@@ -1,3 +1,382 @@
 {
-	
+	"D1_1515251405120": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515251405193,
+		"endDate": 1515251652286
+	},
+	"CH1_1515252380198": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515252380280,
+		"endDate": 1515252644243
+	},
+	"CH8_1515252684826": {
+		"cellInfo": {
+			"cellName": "CH8",
+			"cellArea": 0.56
+		},
+		"startDate": 1515252684906,
+		"endDate": 1515253087218
+	},
+	"sdsad_1515253096684": {
+		"cellInfo": {
+			"cellName": "sdsad",
+			"cellArea": 0.1
+		},
+		"startDate": 1515253096769,
+		"endDate": 1515254330449
+	},
+	"CH2_1515253585781": {
+		"cellInfo": {
+			"cellName": "CH2",
+			"cellArea": 0.57
+		},
+		"startDate": 1515253585875,
+		"endDate": 1515258468813
+	},
+	"CH1_1515258479409": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515258479535,
+		"endDate": 1515354526670
+	},
+	"CH1_1515354540566": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 3
+		},
+		"startDate": 1515354540590,
+		"endDate": 1515354627503
+	},
+	"D1_1515354692868": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515354692892,
+		"endDate": 1515355025481
+	},
+	"D1_1515355042463": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515355042487,
+		"endDate": 1515355641493
+	},
+	"CH1_1515355663934": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515355663956,
+		"endDate": 1515355809284
+	},
+	"Si_1515356007389": {
+		"cellInfo": {
+			"cellName": "Si",
+			"cellArea": 2
+		},
+		"startDate": 1515356007414,
+		"endDate": 1515356168226
+	},
+	"Si_1515356245573": {
+		"cellInfo": {
+			"cellName": "Si",
+			"cellArea": 0.57
+		},
+		"startDate": 1515356245600,
+		"endDate": 1515356390502
+	},
+	"Si_1515356449456": {
+		"cellInfo": {
+			"cellName": "Si",
+			"cellArea": 0.57
+		},
+		"startDate": 1515356449480,
+		"endDate": 1515356471581
+	},
+	"Si_1515356506405": {
+		"cellInfo": {
+			"cellName": "Si",
+			"cellArea": 3
+		},
+		"startDate": 1515356506429,
+		"endDate": 1515356528389
+	},
+	"Si_1515356564832": {
+		"cellInfo": {
+			"cellName": "Si",
+			"cellArea": 3
+		},
+		"startDate": 1515356564861,
+		"endDate": 1515357048002
+	},
+	"adsd_1515357129538": {
+		"cellInfo": {
+			"cellName": "adsd",
+			"cellArea": 1
+		},
+		"startDate": 1515357129561,
+		"endDate": 1515417009600
+	},
+	"D1_1515417113078": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515417113084,
+		"endDate": 1515417207169
+	},
+	"D1_1515417349932": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515417349933,
+		"endDate": 1515417587913
+	},
+	"D1_1515417599451": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515417599454,
+		"endDate": 1515420181611
+	},
+	"D1_1515420194769": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515420194770,
+		"endDate": 1515422349443
+	},
+	"CH1_1515422360452": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515422360452,
+		"endDate": 1515425741414
+	},
+	"CH_1515425763137": {
+		"cellInfo": {
+			"cellName": "CH",
+			"cellArea": 0.57
+		},
+		"startDate": 1515425763144,
+		"endDate": 1515428464501
+	},
+	"CH1_1515428474157": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515428474161,
+		"endDate": 1515428778290
+	},
+	"D1_1515428852030": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515428852034,
+		"endDate": 1515429297395
+	},
+	"D1_1515429339076": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515429339080,
+		"endDate": 1515429548748
+	},
+	"D1_1515429578355": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515429578360,
+		"endDate": 1515430102065
+	},
+	"D1_1515436376452": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515436376462,
+		"endDate": 1515437346337
+	},
+	"D1_1515437369094": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515437369104,
+		"endDate": 1515488202420
+	},
+	"D1_1515491624343": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.12
+		},
+		"startDate": 1515491624335,
+		"endDate": 1515491715292
+	},
+	"D2_1515491657601": {
+		"cellInfo": {
+			"cellName": "D2",
+			"cellArea": 0.12
+		},
+		"startDate": 1515491657604,
+		"endDate": 1515491714470
+	},
+	"D3_1515491700714": {
+		"cellInfo": {
+			"cellName": "D3",
+			"cellArea": 0.12
+		},
+		"startDate": 1515491700703,
+		"endDate": 1515491713613
+	},
+	"CH9_1515491728322": {
+		"cellInfo": {
+			"cellName": "CH9",
+			"cellArea": 0
+		},
+		"startDate": 1515491728312,
+		"endDate": 1515491741865
+	},
+	"D1_1515491865414": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515491865406,
+		"endDate": 1515491882088
+	},
+	"D1_1515491972157": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515491972156,
+		"endDate": 1515492038518
+	},
+	"D1_1515492056906": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.57
+		},
+		"startDate": 1515492056896,
+		"endDate": 1515492089083
+	},
+	"D1_1515492286394": {
+		"cellInfo": {
+			"cellName": "D1",
+			"cellArea": 0.12
+		},
+		"startDate": 1515492286386,
+		"endDate": 1515500836549
+	},
+	"Wuhan1_1515501019746": {
+		"cellInfo": {
+			"cellName": "Wuhan1",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501019756,
+		"endDate": 1515501134047
+	},
+	"Wuhan1_1515501176746": {
+		"cellInfo": {
+			"cellName": "Wuhan1",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501176750
+	},
+	"Wuhan2_1515501177868": {
+		"cellInfo": {
+			"cellName": "Wuhan2",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501177872,
+		"endDate": 1515501281737
+	},
+	"Wuhan3_1515501179456": {
+		"cellInfo": {
+			"cellName": "Wuhan3",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501179460,
+		"endDate": 1515501282987
+	},
+	"Wuhan4_1515501180921": {
+		"cellInfo": {
+			"cellName": "Wuhan4",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501180936,
+		"endDate": 1515501283995
+	},
+	"Wuhan5_1515501182770": {
+		"cellInfo": {
+			"cellName": "Wuhan5",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501182773,
+		"endDate": 1515501284867
+	},
+	"Wuhan2_1515501297360": {
+		"cellInfo": {
+			"cellName": "Wuhan2",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501297362,
+		"endDate": 1515501314673
+	},
+	"Wuhan2_1515501340014": {
+		"cellInfo": {
+			"cellName": "Wuhan2",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501340016
+	},
+	"Wuhan3_1515501363361": {
+		"cellInfo": {
+			"cellName": "Wuhan3",
+			"cellArea": 0.12
+		},
+		"startDate": 1515501363362
+	},
+	"Wuhan4_1515503032027": {
+		"cellInfo": {
+			"cellName": "Wuhan4",
+			"cellArea": 0.12
+		},
+		"startDate": 1515503032038,
+		"endDate": 1515503081742
+	},
+	"Wuhan5_1515503054614": {
+		"cellInfo": {
+			"cellName": "Wuhan5",
+			"cellArea": 0.12
+		},
+		"startDate": 1515503054619
+	},
+	"Wuhan4_1515503707080": {
+		"cellInfo": {
+			"cellName": "Wuhan4",
+			"cellArea": 0.12
+		},
+		"startDate": 1515503707082,
+		"endDate": 1515503738659
+	}
 }

@@ -14,8 +14,8 @@
 				"light": {
 					"on": true,
 					"channelId": 1,
-					"scaling": 6.9,
-					"factory_scaling": 6.9,
+					"scaling": 0.5,
+					"factory_scaling": 0.5,
 					"scheduling": {
 						"enabled": false,
 						"msBasis": 3600,
@@ -69,9 +69,9 @@
 
 				"light": {
 					"on": true,
-					"scaling": 6.9,
+					"scaling": 2,
 					"channelId": 2,
-					"factory_scaling": 6.9,
+					"factory_scaling": 2,
 					"scheduling": {
 						"enabled": false,
 						"msBasis": 3600,
