@@ -44,9 +44,6 @@ module.exports = {
 		}
 		
 		instrument.setGroupConfig( groupName, cfg );
-
-		//lightControllers.hosts[ controllerName ][ groupName ] = cfg;
-		
 		fs.writeFileSync( './config/lightControllers.json', JSON.stringify( lightControllers.hosts, undefined, "\t" ) );
 	}
 }

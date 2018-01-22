@@ -1,5 +1,7 @@
 {
 	"heat1": {
-		
+		"Box A": {
+			"channel": 1
+		}
 	}
 }

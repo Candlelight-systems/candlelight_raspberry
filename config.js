@@ -28,7 +28,7 @@ module.exports = {
 			"params": {
 				"baudrate": 57600
 			},
-			"reconnectTimeout": 1 // in seconds
+			"reconnectTimeout": 5 // in seconds
 		},
 
 		{	
@@ -39,7 +39,7 @@ module.exports = {
 			"params": {
 				"baudrate": 57600
 			},
-			"reconnectTimeout": 1 // in seconds
+			"reconnectTimeout": 5 // in seconds
 		},
 
 
@@ -50,7 +50,7 @@ module.exports = {
 			"params": {
 				"baudrate": 57600
 			},
-			"reconnectTimeout": 1 // in seconds
+			"reconnectTimeout": 5 // in seconds
 		}
 /*
 =======
@@ -124,21 +124,50 @@ module.exports = {
 		hosts: trackerControllers,
 
 		specialcommands: {
-			getTrackData: "DATA:TRACKER",
-			executeIV: "IV:EXECUTE",
+
+			getTrackData: ( chanId ) => { return { string: "DATA:TRAC:CH" + chanId, timeout: 1000 } },
+			executeIV: ( chanId ) => { return { string: "IV:EXECUTE:CH" + chanId, timeout: 300000 } }, // 2 minutes max
+			
+			light: {
+				enable: 'LIGHT:ENABLE',
+				disable: 'LIGHT:DISABLE',
+				isEnabled: 'LIGHT:ENABLED?',
+				isAutomatic: 'LIGHT:AUTOMATIC?',
+				setSetpoint: 'LIGHT:SETPOINT',
+				setScaling: 'LIGHT:SCALING',
+				check: 'LIGHT:CHECK'
+			},
+
+			acquisition: {
+				speed: ( speed ) => "ACQUISITION:SPEED " + speed
+			},
+
 			readPD: {
-				pd_1: "ENVIRONMENT:PHOTODIODE1",
-				pd_2: "ENVIRONMENT:PHOTODIODE2"
-			},			
+				pd_1: "ENVI:PD1",
+				pd_2: "ENVI:PD2"
+			},		
+
+			voc: {
+				trigger: ( chanId ) => { return { string: "MEASURE:VOC:CH" + chanId, timeout: 120000 } },
+				status: ( chanId ) => { return "MEASURE:VOCSTATUS:CH" + chanId },
+				data: ( chanId ) => { return { string: "MEASURE:VOCDATA:CH" + chanId, timeout: 3000 } }
+			},
+
+			jsc: {
+				trigger: ( chanId ) => { return { string: "MEASURE:JSC:CH" + chanId, timeout: 120000 } },
+				status: ( chanId ) => "MEASURE:JSCSTATUS:CH" + chanId,
+				data: ( chanId ) => { return { string: "MEASURE:JSCDATA:CH" + chanId, timeout: 3000 } }
+			},
+
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
 			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId ) => "ENVIRONMENT:TEMPBASE? " + slaveId,
-			readTemperatureChannelIR: ( slaveId ) => "ENVIRONMENT:TEMPIR? " + slaveId,
-			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
-			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
+			readTemperatureChannelBase: ( slaveId ) => "ENVI:TBASE? " + slaveId,
+			readTemperatureChannelIR: ( slaveId ) => "ENVI:TIR? " + slaveId,
+			readTemperature: ( slaveId ) => "ENVI:TEMPBOX? " + slaveId,
+			readHumidity: ( slaveId ) => "ENVI:HUMIDITY? " + slaveId
 		},
 
 		statuscommands: [

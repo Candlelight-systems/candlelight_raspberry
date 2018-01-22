@@ -3,72 +3,6 @@ const serialport 	= require("serialport");
 const queryManager	= require("./queryhandler")
 const rpio 			= require("rpio");
 
-function query( communication, query, linesExpected = 1, executeBefore = () => { return true; }, prepend ) {
-
-	if( query === undefined ) {
-		console.trace();
-		return;
-	}
-	
-	if( ! communication ) {
-		throw "Could not find communication based on the instrument id";
-	}	
-
-	return communication.queryManager.addQuery( async () => {
-
-
-		await communication.lease;
-
-		if( executeBefore ) {
-			if( ! executeBefore() ) {
-				throw "Cannot execute method. Forbidden";
-			}
-		}
-
-		return communication.lease = new Promise( ( resolver, rejecter ) => {
-
-			let data = "", 
-				dataThatMatters = [], 
-				lineCount = 0;
-
-		//	console.time("q");
-			communication.removeAllListeners( "data" );
-			communication.on( "data", async ( d ) => {
-
-				data += d.toString('ascii'); // SAMD sends ASCII data
-
-				while( data.indexOf("\r\n") > -1 ) {
-					
-					lineCount++;
-					
-					if( lineCount < linesExpected ) {
-
-						dataThatMatters.push( data.substr( 0, data.indexOf("\r\n") ) );
-						data = data.substr( data.indexOf("\r\n") + 2 );
-					}
-
-					if( lineCount >= linesExpected ) {
-
-						communication.removeAllListeners( "data" );
-						communication.flush();
-						await delay( 10 );
-
-						if( dataThatMatters.length == 1 ) {
-							resolver( dataThatMatters[ 0 ] );
-						} else {
-							resolver( dataThatMatters );
-						}
-						return;
-					}
-				}
-			} );	
-			console.log( "query:" + query );
-
-			communication.write( query + "\n" );
-			communication.drain( );
-		});
-	}, prepend );
-}
 
 
 
@@ -96,8 +30,155 @@ class InstrumentController {
 		return this.instrumentConfig;
 	}
 
-	query( queryString, expectedLines = 1, prepend ) {
-		return query( this.getConnection(), queryString, expectedLines, () => { return true; }, prepend )
+	query( query, linesExpected = 1, executeBefore = undefined, prepend = false, rawOutput = false, expectedBytes = 0 ) {
+
+
+		let communication = this.connection;
+
+	if( query === undefined ) {
+		console.trace();
+		return;
+	}
+
+	if( ! communication.isOpen() ) {
+		return new Promise( ( resolver, rejecter ) => rejecter( "Port is closed" ) );
+	}
+
+	let queryString;
+	let queryTimeout;
+
+	if( typeof query == "object" ) {
+		queryString = query.string;
+		queryTimeout = query.timeout;
+	} else {
+		queryString = query;
+		queryTimeout = 1000;
+	}
+
+	let statusByte;
+
+	if( ! communication ) {
+		throw "Could not find communication based on the instrument id";
+	}	
+
+
+	return communication.queryManager.addQuery( async () => {
+
+		await communication.lease;
+
+		if( executeBefore ) {
+			if( ! executeBefore() ) {
+				throw "Cannot execute method. Forbidden";
+			}
+		}
+
+		let statusByte;
+
+		// Wait for the lease the be released
+		return communication.lease = new Promise( ( resolver, rejecter ) => {
+
+			let data = Buffer.alloc(0), 
+				dOut = [], 
+				lineCount = 0,
+				timeout = setTimeout( () => {
+					rejecter(); // Reject the current promise
+					this.reset(); // Reset the instrument
+				}, queryTimeout );
+
+			// Start by remove all listeners
+			communication.removeAllListeners( "data" );
+
+			// Listening
+			communication.on( "data", async ( d ) => {
+
+				data = Buffer.concat( [ data, d ] );
+
+				let index;
+
+				function condition( expectedBytes ) {
+
+					if( expectedBytes ) {
+
+						if( data.length < expectedBytes ) {
+							return -1;
+						}
+
+						return expectedBytes;
+
+					} else {
+
+						return data.indexOf( 0x0d0a ) - 1;
+					}
+
+
+				}
+
+				while( ( index = condition( expectedBytes ) ) >= 0 ) { // CRLF detection
+					
+					
+					expectedBytes = 0;
+					lineCount++; // Found a new line, increment the counter
+
+					if( lineCount == linesExpected ) {
+
+						statusByte = data.slice( 0, index )[ 0 ];
+						
+					} else {
+
+						const d = data.slice( 0, index );
+						
+						if( rawOutput ) {
+							dOut.push( d );
+						} else {
+							dOut.push( d.toString( 'ascii' ) ); // Look for carriage return + new line feed
+							
+						}
+					}
+
+					data = data.slice( index + 2 );
+
+					if( lineCount >= linesExpected ) {	// End of the transmission
+
+						if( statusByte !== undefined ) {
+							if( this.checkStatusbyte && ( statusByte & 0x01 ) == 0x00 && this.configured ) {  // LSB is the reset bit
+								this.configured = false;
+								this.configure(); // Instrument has been reset. We
+							}
+						}
+						// Remove all listeners
+						communication.removeAllListeners( "data" );
+
+						// Flush the connection
+						communication.flush();
+
+						// Inform about the communication time
+
+						clearTimeout( timeout );
+						console.timeEnd( "query:" + queryString );
+						await delay( 20 );
+						
+					
+						if( dOut.length == 1 ) {
+							resolver( dOut[ 0 ] );
+						} else {
+							resolver( dOut );
+						}
+						
+						return;
+					}
+				}
+			} );	
+			console.time( "query:" + queryString );
+			//console.log( queryString );
+			communication.write( queryString + "\n" );
+			communication.drain( );
+		});
+	}, prepend );
+
+
+
+
+	
 	}
 
 	emptyQueryQueue() {
@@ -127,28 +208,65 @@ class InstrumentController {
 	}
 
 
+	async reset() {
+
+		if( this.resetting ) {
+			return;
+		}
+		this.resetting = true;
+
+
+
+		if( this.connection && this.connection.isOpen() ) {
+
+			this.connection.removeAllListeners( 'data' );
+			console.log("Reset: closing the port");
+			this.connection.close( () => {
+				console.log("Reset: port is closed");
+			});
+		}
+
+		if( this.communicationConfig.resetPin ) {
+			console.log("Resetting with pin " + this.communicationConfig.resetPin );
+			rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
+			rpio.sleep( 1 );
+			rpio.write( this.communicationConfig.resetPin, rpio.LOW );
+			rpio.sleep( 1 );
+		}
+
+
+		await this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+
+
+		this.emptyQueryQueue();
+		this.connection.lease = Promise.resolve();
+		this.resetting = false;
+	}
+
+
+
 	async openConnection( callback ) {
 
 		const cfg = this.getConfig();
+		this.resetting = false;
+		if( this.connection && this.connection.isOpen() ) {
+			callback();
+			return;
+		}
 
 		if( this.connection ) {
+			console.log('alr');
 			this.connection.open();
+			callback();
 			return;
 		}
 
 		const connection = new serialport( cfg.host, cfg.params );
 		this.connection = connection;
-
+		
 		connection.on("error", ( err ) => {
-
-			if( this.communicationConfig.resetPin ) {
-				console.log("Resetting with pin " + this.communicationConfig.resetPin );
-				rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
-				rpio.sleep( 2 );
-				rpio.write( this.communicationConfig.resetPin, rpio.LOW );
-				rpio.sleep( 1 );
-			}
-
+			console.log( "Error:" + err );
+			this.reset();
 			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );
@@ -156,8 +274,8 @@ class InstrumentController {
 		connection.on("close", ( ) => {
 
 			this.open = false;
-			console.warn('The serial connection is closing');
-			this.waitAndReconnect();
+			console.warn('Serial connection is closing');
+		//	this.waitAndReconnect();
 			
 		} );
 
@@ -170,11 +288,14 @@ class InstrumentController {
 
 				// TODO: Reset hardware
 				//connection.open();
+				this.reset();
+				this.waitAndReconnect();
 
 			}, 1000 );
 
-			connection.on("open", async () => {
+			connection.once("open", async () => {
 				connection.flush();
+				console.log("Serial connection is open");
 				clearTimeout( connectionTimeout );
 				this.open = true;
 
@@ -188,7 +309,10 @@ class InstrumentController {
 
 		let _delay = this.getConfig().reconnectTimeout;
 		await this.delay( _delay * 1000 );
-		return this.connection.open();
+		this.connection.open();
+		this.getConnection().queryManager.block();
+		await this.delay( _delay * 1000 );
+		this.getConnection().queryManager.unblock();
 	}
 
 	

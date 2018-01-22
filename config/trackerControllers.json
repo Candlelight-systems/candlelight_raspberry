@@ -4,16 +4,13 @@
 		"instrumentId": "Tracker 1",
 		"groups": [
 			{
-				"heatController": {
-					"hostAlias": "heat1",
-					"channel": 1
-				},
+				"heatController": "heat1",
 				"lightController": "light1",
 				"groupName": "Box A",
 				"groupID": "boxa",
 				"pds": [
-					"pd_2",
-					"pd_1"
+					"pd_1",
+					"pd_2"
 				],
 				"humiditySensor": {
 					"address": 64
@@ -23,8 +20,8 @@
 						"chanId": 1,
 						"chanName": "Channel 1",
 						"temperatureSensor": {
-							"offset": 1499,
-							"gain": -0.01,
+							"offset": 1013,
+							"gain": -0.005,
 							"channel": 65
 						}
 					},
@@ -32,8 +29,8 @@
 						"chanId": 2,
 						"chanName": "Channel 2",
 						"temperatureSensor": {
-							"offset": 377,
-							"gain": -0.01,
+							"offset": 1013,
+							"gain": -0.005,
 							"channel": 65
 						}
 					},
@@ -41,8 +38,8 @@
 						"chanId": 3,
 						"chanName": "Channel 3",
 						"temperatureSensor": {
-							"offset": 1055,
-							"gain": -0.01,
+							"offset": 721,
+							"gain": -0.005,
 							"channel": 66
 						}
 					},
@@ -50,8 +47,8 @@
 						"chanId": 4,
 						"chanName": "Channel 4",
 						"temperatureSensor": {
-							"offset": 2407,
-							"gain": -0.01,
+							"offset": 721,
+							"gain": -0.005,
 							"channel": 66
 						}
 					},
@@ -59,8 +56,8 @@
 						"chanId": 5,
 						"chanName": "Channel 5",
 						"temperatureSensor": {
-							"offset": 1132,
-							"gain": -0.01,
+							"offset": 524,
+							"gain": -0.005,
 							"channel": 67
 						}
 					},
@@ -68,8 +65,8 @@
 						"chanId": 6,
 						"chanName": "Channel 6",
 						"temperatureSensor": {
-							"offset": 1892,
-							"gain": -0.01,
+							"offset": 524,
+							"gain": -0.005,
 							"channel": 67
 						}
 					},
@@ -77,26 +74,26 @@
 						"chanId": 7,
 						"chanName": "Channel 7",
 						"temperatureSensor": {
-							"offset": 494,
-							"gain": -0.01,
-							"channel": 68
+							"offset": 402,
+							"gain": -0.005,
+							"channel": 70
 						}
 					},
 					{
 						"chanId": 8,
 						"chanName": "Channel 8",
 						"temperatureSensor": {
-							"offset": 934,
-							"gain": -0.01,
-							"channel": 68
+							"offset": 402,
+							"gain": -0.005,
+							"channel": 70
 						}
 					},
 					{
 						"chanId": 9,
 						"chanName": "Channel 9",
 						"temperatureSensor": {
-							"offset": 1123,
-							"gain": -0.01,
+							"offset": 359,
+							"gain": -0.005,
 							"channel": 69
 						}
 					},
@@ -104,8 +101,8 @@
 						"chanId": 10,
 						"chanName": "Channel 10",
 						"temperatureSensor": {
-							"offset": 377,
-							"gain": -0.01,
+							"offset": 359,
+							"gain": -0.005,
 							"channel": 69
 						}
 					},
@@ -113,45 +110,45 @@
 						"chanId": 11,
 						"chanName": "Channel 11",
 						"temperatureSensor": {
-							"offset": 415,
-							"gain": -0.01,
-							"channel": 70
+							"offset": 573,
+							"gain": -0.005,
+							"channel": 68
 						}
 					},
 					{
 						"chanId": 12,
 						"chanName": "Channel 12",
 						"temperatureSensor": {
-							"offset": 1473,
-							"gain": -0.01,
-							"channel": 70
+							"offset": 573,
+							"gain": -0.005,
+							"channel": 68
 						}
 					},
 					{
 						"chanId": 13,
-						"chanName": "Channel 13",
-						"temperatureSensor": {
-							"offset": 1068,
-							"gain": -0.01,
-							"channel": 71
-						}
+						"chanName": "Channel 13"
 					},
 					{
 						"chanId": 14,
-						"chanName": "Channel 14",
+						"chanName": "Channel 14"
+					},
+					{
+						"chanId": 15,
+						"chanName": "Channel 15",
 						"temperatureSensor": {
-							"offset": 1198,
-							"gain": -0.01,
+							"offset": 1437,
+							"gain": -0.005,
 							"channel": 71
 						}
 					},
 					{
-						"chanId": 15,
-						"chanName": "Channel 15"
-					},
-					{
 						"chanId": 16,
-						"chanName": "Channel 16"
+						"chanName": "Channel 16",
+						"temperatureSensor": {
+							"offset": 1437,
+							"gain": -0.005,
+							"channel": 71
+						}
 					}
 				]
 			}
@@ -160,7 +157,7 @@
 			{
 				"name": "Photodiode 1",
 				"ref": "pd_1",
-				"scaling_ma_to_sun": 1,
+				"scaling_ma_to_sun": 1.1547344110854503,
 				"factory_scaling_ma_to_sun": 1
 			},
 			{

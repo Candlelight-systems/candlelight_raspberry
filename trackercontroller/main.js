@@ -74,9 +74,13 @@ module.exports = {
 			if( instrument.hasLightController( group.groupName ) ) {
 				returnObject[ group.groupName ].lightController = true;
 
-				returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint( group.groupName );
-				returnObject[ group.groupName ].lightModeAutomatic = instrument.getLightController( group.groupName ).isModeAutomatic( group.groupName );
+				//returnObject[ group.groupName ].lightSetpoint = instrument.getLightController( group.groupName ).getSetPoint( group.groupName );
+				//returnObject[ group.groupName ].lightModeAutomatic = instrument.getLightController( group.groupName ).isModeAutomatic( group.groupName );
 
+			}
+
+			if( instrument.hasHeatController( group.groupName ) ) {
+				returnObject[ group.groupName ].heatController = true;
 			}
 
 			group.channels.forEach( ( channel ) => {
@@ -171,10 +175,18 @@ module.exports = {
 		return getInstrument( instrumentId ).resetStatus( chanId, status );
 	},
 
+	resetStatuses: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).resetStatuses( groupName );
+	},
+
 	setVoltage: async ( instrumentId, chanNumber, voltage ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		await getInstrument( instrumentId ).saveStatus( chanId, { tracking_mode: 0 } );
 		await getInstrument( instrumentId ).setVoltage( chanId, voltage );
+	},
+
+	measurePhotodiode: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).measureGroupLightIntensity( groupName, false );
 	},
 
 	measureCurrent: ( instrumentId, chanNumber, voltage ) => {
@@ -191,9 +203,9 @@ module.exports = {
 		}
 	},
 
-	enableChannel: ( instrumentId, chanNumber ) => {
+	enableChannel: ( instrumentId, chanNumber, noIV = false ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
-		return getInstrument( instrumentId ).enableChannel( chanId );
+		return getInstrument( instrumentId ).enableChannel( chanId, noIV );
 	},
 
 	disableChannel: ( instrumentId, chanNumber ) => {
@@ -206,11 +218,12 @@ module.exports = {
 		let instrument = getInstrument( instrumentId );
 
 		if( instrument.hasLightController( groupName ) ) {
-			return getInstrument( instrumentId ).getLightControllerConfig( groupName );
+			return getInstrument( instrumentId ).getLightController( groupName ).getInstrumentConfig()[ groupName ];
 		}
 		
 		throw "This instrument has no light controller";
 	},
+
 
 
 	saveLightController: async ( instrumentId, groupName, cfg ) => {
@@ -227,6 +240,7 @@ module.exports = {
 
 	increaseHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
+		console.log( groupName );
 		return await instrument.increaseHeatingPower( groupName );
 	},
 
@@ -238,7 +252,16 @@ module.exports = {
 	getHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return instrument.getHeatingPower( groupName );
+	},
 
+	enableHeatingPower: async( instrumentId, groupName ) => {
+		let instrument = getInstrument( instrumentId );
+		return instrument.enableHeatingPower( groupName );
+	},
+
+	disableHeatingPower: async( instrumentId, groupName ) => {
+		let instrument = getInstrument( instrumentId );
+		return instrument.disableHeatingPower( groupName );
 	},
 
 	getAllMeasurements: () => {
@@ -257,6 +280,11 @@ module.exports = {
 	resetSlave( instrumentId ) {
 		let instrument = getInstrument( instrumentId );
 		return instrument.resetSlave( );
+	},
+
+	measureEnvironment( instrumentId, groupId ) {
+		let instrument = getInstrument( instrumentId );
+		return instrument.measureEnvironment();
 	}
 };
 

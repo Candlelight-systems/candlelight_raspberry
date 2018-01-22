@@ -1,8 +1,9 @@
 'use strict';
 
 //const HostManager					= require( "../hostmanager" );
-const Waveform						= require( "jsgraph-waveform" );
-const InstrumentController			= require('../instrumentcontroller' );
+const Waveform						= require( 'jsgraph-waveform' );
+const InstrumentController			= require( '../instrumentcontroller' );
+const extend  						= require( 'extend' );
 
 class LightController extends InstrumentController {
 
@@ -12,7 +13,7 @@ class LightController extends InstrumentController {
 
 		this.currentCode = {};
 		this.on = false;
-		this.processedConfig = {};
+		
 		this.trackerReference = {};
 	}
 
@@ -24,7 +25,9 @@ class LightController extends InstrumentController {
 			//await this.turnOn();
 		//	this.checkLightStatus();
 
+			//await this.checkLightStatus();
 			this.setTimeout();
+
 
 		} );
 
@@ -34,17 +37,10 @@ class LightController extends InstrumentController {
 	async setTracker( tracker, groupName ) {
 
 		this.trackerReference[ groupName ] = tracker;
-		
-		let cfg = this.getInstrumentConfig()[ groupName ];
-		await this.query( "PWM:VALUE:CH" + cfg.pwmChannel + " " + this.currentCode[ groupName ] );
-		await this.turnOn( groupName );
-
-		await this.checkLightStatus();
 	}
 
-	setGroupConfig( groupName, config ) {
-
-		Object.assign( this.instrumentConfig[ groupName ], config ); // Extend it
+	async setGroupConfig( groupName, config ) {
+		extend( true, this.instrumentConfig[ groupName ], config ); // Extend it
 		this.processConfig( groupName );
 	}
 
@@ -52,8 +48,7 @@ class LightController extends InstrumentController {
 
 		this.instrumentConfig = cfg;
 		for( var i in cfg ) {
-			this.processedConfig[ i ] = {};
-			this.processConfig( i );
+			this.setGroupConfig( i, cfg[ i ] );
 		}
 	}
 
@@ -78,31 +73,21 @@ class LightController extends InstrumentController {
 
 		this.currentCode[ groupName ] = 170;
 
-		if( cfg.setPoint || cfg.setPoint === 0 ) {
-			
-			this.setPoint = cfg.setPoint;
-			this._scheduling = undefined;
-
-		} else if( cfg.scheduling ) {
+		if( cfg.scheduling.enable ) {
 
 			let rescalingMS;	
 			this.setPoint = undefined;
-			this.processedConfig[ groupName ]._scheduling = {};
+			this.getInstrumentConfig()[ groupName ].scheduling = this.getInstrumentConfig()[ groupName ].scheduling || {};
 
-			if( cfg.scheduling.basis == '1day' ) {
+			
+			//this.getInstrumentConfig()[ groupName ].scheduling.waveform = waveform;
+			this.getInstrumentConfig()[ groupName ].scheduling.startDate = Date.now();
 
-				this.processedConfig[ groupName ]._scheduling.msBasis = 3600 * 24 * 1000;
+		} else if( cfg.setPoint || cfg.setPoint === 0 ) {
+			
+			this.setPoint = cfg.setPoint;
+			this.scheduling = undefined;
 
-			} else if( cfg.scheduling.basis == '1hour' ) {
-
-				this.processedConfig[ groupName ]._scheduling.msBasis = 3600 * 1000;
-			}
-
-			let waveform = new Waveform( cfg.scheduling.intensities );
-			waveform.rescaleX( 0, this._scheduling.msBasis / waveform.getLength() ); 
-
-			this.processedConfig[ groupName ]._scheduling.waveform = waveform;
-			this.processedConfig[ groupName ]._scheduling.startDate = Date.now();
 		}
 	}
 
@@ -112,15 +97,31 @@ class LightController extends InstrumentController {
 
 		if( ! cfg.setPoint && cfg.setPoint !== 0 ) {
 			
-			if( ! this.processedConfig[ groupName ]._scheduling ) {
+			if( ! this.getInstrumentConfig()[ groupName ].scheduling ) {
 				throw "Impossible to determine set point. Check scheduler and manual set point value"
 			}
 
-			let ellapsed = ( Date.now() - this.processedConfig[ groupName ]._scheduling.startDate ) % this.processedConfig[ groupName ]._scheduling.msBasis;
+			let basis;
+			switch( this.getInstrumentConfig()[ groupName ].scheduling.basis ) {
+				case '1day':
+					basis = 24 * 3600 * 1000;
+				break;
 
-			const index = this.processedConfig[ groupName ]._scheduling.waveform.getIndexFromX( ellapsed );
+				case '1hour':
+					basis = 3600 * 1000;
+				break;
+			}
+
+			this.getInstrumentConfig()[ groupName ].scheduling.startDate = this.getInstrumentConfig()[ groupName ].scheduling.startDate || Date.now();
+
+			let ellapsed = ( ( Date.now() - this.getInstrumentConfig()[ groupName ].scheduling.startDate ) % basis ) / basis;
+			let wave = new Waveform().setData( this.getInstrumentConfig()[ groupName ].scheduling.intensities );
+			wave.rescaleX( 0, 1 / wave.getLength() ); 
+
 			
-			return this.processedConfig[ groupName ]._scheduling.waveform.getY( index );
+			const index = wave.getIndexFromX( ellapsed );
+		
+			return wave.getY( index );
 		}
 
 
@@ -147,12 +148,13 @@ class LightController extends InstrumentController {
 			let groupName = i;
 
 			if( ! this.getInstrumentConfig()[ i ].modeAutomatic ) {
+				await this.turnOn( groupName );
 				return;
 			}
 			
 			if( this.getInstrumentConfig()[ i ].outputPower !== undefined ) {
 				await this.setCode( groupName, Math.round( 255 - this.getInstrumentConfig()[ i ].outputPower * 255 ) );
-				return;
+				continue;
 			}
 
 			let setPoint = this.getSetPoint( i );
@@ -175,7 +177,7 @@ class LightController extends InstrumentController {
 			if( setPoint === 0 ) {
 				await this.turnOff( i );
 				this.setTimeout();
-				return;
+				continue;
 			} else {
 				await this.turnOn( i );
 			}
@@ -191,18 +193,26 @@ class LightController extends InstrumentController {
 					await trackerReference.pauseChannels();
 				}
 
-				let codePerSun = ( 255 - this.getCurrentCode( groupName ) ) / pdValue; // From the current value, get the code / current(PD) ratio
-				let diffSun = pdValue - setPoint; // Calculate difference with target in sun
-				let idealCodeChange = codePerSun * diffSun; // Get the code difference
+				let calibration = this.getInstrumentConfig()[ groupName ].calibration;
+				let w = new Waveform();
+				w.append( ...calibration[ 0 ] );
+				w.append( ...calibration[ 1 ] );
 
-				await this.setCode( groupName, this.getCurrentCode( groupName ) + idealCodeChange ); // First correction based on linear extrapolation
+				let idealCode = w.interpolate( sun );
+				await this.setCode( groupName, idealCode ); // First correction based on linear extrapolation
 				await this.delay( 300 );
 
 				let i = 0;
 
 				do {
 
-				sun = ( await trackerReference._measurePD( pd ) ) * pdData.scaling_ma_to_sun;
+
+					if( ! this.getInstrumentConfig()[ groupName ].modeAutomatic ) {
+						await this.turnOn( groupName );
+						return;
+					}
+					
+					sun = ( await trackerReference._measurePD( pd ) ) * pdData.scaling_ma_to_sun;
 
 					if( Math.abs( sun - setPoint ) > 0.01 ) {
 
@@ -273,6 +283,10 @@ class LightController extends InstrumentController {
 		}
 
 		const cfg = this.getInstrumentConfig()[ groupName ];
+
+		if( ! cfg.pwmChannel ) {
+			throw new Error("No PWM channel for this controller");
+		}
 
 		this.on = true;
 		await this.query( "OUTPUT:ON:CH" + cfg.pwmChannel );
