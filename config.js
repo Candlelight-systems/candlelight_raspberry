@@ -4,7 +4,7 @@ const influx = require("./config/influx.json");
 const instrument = require("./config/instrument.json");
 const trackerControllers = require("./config/trackerControllers.json");
 const relayControllers = require("./config/relayControllers.json");
-
+const hosts = require("./config/hosts.json");
 
 module.exports = {
 	
@@ -16,132 +16,38 @@ module.exports = {
 
 	influx: influx,
 
-	hosts: [
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Small cells",
-			"constructorName": "TrackerController",
-			"resetPin": 40,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-			"alias": "Small modules",
-			"constructorName": "TrackerController",
-			"resetPin": 40,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "relay1",
-			"constructorName": "RelayController",
-			"resetPin": 40,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}/*,
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "Light",
-			"constructorName": "LightController",
-			
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-			"alias": "heat1",
-			"constructorName": "HeatController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}*/
-/*
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
-			"alias": "relay1",
-			"resetPin": 21,
-			"constructorName": "RelayController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "heat1",
-			"resetPin": 22,
-			"constructorName": "HeatController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
-			"constructorName": "TrackerController",
-			"resetPin": 12,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}
->>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
-			"constructorName": "TrackerController",
-			"resetPin": 12,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}
-*/
-	],
-
-
+	hosts: hosts,
 	trackerControllers: {
 
 		hosts: trackerControllers,
 
 		specialcommands: {
-			getTrackData: "DATA:TRACKER",
+			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
 
 			iv: {
-				execute: "IV:EXECUTE",
+				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}` } },
 				data: "IV:DATA",
 				status: "IV:STATUS",
 			},
 
 			light: {
-				enable: 'LIGHT:ENABLE',
-				disable: 'LIGHT:DISABLE',
-				isEnabled: 'LIGHT:ENABLED?',
-				isAutomatic: 'LIGHT:AUTOMATIC?',
-				setSetpoint: 'LIGHT:SETPOINT',
-				setScaling: 'LIGHT:SCALING',
-				check: 'LIGHT:CHECK'
+				enable:  ( chanId ) => { return { string: `LIGHT:ENABLE:CH${chanId}` } },
+				disable:  ( chanId ) => { return { string: `LIGHT:DISABLE:CH${chanId}` } },
+				isEnabled:  ( chanId ) => { return { string: `LIGHT:ENABLED?:CH${chanId}` } },
+				isAutomatic:  ( chanId ) => { return { string: `LIGHT:AUTOMATIC?:CH${chanId}` } },
+				setSetpoint:  ( chanId, value ) => { return { string: `LIGHT:SETPOINT:CH${chanId} ${value}` } },
+				setScaling:  ( chanId , value) => { return { string: `LIGHT:SCALING:CH${chanId} ${value}` } },
+				check:  ( chanId ) => { return { string: `LIGHT:CHECK:CH${chanId}`, timeout: 30000 } },
+			},
+
+			dcdc: {
+
+				isEnabled: ( chanId ) => { return { string: `DCDC:ENABLED?:CH${ chanId }` } },
+				setPower: ( chanId, value ) => { return { string: `DCDC:VALUE:CH${ chanId } ${ value }` } },
+				enable:  ( chanId ) => { return { string: `DCDC:ENABLE:CH${ chanId }` } },
+				disable:  ( chanId ) => { return { string: `DCDC:DISABLE:CH${ chanId }` } },
+				getVoltage:  ( chanId ) => { return { string: `DCDC:VOLTAGE:CH${ chanId }` } },
+				getCurrent:  ( chanId ) => { return { string: `DCDC:CURRENT:CH${ chanId }` } }
 			},
 
 			acquisition: {
@@ -149,20 +55,20 @@ module.exports = {
 			},
 
 			readPD: {
-				current: "ENVIRONMENT:PHOTODIODE",
-				sun: "ENVIRONMENT:SUNPHOTODIODE"
+				current: (pdId) => `ENVIRONMENT:PHOTODIODE:CH${pdId}`,
+				sun: (pdId) => `ENVIRONMENT:SUNPHOTODIODE:CH${pdId}`
 			},		
 
 			voc: {
-				trigger: "MEASURE:VOC",
-				status: "MEASURE:VOCSTATUS",
-				data: "MEASURE:VOCDATA"
+				trigger: ( chanId ) => { return { string: "MEASURE:VOC:CH" + chanId, timeout: 120000 } },
+				status: ( chanId ) => { return "MEASURE:VOCSTATUS:CH" + chanId },
+				data: ( chanId ) => { return { string: "MEASURE:VOCDATA:CH" + chanId, timeout: 3000 } }
 			},
 
 			jsc: {
-				trigger: "MEASURE:JSC",
-				status: "MEASURE:JSCSTATUS",
-				data: "MEASURE:JSCDATA"
+				trigger: ( chanId ) => { return { string: "MEASURE:JSC:CH" + chanId, timeout: 120000 } },
+				status: ( chanId ) => "MEASURE:JSCSTATUS:CH" + chanId,
+				data: ( chanId ) => { return { string: "MEASURE:JSCDATA:CH" + chanId, timeout: 3000 } }
 			},
 
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
@@ -170,10 +76,10 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVIRONMENT:TEMPBASE? " + slaveId,
-			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVIRONMENT:TEMPIR? " + slaveId,
-			readTemperature: ( slaveId ) => "ENVIRONMENT:TEMPBOX? " + slaveId,
-			readHumidity: ( slaveId ) => "ENVIRONMENT:HUMIDITY? " + slaveId
+			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVI:TBASE?:CH" + chanId + " " + slaveId,
+			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVI:TIR?:CH" + chanId + " " + slaveId,
+			readTemperature: ( slaveId ) => "ENVI:TEMPBOX? " + slaveId,
+			readHumidity: ( slaveId ) => "ENVI:HUMIDITY? " + slaveId
 			
 		},
 

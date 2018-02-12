@@ -59,7 +59,7 @@
 			"cellName": "Wuhan1",
 			"chanId": 1,
 			"instrumentId": "Small cells",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -150,7 +150,7 @@
 			"cellName": "Wuhan2",
 			"chanId": 2,
 			"instrumentId": "Small cells",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -241,7 +241,7 @@
 			"cellName": "Wuhan3",
 			"chanId": 3,
 			"instrumentId": "Small cells",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"tracking_record_interval": 10000,
@@ -453,7 +453,7 @@
 			"cellName": "Wuhan5",
 			"chanId": 5,
 			"instrumentId": "Small cells",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"tracking_record_interval": 10000,

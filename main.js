@@ -409,16 +409,17 @@ app.get("/light.setScaling", ( req, res ) => {
 
 app.get("/lightGetControl", function( req, res ) {
 	try {
-		let control = trackerController.lightGetControl( req.query.instrumentId, req.query.groupName );
+		let control = trackerController.getLightControl( req.query.instrumentId, req.query.groupName );
 		res.type("application/json").send( JSON.stringify( control ) );	
-	} catch( e ) {
+	} catch( error ) {
+		console.error( error );
 		res.status( 500 ).send(`Light control could not be retrieved. Error was ${error}`);
 	}
 });
 
-app.post("/lightSaveControl", ( req, res ) => {
+app.post("/lightSetControl", ( req, res ) => {
 
-	trackerController.lightSetControl( req.body.instrumentId, req.body.groupName, req.body.control ).then( () => {	
+	trackerController.setLightControl( req.body.instrumentId, req.body.groupName, req.body.control ).then( () => {	
 	
 		res.send("");
 	
@@ -430,10 +431,10 @@ app.post("/lightSaveControl", ( req, res ) => {
 	});
 });
 
-app.post("/heat.setPower", function( req, res ) {
+app.get("/heat.enable", function( req, res ) {
 
 
-	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
+	trackerController.heaterEnable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
 		
 		res.send( "" );	
 		
@@ -441,23 +442,27 @@ app.post("/heat.setPower", function( req, res ) {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be set. Error was \"" + error + "\"" );
+		res.status( 500 ).send("Heating could not be enabled. Error: \"" + error + "\"" );
 	} );
 });
 
-app.get("/heat.getPower", function( req, res ) {
 
-	trackerController.getHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+
+app.get("/heat.disable", function( req, res ) {
+
+
+	trackerController.heaterDisable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
 		
-		res.send( power );	
+		res.send( "" );	
 		
 	} ).catch( ( error ) => {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+		res.status( 500 ).send("Heating could not be disabled. Error: \"" + error + "\"" );
 	} );
-} );
+});
+
 
 
 app.get("/heat.increasePower", function( req, res ) {

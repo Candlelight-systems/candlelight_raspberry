@@ -211,26 +211,32 @@ module.exports = {
 		return getInstrument( instrumentId ).setAcquisitionSpeed( speed );
 	},
 
-	setHeatingPower: async( instrumentId, groupName, power ) => {
+	heaterEnable: async( instrumentId, groupName, power ) => {
 		let instrument = getInstrument( instrumentId );
-		await instrument.setHeatingPower( groupName, power );
+		await instrument.heaterEnable( groupName, power );
+		await save();
+	},
+	
+	heaterDisable: async( instrumentId, groupName, power ) => {
+		let instrument = getInstrument( instrumentId );
+		await instrument.heaterDisable( groupName, power );
+		await save();
 	},
 
 	increaseHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return await instrument.increaseHeatingPower( groupName );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
 	},
 
 	decreaseHeatingPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return await instrument.decreaseHeatingPower( groupName );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
 	},
 
-	getHeatingPower: async( instrumentId, groupName ) => {
-		let instrument = getInstrument( instrumentId );
-		return instrument.getHeatingPower( groupName );
-
-	},
 
 	getAllMeasurements: () => {
 		return allMeasurements;
@@ -251,13 +257,13 @@ module.exports = {
 	},
 
 
-	getLightControl: async ( instrumentId, groupName ) => {
+	getLightControl: ( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
 		return instrument.lightGetControl( groupName );		
 	},
 
 	setLightControl: async ( instrumentId, groupName, cfg ) => {
-		let savingPromise = getInstrument( instrumentId ).setLightControl( groupName, cfg );
+		let savingPromise = getInstrument( instrumentId ).lightSetControl( groupName, cfg );
 		save();
 		return savingPromise;
 	},
