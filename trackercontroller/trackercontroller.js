@@ -1008,7 +1008,7 @@ class TrackerController extends InstrumentController {
 		}
 
 		if( group.heat.channelId ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.dcdc[ command ]( group.light.channelId, value ), request ? 2 : 1 );	
+			return this.query( globalConfig.trackerControllers.specialcommands.dcdc[ command ]( group.heat.channelId, value ), request ? 2 : 1 );	
 		}
 
 		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
