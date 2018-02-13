@@ -8,25 +8,5 @@
 			"baudrate": 57600
 		},
 		"reconnectTimeout": 1
-	},
-	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-		"alias": "Small modules",
-		"constructorName": "TrackerController",
-		"resetPin": 40,
-		"params": {
-			"baudrate": 57600
-		},
-		"reconnectTimeout": 1 
-	},
-	{	
-		"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-		"alias": "relay1",
-		"constructorName": "RelayController",
-		"resetPin": 40,
-		"params": {
-			"baudrate": 57600
-		},
-		"reconnectTimeout": 1 
 	}
 ]
