@@ -950,6 +950,9 @@ class TrackerController extends InstrumentController {
 		
 		const group = this.getGroupFromGroupName( groupName );
 		
+		if( isNaN( power ) ) {
+			return;
+		}
 
 		if( power > 1 ) {
 			power = 1;
@@ -969,8 +972,11 @@ class TrackerController extends InstrumentController {
 		} else if( rbottomcode > 255 ) {
 			rbottomcode = 255;
 		}
-
 		
+		if( isNaN( rbottomcode ) ) {
+			return;
+		}
+
 		group.heat.power = power;
 
 		if( setVoltage < 1 ) {
