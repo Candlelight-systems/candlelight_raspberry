@@ -693,11 +693,11 @@ class TrackerController extends InstrumentController {
 
 				Object.assign( data, {
 					heater_status: await this.heaterIsEnabled( group.groupName ),
-					heater_voltage: Math.round( await this.heaterGetVoltage( group.groupName ) * 10 ) / 10,
-					heater_current: Math.round( await this.heaterGetCurrent( group.groupName ) * 10 ) / 10,
+					heater_voltage: Math.round( await this.heaterGetVoltage( group.groupName ) * 100 ) / 100,
+					heater_current: Math.round( await this.heaterGetCurrent( group.groupName ) * 100 ) / 100,
 				} );
 
-				data.heater_power = Math.round( data.heater_voltage * data.heater_current * 10 ) / 10;
+				data.heater_power = Math.round( data.heater_voltage * data.heater_current * 100 ) / 100;
 			}
 
 			if( group.light ) {
