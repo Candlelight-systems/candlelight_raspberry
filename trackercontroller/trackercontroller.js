@@ -69,7 +69,7 @@ class TrackerController extends InstrumentController {
 		await this.query( "RESERVED:SETUP" );
 		await this.normalizeStatus();
 		await this.resumeChannels();
-		await this.scheduleEnvironmentSensing( 2000 );
+		await this.scheduleEnvironmentSensing( 20000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.lightSensing(); // Normalize the light sensing
 		await this.heatUpdate(); // Normalize the light sensing
@@ -685,6 +685,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group.groupName );
+				console.log( humidity );
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -1276,14 +1277,7 @@ class TrackerController extends InstrumentController {
 
 	requestIVCurve( chanId ) {
 		
-		return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 ).then( ( data ) => {
-
-			data = data
-				.split(',');			
-			data.pop();
-
-			return data.map( ( value ) => parseFloat( value ) );
-		});
+		return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 );
 	}
 	
 

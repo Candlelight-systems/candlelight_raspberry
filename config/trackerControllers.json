@@ -3,7 +3,8 @@
 
 		"fullScaleCurrent": 0.015,
 		"instrumentId": "Small cells",
-		
+		"relayController": "relay1",
+
 		"groups": [
 			{	
 				"groupName": "Slot A",
@@ -16,7 +17,7 @@
 
 
 				"heat": {
-					"channelId": 2,
+					"channelId": 1,
 					"maxVoltage": 20
 				},
 
@@ -78,50 +79,6 @@
 						},
 
 						"channels": [ 5, 6, 7, 8 ]
-					},
-
-
-					{
-						"thermistor": {
-							"I2CAddress": 72,
-							"ADCChannel": 3,
-							"model": "ztp_101t",
-							"vref": 2.5,
-							"resistor": 14300,
-							"offset": -7.5
-						},
-
-						"thermopile": {
-							"I2CAddress": 72,
-							"ADCChannel": 2,
-							"model": "ztp_101t",
-							"gain": 430.528,
-							"offset": 0
-						},
-
-						"channels": [ 9, 10, 11, 12 ]
-					},
-
-
-					{
-						"thermistor": {
-							"I2CAddress": 72,
-							"ADCChannel": 3,
-							"model": "ztp_101t",
-							"vref": 2.5,
-							"resistor": 14300,
-							"offset": -7.5
-						},
-
-						"thermopile": {
-							"I2CAddress": 72,
-							"ADCChannel": 2,
-							"model": "ztp_101t",
-							"gain": 430.528,
-							"offset": 0
-						},
-
-						"channels": [ 13, 14, 15, 16 ]
 					}	
 				],
 
@@ -157,7 +114,40 @@
 					{
 						"chanId": 8,
 						"chanName": "Channel 8"
+					}
+				]
+			},
+
+
+			{	
+				"groupName": "Slot B",
+				"groupID": "boxb",
+
+				"light": {
+					"on": true,
+					"scaling": 2,
+					"channelId": 2,
+					"factory_scaling": 2,
+					"scheduling": {
+						"enabled": false,
+						"basis": 3600,
+						"intensities": [ 0, 1, 0 ]
 					},
+					"setPoint": 1,
+					"sensing": {}
+				},
+
+				"heat": {
+					"channelId": 2,
+					"maxVoltage": 20
+				},
+
+				"humiditySensor": {
+					"address": 64
+				},
+
+				"i2cSlave": 8,
+				"channels": [
 					{
 						"chanId": 9,
 						"chanName": "Channel 9"
@@ -192,6 +182,54 @@
 					}
 				]
 			}
-		]
+		],
+		"pdRefs": []
+	},
+
+
+	"Small modules": {
+		"fullScaleCurrent": 0.100,
+		"instrumentId": "Small modules",
+		"groups": [
+			{	
+				"groupName": "Modules",
+				"groupID": "modules",
+				"channels": [
+					{
+						"chanId": 1,
+						"chanName": "Module 1"
+					},
+					{
+						"chanId": 2,
+						"chanName": "Module 2"
+					},
+					{
+						"chanId": 3,
+						"chanName": "Module 3"
+					},
+					{
+						"chanId": 4,
+						"chanName": "Module 4"
+					},
+					{
+						"chanId": 5,
+						"chanName": "Module 5"
+					},
+					{
+						"chanId": 6,
+						"chanName": "Module 6"
+					},
+					{
+						"chanId": 7,
+						"chanName": "Module 7"
+					},
+					{
+						"chanId": 8,
+						"chanName": "Module 8"
+					}
+				]
+			}
+		],
+		"pdRefs": []
 	}
 }
