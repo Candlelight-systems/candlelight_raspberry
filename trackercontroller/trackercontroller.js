@@ -685,7 +685,6 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group.groupName );
-				console.log( humidity );
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -1018,25 +1017,40 @@ class TrackerController extends InstrumentController {
 
 
 	async readBaseTemperature( cfg ) {
-
+		const t0 = 273.15;
 		const buffer = await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( cfg.I2CAddress, cfg.ADCChannel ), 2, undefined, false, true, 2 );
-		const int = buffer.readInt16BE( 0 ) / 32;
+		const int = buffer.readInt16BE( 0 ) / 16;
 		const vout = int / 2047 * 2.048; // 12 bit word ( 0 - 2047 ) * PGA value (2.048V)
-		const thermistor = cfg.resistor / ( cfg.vref - vout );
-		const wave = new waveform().setData( thermal_modules[ cfg.model ].thermistor );
-		const trueIndex = wave.findLevel( thermistor / 1000, { rounding: "interpolate" } );
-		return wave.interpolateIndex_X( trueIndex ) + cfg.offset;
+
+
+		const thermistor = vout * cfg.resistor / ( cfg.vref - vout );
+		console.log( vout, thermistor, thermal_modules[ cfg.model ].thermistor.r0, thermal_modules[ cfg.model ].thermistor.beta );
+		const t = ( ( 1 / ( 25 + t0 ) +  ( 1 / thermal_modules[ cfg.model ].thermistor.beta ) * Math.log( thermistor / thermal_modules[ cfg.model ].thermistor.r0 ) ) ** -1 ) - t0;
+		return t;
 	}
 
 
 	async readIRTemperature( cfg ) {
 
 		const buffer = await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( cfg.I2CAddress, cfg.ADCChannel ), 2, undefined, false, true, 2 );
+		console.log( buffer.readInt16BE( 0 ) / 16 / 2047 * 2.048 );
+		let vout = ( buffer.readInt16BE( 0 ) / 16 - cfg.offset ) / 2047 * 2.048 / cfg.gain; // Sensor voltage
+
 		
-		let vout = ( buffer.readInt16BE( 0 ) / 32 - cfg.offset ) / 2047 * 2.048 / cfg.gain; // Sensor voltage
 		const coeffs = thermal_modules[ cfg.model ].thermopile.polynomialCoefficients;
 		vout *= 1000;
-		const deltaT = coeffs[ 0 ] + vout * coeffs[ 1 ] + ( vout ** 2 ) * coeffs[ 2 ] + ( vout ** 3 ) * coeffs[ 3 ] + ( vout ** 4 ) * coeffs[ 4 ] + ( vout ** 5 ) * coeffs[ 5 ];
+		const deltaT = coeffs[ 0 ] * 0 + // Rescale to 0
+						+ ( vout ** 1 ) * coeffs[ 1 ] 
+						+ ( vout ** 2 ) * coeffs[ 2 ] 
+						+ ( vout ** 3 ) * coeffs[ 3 ] 
+						+ ( vout ** 4 ) * coeffs[ 4 ] 
+						+ ( vout ** 5 ) * coeffs[ 5 ]
+						+ ( vout ** 6 ) * coeffs[ 6 ]
+						+ ( vout ** 7 ) * coeffs[ 7 ]
+						+ ( vout ** 8 ) * coeffs[ 8 ];
+
+
+		console.log( vout, deltaT, coeffs );
 		return deltaT;
 	}
 
@@ -1049,18 +1063,6 @@ class TrackerController extends InstrumentController {
 				return sensor;
 			}
 		}
-	}
-
-	async measureGroupTemperature( groupName ) {
-		return;
-		let group = this.getGroupFromGroupName( groupName );
-
-		if( ! group.i2cSlave ) {
-			return;
-		}
-
-		this.groupTemperature[ groupName ] = Math.round( 10 * parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readTemperature( group.i2cSlave ), 2 ) ) ) / 10;
-		return this.getGroupTemperature( groupName );
 	}
 
 	getGroupTemperature( groupName ) {
@@ -1448,8 +1450,8 @@ class TrackerController extends InstrumentController {
 		          efficiency: efficiency,
 		          sun: sun,
 		          pga: pga,
-				  temperature_base: temperature ? temperature[ 1 ] : 0,
-				  temperature_junction: temperature ? temperature[ 0 ] : 0,
+				  temperature_base: temperature && !isNaN( temperature[ 1 ] ) ? temperature[ 1 ] : 0,
+				  temperature_junction: temperature && !isNaN( temperature[ 0 ] ) ? temperature[ 0 ] : 0,
 				  humidity: this.groupHumidity[ group.groupName ] || 0
 		        }
 		      }

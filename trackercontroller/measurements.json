@@ -404,6 +404,59 @@
 			"cellName": "CH7",
 			"cellArea": 0.57
 		},
-		"startDate": 1518775017724
+		"startDate": 1518775017724,
+		"endDate": 1518803824341
+	},
+	"Ch1_1518803830477": {
+		"cellInfo": {
+			"cellName": "Ch1",
+			"cellArea": 0.57
+		},
+		"startDate": 1518803830013,
+		"endDate": 1518803832145
+	},
+	"Ch2_1518803837675": {
+		"cellInfo": {
+			"cellName": "Ch2",
+			"cellArea": 0.57
+		},
+		"startDate": 1518803837097,
+		"endDate": 1518803838833
+	},
+	"Ch3_1518803840610": {
+		"cellInfo": {
+			"cellName": "Ch3",
+			"cellArea": 0.57
+		},
+		"startDate": 1518803840030,
+		"endDate": 1518803841008
+	},
+	"CH4_1518804115167": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 0.57
+		},
+		"startDate": 1518804114706
+	},
+	"Ch8_1518874142424": {
+		"cellInfo": {
+			"cellName": "Ch8",
+			"cellArea": 0.57
+		},
+		"startDate": 1518874142641
+	},
+	"Ch6_1518874143782": {
+		"cellInfo": {
+			"cellName": "Ch6",
+			"cellArea": 0.57
+		},
+		"startDate": 1518874143816
+	},
+	"Ch5_1518874144602": {
+		"cellInfo": {
+			"cellName": "Ch5",
+			"cellArea": 0.57
+		},
+		"startDate": 1518874144634
 	}
 }
