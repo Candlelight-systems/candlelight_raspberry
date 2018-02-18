@@ -69,7 +69,7 @@ class TrackerController extends InstrumentController {
 		await this.query( "RESERVED:SETUP" );
 		await this.normalizeStatus();
 		await this.resumeChannels();
-		await this.scheduleEnvironmentSensing( 20000 );
+		await this.scheduleEnvironmentSensing( 2000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.lightSensing(); // Normalize the light sensing
 		await this.heatUpdate(); // Normalize the light sensing
@@ -1024,7 +1024,7 @@ class TrackerController extends InstrumentController {
 
 
 		const thermistor = vout * cfg.resistor / ( cfg.vref - vout );
-		console.log( vout, thermistor, thermal_modules[ cfg.model ].thermistor.r0, thermal_modules[ cfg.model ].thermistor.beta );
+		
 		const t = ( ( 1 / ( 25 + t0 ) +  ( 1 / thermal_modules[ cfg.model ].thermistor.beta ) * Math.log( thermistor / thermal_modules[ cfg.model ].thermistor.r0 ) ) ** -1 ) - t0;
 		return t;
 	}
@@ -1033,7 +1033,7 @@ class TrackerController extends InstrumentController {
 	async readIRTemperature( cfg ) {
 
 		const buffer = await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( cfg.I2CAddress, cfg.ADCChannel ), 2, undefined, false, true, 2 );
-		console.log( buffer.readInt16BE( 0 ) / 16 / 2047 * 2.048 );
+//		console.log( buffer.readInt16BE( 0 ), buffer.readInt16BE( 0 ) / 16 / 2047 * 2.048 );
 		let vout = ( buffer.readInt16BE( 0 ) / 16 - cfg.offset ) / 2047 * 2.048 / cfg.gain; // Sensor voltage
 
 		
@@ -1050,7 +1050,7 @@ class TrackerController extends InstrumentController {
 						+ ( vout ** 8 ) * coeffs[ 8 ];
 
 
-		console.log( vout, deltaT, coeffs );
+		console.log( vout, deltaT );
 		return deltaT;
 	}
 
