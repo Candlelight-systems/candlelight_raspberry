@@ -63,7 +63,7 @@ class TrackerController extends InstrumentController {
 		await this.query( "RESERVED:SETUP" );
 		await this.normalizeStatus();
 		await this.resumeChannels();
-		await this.scheduleEnvironmentSensing( 10000 );
+		await this.scheduleEnvironmentSensing( 2000 );
 
 		// This will take some time as all channels have to be updated
 		this._initLightControllers();
@@ -714,6 +714,8 @@ class TrackerController extends InstrumentController {
 					lightSetpoint: controller.getSetPoint( group.groupName ),
 					lightValue: await this.measureGroupLightIntensity( group.groupName ),
 				} );
+
+				console.log( data );
 			}
 
 			if( group.heatController ) {
@@ -1106,11 +1108,10 @@ console.log( chan.temperatureSensor.channel, baseTemperature, sensorVoltage );
 		this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
 		return this
-			.getStateManager()
+			.getManager( 'IV' )
 			.addQuery( async () => {
 
 				var status = this.getStatus( chanId );
-
 				this.preventMPPT[ chanId ] = true;
 
 				if( ! status.enable ) {
@@ -1186,7 +1187,6 @@ console.log( chan.temperatureSensor.channel, baseTemperature, sensorVoltage );
 				for( var i = 0; i < 9; i ++ ) {
 					out.push( data.readFloatLE( i * 4 ) ); // New float every 4 byte
 				}
-
 
 				out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
 				out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data

@@ -38,25 +38,25 @@
 			"tracking_step": null,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,
-			"iv_autostart": true,
+			"iv_autostart": false,
 			"iv_stop": 0,
-			"iv_hysteresis": true,
+			"iv_hysteresis": false,
 			"iv_rate": 0.1,
-			"iv_interval": 3600000,
-			"enable": 1,
+			"iv_interval": 86400000,
+			"enable": 0,
 			"tracking_gain": -1,
-			"tracking_measure_jsc": 1,
-			"tracking_measure_voc": 1,
+			"tracking_measure_jsc": 0,
+			"tracking_measure_voc": 0,
 			"tracking_measure_jsc_time": 10000,
 			"tracking_measure_voc_time": 10000,
-			"tracking_measure_jsc_interval": 10800000,
-			"tracking_measure_voc_interval": 3600000,
-			"tracking_mode": 1,
-			"cellArea": 0.57,
+			"tracking_measure_jsc_interval": 86400000,
+			"tracking_measure_voc_interval": 86400000,
+			"tracking_mode": 0,
+			"cellArea": 0,
 			"connection": "group",
 			"lightRefValue": 1000,
-			"measurementName": "D1_1515771540586",
-			"cellName": "D1",
+			"measurementName": null,
+			"cellName": null,
 			"chanId": 1,
 			"instrumentId": "Tracker 1",
 			"iv_booked": false
@@ -99,25 +99,25 @@
 			"tracking_step": null,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,
-			"iv_autostart": true,
+			"iv_autostart": false,
 			"iv_stop": 0,
-			"iv_hysteresis": true,
+			"iv_hysteresis": false,
 			"iv_rate": 0.1,
-			"iv_interval": 3600000,
-			"enable": 1,
+			"iv_interval": 86400000,
+			"enable": 0,
 			"tracking_gain": -1,
-			"tracking_measure_jsc": 1,
-			"tracking_measure_voc": 1,
+			"tracking_measure_jsc": 0,
+			"tracking_measure_voc": 0,
 			"tracking_measure_jsc_time": 10000,
 			"tracking_measure_voc_time": 10000,
-			"tracking_measure_jsc_interval": 10800000,
-			"tracking_measure_voc_interval": 3600000,
-			"tracking_mode": 1,
-			"cellArea": 0.57,
+			"tracking_measure_jsc_interval": 86400000,
+			"tracking_measure_voc_interval": 86400000,
+			"tracking_mode": 0,
+			"cellArea": 0,
 			"connection": "group",
 			"lightRefValue": 1000,
-			"measurementName": "D2_1515771542299",
-			"cellName": "D2",
+			"measurementName": null,
+			"cellName": null,
 			"chanId": 2,
 			"instrumentId": "Tracker 1",
 			"iv_booked": false
@@ -160,25 +160,25 @@
 			"tracking_step": null,
 			"tracking_switchdelay": 1,
 			"iv_start": 1,
-			"iv_autostart": true,
+			"iv_autostart": false,
 			"iv_stop": 0,
-			"iv_hysteresis": true,
+			"iv_hysteresis": false,
 			"iv_rate": 0.1,
-			"iv_interval": 3600000,
-			"enable": 1,
+			"iv_interval": 86400000,
+			"enable": 0,
 			"tracking_gain": -1,
-			"tracking_measure_jsc": 1,
-			"tracking_measure_voc": 1,
+			"tracking_measure_jsc": 0,
+			"tracking_measure_voc": 0,
 			"tracking_measure_jsc_time": 10000,
 			"tracking_measure_voc_time": 10000,
-			"tracking_measure_jsc_interval": 10800000,
-			"tracking_measure_voc_interval": 3600000,
-			"tracking_mode": 1,
-			"cellArea": 0.57,
+			"tracking_measure_jsc_interval": 86400000,
+			"tracking_measure_voc_interval": 86400000,
+			"tracking_mode": 0,
+			"cellArea": 0,
 			"connection": "group",
 			"lightRefValue": 1000,
-			"measurementName": "D3_1515771543684",
-			"cellName": "D3",
+			"measurementName": null,
+			"cellName": null,
 			"chanId": 3,
 			"instrumentId": "Tracker 1",
 			"iv_booked": false
@@ -242,7 +242,7 @@
 			"cellName": "D4",
 			"chanId": 4,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"4": {
@@ -303,7 +303,7 @@
 			"cellName": "D5",
 			"chanId": 5,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"5": {
@@ -364,7 +364,7 @@
 			"cellName": "D6",
 			"chanId": 6,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"6": {
@@ -425,7 +425,7 @@
 			"cellName": "D7",
 			"chanId": 7,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"7": {
@@ -486,7 +486,7 @@
 			"cellName": "D8",
 			"chanId": 8,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"8": {
@@ -547,7 +547,7 @@
 			"cellName": "D9",
 			"chanId": 9,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"9": {
@@ -608,7 +608,7 @@
 			"cellName": "D10",
 			"chanId": 10,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"10": {
@@ -669,7 +669,7 @@
 			"cellName": "D11",
 			"chanId": 11,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"11": {
@@ -730,7 +730,7 @@
 			"cellName": "D12",
 			"chanId": 12,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"12": {
@@ -791,7 +791,7 @@
 			"cellName": "D13",
 			"chanId": 13,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		},
 		{
 			"13": {
@@ -852,7 +852,7 @@
 			"cellName": "D14",
 			"chanId": 14,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false,
+			"iv_booked": true,
 			"voc_booked": true
 		},
 		{
@@ -914,7 +914,7 @@
 			"cellName": "D15",
 			"chanId": 15,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false,
+			"iv_booked": true,
 			"jsc_booked": false,
 			"voc_booked": false
 		},
@@ -977,7 +977,7 @@
 			"cellName": "D16",
 			"chanId": 16,
 			"instrumentId": "Tracker 1",
-			"iv_booked": false
+			"iv_booked": true
 		}
 	]
 }

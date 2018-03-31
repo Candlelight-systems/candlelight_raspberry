@@ -1518,21 +1518,24 @@
 			"cellName": "D1",
 			"cellArea": 0.57
 		},
-		"startDate": 1515705531745
+		"startDate": 1515705531745,
+		"endDate": 1517344127576
 	},
 	"D2_1515771542299": {
 		"cellInfo": {
 			"cellName": "D2",
 			"cellArea": 0.57
 		},
-		"startDate": 1515705533439
+		"startDate": 1515705533439,
+		"endDate": 1517345274212
 	},
 	"D3_1515771543684": {
 		"cellInfo": {
 			"cellName": "D3",
 			"cellArea": 0.57
 		},
-		"startDate": 1515705534826
+		"startDate": 1515705534826,
+		"endDate": 1517345275962
 	},
 	"D4_1515771544693": {
 		"cellInfo": {
