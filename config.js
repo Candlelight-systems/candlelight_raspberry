@@ -3,10 +3,8 @@ const influx = require("./config/influx.json");
 
 const instrument = require("./config/instrument.json");
 const trackerControllers = require("./config/trackerControllers.json");
-const lightControllers = require("./config/lightControllers.json");
 const relayControllers = require("./config/relayControllers.json");
-const heatControllers = require("./config/heatControllers.json");
-
+const hosts = require("./config/hosts.json");
 
 module.exports = {
 	
@@ -18,124 +16,39 @@ module.exports = {
 
 	influx: influx,
 
-	hosts: [
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
-			"constructorName": "TrackerController",
-			"resetPin": 40,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 5 // in seconds
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "light1",
-			"constructorName": "LightController",
-			
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 5 // in seconds
-		},
-
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.4:1.0",
-			"alias": "heat1",
-			"constructorName": "HeatController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 5 // in seconds
-		}
-/*
-=======
->>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.3:1.0",
-			"alias": "relay1",
-			"resetPin": 21,
-			"constructorName": "RelayController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-
-<<<<<<< HEAD
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "heat1",
-			"resetPin": 22,
-			"constructorName": "HeatController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-=======
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.5:1.0",
-			"alias": "heat1",
-			"resetPin": 22,
-			"constructorName": "HeatController",
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		},
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
-			"constructorName": "TrackerController",
-			"resetPin": 12,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}
->>>>>>> 14183a1113a97636bff9fb7897004fc0e52d9712
-
-		{	
-			"host": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.2:1.0",
-			"alias": "Tracker 1",
-			"constructorName": "TrackerController",
-			"resetPin": 12,
-			"params": {
-				"baudrate": 57600
-			},
-			"reconnectTimeout": 1 // in seconds
-		}
-*/
-	],
-
-
+	hosts: hosts,
 	trackerControllers: {
 
 		hosts: trackerControllers,
 
 		specialcommands: {
+			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
 
-			getTrackData: ( chanId ) => { return { string: "DATA:TRAC:CH" + chanId, timeout: 1000 } },
-			executeIV: ( chanId ) => { return { string: "IV:EXECUTE:CH" + chanId, timeout: 300000 } }, // 2 minutes max
-			
+			iv: {
+				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}` } },
+				data: "IV:DATA",
+				status: "IV:STATUS",
+			},
+
 			light: {
-				enable: 'LIGHT:ENABLE',
-				disable: 'LIGHT:DISABLE',
-				isEnabled: 'LIGHT:ENABLED?',
-				isAutomatic: 'LIGHT:AUTOMATIC?',
-				setSetpoint: 'LIGHT:SETPOINT',
-				setScaling: 'LIGHT:SCALING',
-				check: 'LIGHT:CHECK'
+				enable:  ( chanId ) => { return { string: `LIGHT:ENABLE:CH${chanId}` } },
+				disable:  ( chanId ) => { return { string: `LIGHT:DISABLE:CH${chanId}` } },
+				isEnabled:  ( chanId ) => { return { string: `LIGHT:ENABLED?:CH${chanId}` } },
+				isAutomatic:  ( chanId ) => { return { string: `LIGHT:AUTOMATIC?:CH${chanId}` } },
+				setSetpoint:  ( chanId, value ) => { return { string: `LIGHT:SETPOINT:CH${chanId} ${value}` } },
+				setScaling:  ( chanId , value) => { return { string: `LIGHT:SCALING:CH${chanId} ${value}` } },
+				check:  ( chanId ) => { return { string: `LIGHT:CHECK:CH${chanId}`, timeout: 30000 } },
+				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } }
+			},
+
+			dcdc: {
+
+				isEnabled: ( chanId ) => { return { string: `DCDC:ENABLED?:CH${ chanId }` } },
+				setPower: ( chanId, value ) => { return { string: `DCDC:VALUE:CH${ chanId } ${ value }` } },
+				enable:  ( chanId ) => { return { string: `DCDC:ENABLE:CH${ chanId }` } },
+				disable:  ( chanId ) => { return { string: `DCDC:DISABLE:CH${ chanId }` } },
+				getVoltage:  ( chanId ) => { return { string: `DCDC:VOLTAGE:CH${ chanId }` } },
+				getCurrent:  ( chanId ) => { return { string: `DCDC:CURRENT:CH${ chanId }` } }
 			},
 
 			acquisition: {
@@ -143,8 +56,8 @@ module.exports = {
 			},
 
 			readPD: {
-				pd_1: "ENVI:PD1",
-				pd_2: "ENVI:PD2"
+				current: (pdId) => `ENVIRONMENT:PHOTODIODE:CH${pdId}`,
+				sun: (pdId) => `ENVIRONMENT:SUNPHOTODIODE:CH${pdId}`
 			},		
 
 			voc: {
@@ -164,10 +77,12 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId ) => "ENVI:TBASE? " + slaveId,
-			readTemperatureChannelIR: ( slaveId ) => "ENVI:TIR? " + slaveId,
+			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVI:TBASE?:CH" + chanId + " " + slaveId,
+			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVI:TIR?:CH" + chanId + " " + slaveId,
 			readTemperature: ( slaveId ) => "ENVI:TEMPBOX? " + slaveId,
-			readHumidity: ( slaveId ) => "ENVI:HUMIDITY? " + slaveId
+			readHumidity: ( slaveId ) => "ENVI:HUMIDITY? " + slaveId,
+			reset: ( chanId ) => `TRACKING:RESET:CH${ chanId }`
+			
 		},
 
 		statuscommands: [
@@ -177,15 +92,14 @@ module.exports = {
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
-
-			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
 			[ "TRACKING:GAIN", function( status ) { return status.tracking_gain || -1; } ],
-			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
 			[ "TRACKING:FWBWTHRESHOLD", function( status ) { return status.tracking_fwbwthreshold; } ],
 			[ "TRACKING:BWFWTHRESHOLD", function( status ) { return status.tracking_bwfwthreshold; } ],
-			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
 			[ "TRACKING:SWITCHDELAY", function( status ) { return status.tracking_switch_delay || 1; } ],
-
+			[ "TRACKING:INTERVAL", function( status ) { return status.tracking_interval || 1; } ],
+			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
+			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
+			[ "TRACKING:PHOTODIODE", function( status, groupConfig ) { return groupConfig ? ( groupConfig.light ? -1 || -1 : -1 ) : -1; } ], // groupConfig.light.channelId
 			[ "OUTPUT:ENABLE", function( status ) { return status.enable || 0; } ]
 		],
 
@@ -212,24 +126,15 @@ module.exports = {
 			"tracking_measure_voc_interval": 24 * 3600 * 1000,
 			"tracking_mode": 0,
 			"cellArea": 0,
-
 			"connection": "group",
-			"lightRefValue": 1000,
-
+			"lightRefValue": undefined,
 			"measurementName": null,
 			"cellName": null
 		},
-	},
-
-	heatControllers: {
-		hosts: heatControllers
-	},
-
-	lightControllers: {
-		hosts: lightControllers
 	},
 
 	relayControllers: {
 		hosts: relayControllers
 	}
 };
+

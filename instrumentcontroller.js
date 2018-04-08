@@ -1,8 +1,7 @@
+
 const serialport 	= require("serialport");
 const queryManager	= require("./queryhandler")
-//const rpio 			= require("rpio");
-
-
+const rpio 			= require("rpio");
 
 
 class InstrumentController {
@@ -11,12 +10,12 @@ class InstrumentController {
 	constructor( config ) {
 
 		this.communicationConfig = config;
-		this.managers = [];
+		this.stateManager = new queryManager();
 
 		if( this.communicationConfig.resetPin ) {
 
 			console.log('Preparing', this.communicationConfig.resetPin);
-	//		rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
+			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
 
 		}
 	}	
@@ -29,10 +28,9 @@ class InstrumentController {
 		return this.instrumentConfig;
 	}
 
+
 	query( query, linesExpected = 1, executeBefore = undefined, prepend = false, rawOutput = false, expectedBytes = 0 ) {
 
-
-		return Promise.resolve();
 
 		let communication = this.connection;
 
@@ -55,6 +53,8 @@ class InstrumentController {
 			queryString = query;
 			queryTimeout = 1000;
 		}
+
+		queryTimeout = queryTimeout || 1000; // Default to 1 second
 
 		let statusByte;
 
@@ -80,12 +80,13 @@ class InstrumentController {
 
 				let data = Buffer.alloc(0), 
 				dOut = [], 
-				lineCount = 0,
+				lineCount = 0,	
 				timeout = setTimeout( () => {
-						rejecter(); // Reject the current promise
-						this.reset(); // Reset the instrument
-					}, queryTimeout );
-
+					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms). Trying to reset the instrument.`);
+					rejecter(); // Reject the current promise
+					this.reset(); // Reset the instrument
+				}, queryTimeout );
+			
 				// Start by remove all listeners
 				communication.removeAllListeners( "data" );
 
@@ -132,7 +133,6 @@ class InstrumentController {
 								dOut.push( d );
 							} else {
 								dOut.push( d.toString( 'ascii' ) ); // Look for carriage return + new line feed
-								
 							}
 						}
 
@@ -142,6 +142,7 @@ class InstrumentController {
 
 							if( statusByte !== undefined ) {
 								if( this.checkStatusbyte && ( statusByte & 0x01 ) == 0x00 && this.configured ) {  // LSB is the reset bit
+									console.error("Instrument is not in a configured state. Attempting to re-configure");
 									this.configured = false;
 									this.configure(); // Instrument has been reset. We
 								}
@@ -153,8 +154,10 @@ class InstrumentController {
 							communication.flush();
 
 							// Inform about the communication time
+							if( timeout ) {
+								clearTimeout( timeout );
+							}
 
-							clearTimeout( timeout );
 							console.timeEnd( "query:" + queryString );
 							await delay( 20 );
 							
@@ -181,14 +184,14 @@ class InstrumentController {
 
 	emptyQueryQueue() {
 		this.getConnection().queryManager.emptyQueue();
-		this.getManager('state').emptyQueue();
+		this.stateManager.emptyQueue();
 	}
 
 	/**
 	 *	@returns {SerialPort} The serial communication with the instrument
 	 */
 	 getConnection() {
-	 	return;
+
 	 	if( ! this.connection ) {
 	 		throw "Cannot retrieve the serial connection. Connection does not exist yet.";
 	 	}
@@ -213,7 +216,7 @@ class InstrumentController {
 	 	}
 	 	this.resetting = true;
 
-	 	return;
+
 
 	 	if( this.connection && this.connection.isOpen() ) {
 
@@ -226,10 +229,10 @@ class InstrumentController {
 
 	 	if( this.communicationConfig.resetPin ) {
 	 		console.log("Resetting with pin " + this.communicationConfig.resetPin );
-	 	/*	rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
+	 		rpio.write( this.communicationConfig.resetPin, rpio.HIGH );
 	 		rpio.sleep( 1 );
 	 		rpio.write( this.communicationConfig.resetPin, rpio.LOW );
-	 		rpio.sleep( 1 );*/
+	 		rpio.sleep( 1 );
 	 	}
 
 
@@ -244,12 +247,6 @@ class InstrumentController {
 
 
 	async openConnection( callback ) {
-
-		//connection.lease = Promise.resolve();
-		//connection.queryManager = new queryManager( connection );
-		this.open = true;
-		return callback();
-
 
 		const cfg = this.getConfig();
 		this.resetting = false;
@@ -321,16 +318,7 @@ class InstrumentController {
 
 	
 	getStateManager() {
-		return this.getManager('state');
-	}
-
-	getManager( name ) {
-
-		if( ! this.managers[ name ] ) {
-			this.managers[ name ] = new queryManager();
-		}
-
-		return this.managers[ name ];
+		return this.stateManager;
 	}
 
 

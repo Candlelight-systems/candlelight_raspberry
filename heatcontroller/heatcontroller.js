@@ -7,9 +7,7 @@ const maxVoltage = 20; // 20V max !
 class HeatController extends InstrumentController {
 
 	constructor( config ) {
-
 		super( config );
-		this.trackerReference = {};
 		this.resistorCode = {
 			1: -1,
 			2: -1,
@@ -31,14 +29,8 @@ class HeatController extends InstrumentController {
 		} );
 	}
 
-
-	async setTracker( tracker, groupName ) {
-		this.trackerReference[ groupName ] = tracker;
-	}
-
-	async setPower( groupName, power ) {
-
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
+	async setPower( channel, power ) {
+		
 		if( power > 1 ) {
 			power = 1;
 		}
@@ -60,20 +52,17 @@ class HeatController extends InstrumentController {
 			rbottomcode = 255;
 		}
 
-		this.getInstrumentConfig()[ groupName ].value = power;
-
 		if( setVoltage < 1 ) {
-			//await this.turnOff( channel );
+			await this.turnOff( channel );
 			this.resistorCode[ channel ] = -1;
 		} else {
-			//await this.turnOn( channel );
+			await this.turnOn( channel );
 			this.resistorCode[ channel ] = rbottomcode;
-			await this.setValue( groupName, this.resistorCode[ channel ] );
+			await this.setValue( channel, this.resistorCode[ channel ] );
 		}
 	}
 
-	getPower( groupName ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
+	getPower( channel ) {
 		if( this.resistorCode[ channel ] < 0 ) {
 			return -1;
 		}
@@ -81,36 +70,33 @@ class HeatController extends InstrumentController {
 		return  ( 82000 / ( ( 255 - this.resistorCode[ channel ] ) / 255 * 50000 ) * 0.75 - 0.75 ) / maxVoltage;
 	}
 
-	async increasePower( groupName, increment = 0.05 ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
+	async increasePower( channel, increment = 0.05 ) {
+
 		increment = Math.max( 0, Math.min( 1, increment ) );
 		this.nominalPower[ channel ] += increment; // Add 1 percent
-		return this.setPower( groupName, this.nominalPower[ channel ] );
+		console.log( this.nominalPower[ channel ] );
+		return this.setPower( channel, this.nominalPower[ channel ] );
 	}
 
-	async decreasePower( groupName, increment = 0.05 ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
+	async decreasePower( channel, increment = 0.05 ) {
+
 		increment = Math.max( 0, Math.min( 1, increment ) );
 		this.nominalPower[ channel ] -= increment; // Add 1 percent
-		return this.setPower( groupName, this.nominalPower[ channel ] );
+		return this.setPower( channel, this.nominalPower[ channel ] );
 	}
 
-	async turnOff( groupName ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
-		this.getInstrumentConfig()[ groupName ].on = false;
-		await this.setPower( groupName, 0 );
+	async turnOff( channel ) {
+
 		return this.query("DCDC:DISABLE:CH" + channel );
 	}
 
-	async turnOn( groupName ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
-		this.getInstrumentConfig()[ groupName ].on = true;
-		await this.setPower( groupName, 0 );
+	async turnOn( channel ) {
+
 		return this.query("DCDC:ENABLE:CH" + channel );
 	}
 
-	async setValue( groupName, value ) {
-		let channel = this.getInstrumentConfig()[ groupName ].channel;
+	async setValue( channel, value ) {
+
 		return this.query("DCDC:VALUE:CH" + channel + " " + value );	
 	}
 }

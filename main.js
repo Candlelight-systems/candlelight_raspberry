@@ -10,9 +10,7 @@ const fs = require('fs');
 const HostManager = require('./hostmanager');
 
 const trackerController = require('./trackercontroller/main');
-const lightController = require('./lightcontroller/main');
 const relayController = require('./relaycontroller/main');
-const heatController = require('./heatcontroller/main');
 
 
 var app = express();
@@ -124,9 +122,6 @@ app.get("/getChannelConfig", function( req, res ) {
 	res.send( JSON.stringify( trackerController.getChannelConfig( instrumentId, chanId ) ) );
 } );
 
-
-
-
 app.get("/getConfig", function( req, res ) {
 
 	res.type("application/json");
@@ -135,36 +130,6 @@ app.get("/getConfig", function( req, res ) {
 	const chanId = req.query.chanId;
 	
 	res.send( JSON.stringify( matahari.getConfig( instrumentId, chanId ) ) );
-} );
-
-
-app.get("/getPDOptions", function( req, res ) {
-
-	res.type("application/json");
-
-	const instrumentId = req.query.instrumentId;
-	const groupName = req.query.groupName;
-	
-	res.send( JSON.stringify( trackerController.getPDOptions( instrumentId, groupName ) ) );
-} );
-
-
-app.post("/setPDScaling", function( req, res ) {
-
-	res.type("application/json");
-
-	const instrumentId = req.body.instrumentId;	
-	const groupName = req.body.groupName;
-	
-	trackerController.setPDScaling( instrumentId, groupName, req.body.pdScale ).then( ( ) => {
-
-		res.send("");
-
-	}).catch( ( error ) => {
-
-		console.error( error );
-		res.status( 500 ).send("Photodiode scaling could not be set. Error was " + error );
-	});
 } );
 
 
@@ -225,14 +190,12 @@ app.get("/recordJsc", function( req, res ) {
 	
 app.get("/measureCurrent", async ( req, res ) => {
 
-	const instrumentId = req.query.instrumentId;
-	let results = {};
-
-	const channels = req.query.chanIds ? req.query.chanIds.split(',') : [];
-	results[ 'pd' ] = await trackerController.measurePhotodiode( instrumentId, req.query.groupName );
+	let instrumentId = req.query.instrumentId,
+		channels = req.query.chanIds.split(','),
+		results = {};
 
 	for( let channel of channels ) {
-		results[ channel ] = await trackerController.measureCurrent( instrumentId, channel );
+		results[ channel ] = await trackerController.measureCurrent(  instrumentId, channel );
 	}
 
 	res.type( "application/json" );
@@ -262,7 +225,7 @@ app.get("/enableChannel", ( req, res ) => {
 	let instrumentId = req.query.instrumentId,
 		chanId = req.query.chanId;
 
-	trackerController.enableChannel( instrumentId, chanId, req.query.noIV ).then( () => {
+	trackerController.enableChannel( instrumentId, chanId ).then( () => {
 		res.send("");
 
 	}).catch( ( error ) => {
@@ -369,26 +332,6 @@ app.post("/setStatuses", ( req, res ) => {
 	} );
 } );
 
-
-app.get("/resetAllChannels", function( req, res ) {
-
-	let status = req.query;
-	let instrumentId = status.instrumentId,
-		groupName = status.groupName;
-
-	trackerController.resetStatuses( instrumentId, groupName ).then( () => {
-		
-		res.type("application/json").send( {} );	
-		
-	}).catch(( error ) => {
-
-		console.log( error );
-		res.status( 500 ).send("Channels could not be reset. Error was " + error );
-	 });
-});
-
-
-
 app.get("/resetStatus", function( req, res ) {
 
 	let status = req.query;
@@ -410,6 +353,14 @@ app.get("/getAllMeasurements", function( req, res ) {
 
 	res.type( "application/json" ).send( JSON.stringify( trackerController.getAllMeasurements( ) ) );
 });
+
+
+
+app.get("/getMeasurement", function( req, res ) {
+
+	res.type( "application/json" ).send( JSON.stringify( trackerController.getMeasurement( req.query.measurementName ) ) );
+});
+
 
 app.get("/dropMeasurement", function( req, res ) {
 
@@ -433,39 +384,65 @@ app.get("/resetSlave", ( req, res ) => {
 
 } );
 
+app.get("/light.enable", ( req, res ) => {
+	trackerController.lightEnable( req.query.instrumentId, req.query.groupName ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.disable", ( req, res ) => {
+	trackerController.lightDisable( req.query.instrumentId, req.query.groupName ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+
+app.get("/light.isEnabled", ( req, res ) => {
+	trackerController.lightIsEnabled( req.query.instrumentId, req.query.groupName ).then( ( value ) => {
+		res.send( value );
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.setSetpoint", ( req, res ) => {
+	trackerController.lightSetSetpoint( req.query.instrumentId, req.query.groupName, req.query.setPoint ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
+
+app.get("/light.setScaling", ( req, res ) => {
+	trackerController.lightEnable( req.query.instrumentId, req.query.groupName, req.query.scaling ).then( () => {
+		res.send("");
+	}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+});
 
 app.get("/lightGetControl", function( req, res ) {
-
-	trackerController.getLightController( req.query.instrumentId, req.query.groupName ).then( ( controllers ) => {
-		
-		res.type("application/json").send( JSON.stringify( controllers ) );	
-		
-	} ).catch( ( error ) => {
-
-		console.log( error );
-		console.trace( error );
-		res.status( 500 ).send("Light controllers could not be retrieved. Error was \"" + error + "\"" );
-	} );
+	try {
+		let control = trackerController.getLightControl( req.query.instrumentId, req.query.groupName );
+		res.type("application/json").send( JSON.stringify( control ) );	
+	} catch( error ) {
+		console.error( error );
+		res.status( 500 ).send(`Light control could not be retrieved. Error was ${error}`);
+	}
 });
 
 app.post("/lightSetControl", ( req, res ) => {
-
-	trackerController.saveLightController( req.body.instrumentId, req.body.groupName, req.body.control ).then( () => {
-		
+console.log( req.body );
+	trackerController.setLightControl( req.body.instrumentId, req.body.groupName, req.body.control ).then( () => {	
+	
 		res.send("");
-
+	
 	}).catch( ( error ) => {
 
 		console.error( error );
-		res.status( 500 ).send("Cannot save light controllers. Error was " + error );
+		res.status( 500 ).send(`Cannot save light control. Error was ${error}`);
 
 	});
 });
 
-app.post("/heat.setPower", function( req, res ) {
+app.get("/heat.enable", function( req, res ) {
 
 
-	trackerController.setHeatingPower( req.body.instrumentId, req.body.groupName, req.body.power ).then( ( ) => {
+	trackerController.heaterEnable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
 		
 		res.send( "" );	
 		
@@ -473,58 +450,35 @@ app.post("/heat.setPower", function( req, res ) {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be set. Error was \"" + error + "\"" );
+		res.status( 500 ).send("Heating could not be enabled. Error: \"" + error + "\"" );
 	} );
 });
 
-app.get("/heat.getPower", function( req, res ) {
-
-	trackerController.getHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		
-		res.send( power );	
-		
-	} ).catch( ( error ) => {
-
-		console.log( error );
-		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
-	} );
-} );
-
-
-app.get("/heat.enable", function( req, res ) {
-
-	trackerController.enableHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
-		
-	} ).catch( ( error ) => {
-
-		console.log( error );
-		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
-	} );
-} );
 
 
 app.get("/heat.disable", function( req, res ) {
 
-	trackerController.disableHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+
+	trackerController.heaterDisable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
+		
+		res.send( "" );	
 		
 	} ).catch( ( error ) => {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+		res.status( 500 ).send("Heating could not be disabled. Error: \"" + error + "\"" );
 	} );
-} );
+});
 
 
 
 app.get("/heat.increasePower", function( req, res ) {
 
 	trackerController.increaseHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		res.sendStatus( 200 );
+		console.log( power );
+		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+		
 	} ).catch( ( error ) => {
 
 		console.log( error );
@@ -548,17 +502,14 @@ app.get("/heat.decreasePower", function( req, res ) {
 	} );
 } );
 
+app.get("instrument.setAcquisitionSpeed", ( req, res ) => {
 
-
-app.get("/environmentalSensing", function( req, res ) {
-
-	trackerController.measureEnvironment( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
-		
+	trackerController.setAcquisitionSpeed( req.query.instrumentId, req.query.groupName ).then( ( speed ) => {
+		res.send( speed );
 	} ).catch( ( error ) => {
 
-		console.log( error );
+		console.error( error );
 		console.trace( error );
-		res.status( 500 ).send("Could not measure the environment variables. Error was \"" + error + "\"" );
+		res.status( 500 ).send(`Cannot update the tracking power. Error was "${error}"`);
 	} );
 } );

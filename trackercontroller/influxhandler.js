@@ -19,6 +19,7 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
   return influxClient.writePoints([
       {
         measurement: measurementName + "_iv",
+        timestamp: Date.now() * 1000000, // nano seconds
         fields: { 
           iv: '"' + ivData + '"',
           sun: sun
@@ -54,6 +55,7 @@ module.exports.storeVoc = function( measurementName, voc ) {
     return influxClient.writePoints([
       {
         measurement: encodeURIComponent( measurementName ) + "_voc",
+        timestamp: Date.now() * 1000000, // nano seconds
         fields: { 
           voc: voc
         }
@@ -71,6 +73,7 @@ module.exports.storeJsc = function( measurementName, jsc ) {
     return influxClient.writePoints( [
       {
         measurement: encodeURIComponent( measurementName ) + "_jsc",
+        timestamp: Date.now() * 1000000, // nano seconds
         fields: { 
           jsc: jsc
         },
@@ -99,6 +102,7 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
     return influxClient.writePoints( [
       {
         measurement: encodeURIComponent( measurementName ),
+        timestamp: Date.now() * 1000000, // nano seconds
         fields: fields
       }
 

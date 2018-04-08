@@ -8,10 +8,6 @@ class queryManager {
 
 	addQuery( q, prepend ) {
 		
-		if( this.blocked ) {
-			return Promise.reject();
-		}
-		
 		let done = new Promise( ( resolver, rejecter ) => {
 
 			let o = { 
@@ -67,14 +63,6 @@ class queryManager {
 			this.processQueue();
 
 		} );
-	}
-
-	block() {
-		this.blocked = true;
-	}
-
-	unblock() {
-		this.blocked = false;
 	}
 }
 
