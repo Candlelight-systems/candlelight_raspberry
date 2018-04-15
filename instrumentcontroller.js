@@ -10,7 +10,11 @@ class InstrumentController {
 	constructor( config ) {
 
 		this.communicationConfig = config;
-		this.stateManager = new queryManager();
+
+		this.managers = {
+			'state': new queryManager()
+		}
+		
 
 		if( this.communicationConfig.resetPin ) {
 
@@ -39,7 +43,7 @@ class InstrumentController {
 			return;
 		}
 
-		if( ! communication.isOpen() ) {
+		if( ! communication.isOpen ) {
 			return new Promise( ( resolver, rejecter ) => rejecter( "Port is closed" ) );
 		}
 
@@ -111,8 +115,6 @@ class InstrumentController {
 
 							return data.indexOf( 0x0d0a ) - 1;
 						}
-
-
 					}
 
 					while( ( index = condition( expectedBytes ) ) >= 0 ) { // CRLF detection
@@ -159,7 +161,7 @@ class InstrumentController {
 							}
 
 							console.timeEnd( "query:" + queryString );
-							await delay( 20 );
+							await delay( 10 );
 							
 
 							if( dOut.length == 1 ) {
@@ -184,7 +186,7 @@ class InstrumentController {
 
 	emptyQueryQueue() {
 		this.getConnection().queryManager.emptyQueue();
-		this.stateManager.emptyQueue();
+		this.getStateManager().emptyQueue();
 	}
 
 	/**
@@ -218,7 +220,7 @@ class InstrumentController {
 
 
 
-	 	if( this.connection && this.connection.isOpen() ) {
+	 	if( this.connection && this.connection.isOpen ) {
 
 	 		this.connection.removeAllListeners( 'data' );
 	 		console.log("Reset: closing the port");
@@ -250,7 +252,7 @@ class InstrumentController {
 
 		const cfg = this.getConfig();
 		this.resetting = false;
-		if( this.connection && this.connection.isOpen() ) {
+		if( this.connection && this.connection.isOpen ) {
 			callback();
 			return;
 		}
@@ -318,9 +320,17 @@ class InstrumentController {
 
 	
 	getStateManager() {
-		return this.stateManager;
+		return this.getManager('state');
 	}
 
+	getManager( name ) {
+
+		if( ! this.managers[ name ] ) {
+			this.managers[ name ] = new queryManager();
+		}
+
+		return this.managers[ name ];
+	}
 
 	delay( delayMS = 100 ) {
 		return new Promise( ( resolver ) => { setTimeout( () => { resolver() }, delayMS ) } );

@@ -439,10 +439,10 @@ console.log( req.body );
 	});
 });
 
-app.get("/heat.enable", function( req, res ) {
+app.get("/dcdc.enable", function( req, res ) {
 
 
-	trackerController.heaterEnable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
+	trackerController.dcdcEnable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
 		
 		res.send( "" );	
 		
@@ -450,16 +450,16 @@ app.get("/heat.enable", function( req, res ) {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating could not be enabled. Error: \"" + error + "\"" );
+		res.status( 500 ).send("DCDC could not be enabled. Error: \"" + error + "\"" );
 	} );
 });
 
 
 
-app.get("/heat.disable", function( req, res ) {
+app.get("/dcdc.disable", function( req, res ) {
 
 
-	trackerController.heaterDisable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
+	trackerController.dcdcDisable( req.query.instrumentId, req.query.groupName ).then( ( ) => {
 		
 		res.send( "" );	
 		
@@ -467,40 +467,110 @@ app.get("/heat.disable", function( req, res ) {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating could not be disabled. Error: \"" + error + "\"" );
+		res.status( 500 ).send("DCDC could not be disabled. Error: \"" + error + "\"" );
 	} );
 });
 
 
 
-app.get("/heat.increasePower", function( req, res ) {
+app.get("/dcdc.increasePower", function( req, res ) {
 
-	trackerController.increaseHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
-		console.log( power );
-		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+	trackerController.increaseDCDCPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+
+		res.type("application/json").send( JSON.stringify( { dcdcPower: power } ) );	
 		
 	} ).catch( ( error ) => {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+		res.status( 500 ).send("DCDC power could not be increased. Error was \"" + error + "\"" );
 	} );
 } );
 
 
-app.get("/heat.decreasePower", function( req, res ) {
+app.get("/dcdc.decreasePower", function( req, res ) {
 
-	trackerController.decreaseHeatingPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+	trackerController.decreaseDCDCPower( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
 		console.log( power );
-		res.type("application/json").send( JSON.stringify( { heatingPower: power } ) );	
+		res.type("application/json").send( JSON.stringify( { dcdcPower: power } ) );	
 		
 	} ).catch( ( error ) => {
 
 		console.log( error );
 		console.trace( error );
-		res.status( 500 ).send("Heating power could not be retrieved. Error was \"" + error + "\"" );
+		res.status( 500 ).send("DCDC power could not be decreased. Error was \"" + error + "\"" );
 	} );
 } );
+
+
+app.get("/heat.setTarget", function( req, res ) {
+
+	trackerController.heatSetTarget( req.query.instrumentId, req.query.groupName, req.query.target ).then( ( power ) => {
+		
+		res.send("Ok");
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating target temperature could not be set. Error was \"" + error + "\"" );
+	} );
+} );
+
+
+
+app.get("/heat.setHeating", function( req, res ) {
+
+	trackerController.heatSetTarget( req.query.instrumentId, req.query.groupName, req.query.target ).then( ( power ) => {
+		
+		res.send("Ok");
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Heating could not be enabled. Error was \"" + error + "\"" );
+	} );
+} );
+
+
+
+app.get("/heat.setCooling", function( req, res ) {
+
+	trackerController.heatSetCooling( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		
+		res.send("Ok");
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send("Cooling could not be enabled. Error was \"" + error + "\"" );
+	} );
+} );
+
+
+
+app.get("/heat.getTemperature", function( req, res ) {
+
+	trackerController.heatSetCooling( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		
+		res.send("Ok");
+		
+	} ).catch( ( error ) => {
+
+		console.log( error );
+		console.trace( error );
+		res.status( 500 ).send(`Cooling could not be enabled. Error was ${ error }` );
+	} );
+} );
+
+
+	heatGetTemperature: ( instrumentName, groupName ) => {
+		return getInstrument( instrumentName ).heatGetTemperature( groupName );
+	}
+
+
 
 app.get("instrument.setAcquisitionSpeed", ( req, res ) => {
 

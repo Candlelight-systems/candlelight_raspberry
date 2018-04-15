@@ -210,32 +210,82 @@ module.exports = {
 		return getInstrument( instrumentId ).setAcquisitionSpeed( speed );
 	},
 
-	heaterEnable: async( instrumentId, groupName, power ) => {
+	dcdcEnable: async( instrumentId, groupName, power ) => {
 		let instrument = getInstrument( instrumentId );
-		await instrument.heaterEnable( groupName, power );
+		await instrument.dcdcEnable( groupName, power );
 		await save();
 	},
 	
-	heaterDisable: async( instrumentId, groupName, power ) => {
+	dcdcDisable: async( instrumentId, groupName, power ) => {
 		let instrument = getInstrument( instrumentId );
-		await instrument.heaterDisable( groupName, power );
+		await instrument.dcdcDisable( groupName, power );
 		await save();
 	},
 
-	increaseHeatingPower: async( instrumentId, groupName ) => {
+	increaseDCDCPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
-		return await instrument.increaseHeatingPower( groupName );
+		return await instrument.increaseDCDCPower( groupName );
 		await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
 
-	decreaseHeatingPower: async( instrumentId, groupName ) => {
+	decreaseDCDCPower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
-		return await instrument.decreaseHeatingPower( groupName );
+		return await instrument.decreaseDCDCPower( groupName );
 		await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
 
+
+
+
+
+
+	async heatSetTarget: ( groupName, target ) => {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController ) {
+			group.heatController.target = 30;
+
+			if( group.heatController.ssr ) {
+				await this.heatUpdateSSRTarget( groupName );
+			}
+			return;
+		}
+
+		throw new Error( "No heat controller defined for this group" );
+	}
+
+	// Set the target in the SSR command for hardware implementation
+	heatUpdateSSRTarget: ( groupName ) => {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController && group.heatController.ssr ) {
+			return this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
+		}
+
+		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
+	},
+
+	heatSetHeating: ( instrumentName, groupName ) => {
+		
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController && group.heatController.relay && group.generalRelay ) {
+			group.generalRelay.state = group.heatController.relay_heating;
+			await this.generalRelayUpdateGroup( groupName );
+			return;
+		}
+
+		throw new Error( "Either no heat controller for this group or cannot execute the requested action");
+	}
+
+	heatSetCooling: ( instrumentName, groupName ) => {
+		return getInstrument( instrumentName ).heatSetCooling( groupName );
+	}
+
+	heatGetTemperature: ( instrumentName, groupName ) => {
+		return getInstrument( instrumentName ).heatGetTemperature( groupName );
+	}
 
 	getAllMeasurements: () => {
 		return allMeasurements;
@@ -267,7 +317,7 @@ module.exports = {
 
 	setLightControl: async ( instrumentId, groupName, cfg ) => {
 		await getInstrument( instrumentId ).lightSetControl( groupName, cfg );
-		save();
+		await save();
 	},
 
 	async lightDisable( instrumentId, groupName ) {
@@ -285,7 +335,7 @@ module.exports = {
 	},
 
 	lightIsEnabled( instrumentId, groupName ) {
-		getInstrument( instrumentId ).lightIsEnabled( groupName );
+		return getInstrument( instrumentId ).lightIsEnabled( groupName );
 	},
 
 	lightSetSetpoint( instrumentId, groupName, setpoint ) {

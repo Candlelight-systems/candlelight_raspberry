@@ -6,6 +6,7 @@
 			{
 				"groupName": "Slot A",
 				"groupID": "boxa",
+				"slaveNumber": 1,
 				"defaults": {
 					"connection": "group",
 					"lightRefValue": null
@@ -13,13 +14,28 @@
 				"humiditySensor": {
 					"address": 65
 				},
-				"heat": {
-					"channelId": 2,
-					"maxVoltage": 20
+
+				"heatController": {
+					"target": 30,
+					"feedbackTemperatureSensor": 1,
+					"ssr": true,
+					"relay": true,
+					"relay_heating": 1,
+					"relay_cooling": 0
 				},
+				
+				"generalRelay": {
+					"channelId": 1,
+					"state": false
+				},
+
+				"ssr": {
+					"channelId": 1
+				},
+			
 				"light": {
 					"on": true,
-					"channelId": 2,
+					"channelId": 1,
 					"scaling": 0.8,
 					"factory_scaling": 0.8,
 					"scheduling": {

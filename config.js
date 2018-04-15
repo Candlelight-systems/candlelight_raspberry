@@ -26,8 +26,8 @@ module.exports = {
 
 			iv: {
 				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}` } },
-				data: "IV:DATA",
-				status: "IV:STATUS",
+				data: ( chanId ) => { return { string: `IV:DATA:CH${chanId}`, timeout: 10000 } },
+				status: ( chanId ) => { return { string: `IV:STATUS:CH${chanId}` } }
 			},
 
 			light: {
@@ -50,6 +50,15 @@ module.exports = {
 				getVoltage:  ( chanId ) => { return { string: `DCDC:VOLTAGE:CH${ chanId }` } },
 				getCurrent:  ( chanId ) => { return { string: `DCDC:CURRENT:CH${ chanId }` } }
 			},
+
+			ssr: {
+				feedback: ( chanId, value ) => { return { string: `SSR:FEEDBACK:CH${ chanId } ${ value }` } },
+				target: ( chanId, value ) => { return { string: `SSR:TARGET:CH${ chanId } ${ value }` } },
+				enable:  ( chanId ) => { return { string: `SSR:ENABLE:CH${ chanId }` } },
+				disable:  ( chanId ) => { return { string: `SSR:DISABLE:CH${ chanId }` } },
+			},
+
+			generalRelay: ( chanId, mode ) => { return `RELAY:GENERAL:CH${ chanId } ${ mode ? 1 : 0 }` },
 
 			acquisition: {
 				speed: ( speed ) => "ACQUISITION:SPEED " + speed
@@ -77,10 +86,10 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveId, chanId ) => "ENVI:TBASE?:CH" + chanId + " " + slaveId,
-			readTemperatureChannelIR: ( slaveId, chanId ) => "ENVI:TIR?:CH" + chanId + " " + slaveId,
-			readTemperature: ( slaveId ) => "ENVI:TEMPBOX? " + slaveId,
-			readHumidity: ( slaveId ) => "ENVI:HUMIDITY? " + slaveId,
+			readTemperatureChannelBase: ( slaveNumber, slaveId, chanId ) => `ENVI:TBASE?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
+			readTemperatureChannelIR: ( slaveNumber, slaveId, chanId ) => `ENVI:TIR?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
+			readTemperature: ( slaveNumber, slaveId ) => `ENVI:TEMPBOX?:SLAVE${slaveNumber} ${slaveId}`,
+			readHumidity: ( slaveNumber, slaveId ) => `ENVI:HUMIDITY?:SLAVE${slaveNumber} ${slaveId}`,
 			reset: ( chanId ) => `TRACKING:RESET:CH${ chanId }`
 			
 		},
@@ -100,7 +109,7 @@ module.exports = {
 			[ "TRACKING:STEP", function( status ) { return status.tracking_step || 0.001; } ],
 			[ "TRACKING:MODE", function( status ) { return status.tracking_mode || "0"; } ],
 			[ "TRACKING:PHOTODIODE", function( status, groupConfig ) { return groupConfig ? ( groupConfig.light ? -1 || -1 : -1 ) : -1; } ], // groupConfig.light.channelId
-			[ "OUTPUT:ENABLE", function( status ) { return status.enable || 0; } ]
+			[ "RELAY:CHANNEL", function( status ) { return status.enable || 0; } ]
 		],
 
 		defaults: {
