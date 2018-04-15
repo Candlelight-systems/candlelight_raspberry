@@ -58,8 +58,11 @@ module.exports = {
 				disable:  ( chanId ) => { return { string: `SSR:DISABLE:CH${ chanId }` } },
 			},
 
-			generalRelay: ( chanId, mode ) => { return `RELAY:GENERAL:CH${ chanId } ${ mode ? 1 : 0 }` },
-
+			relay: {
+				external: ( chanId, enabled ) => { return { string: `RELAY:EXTERNAL:CH${ chanId } ${ enabled ? 1 : 0 }` } },
+				general: ( chanId, enabled ) => { return { string: `RELAY:GENERAL:CH${ chanId } ${ enabled ? 1 : 0 }` } }
+			},
+			
 			acquisition: {
 				speed: ( speed ) => "ACQUISITION:SPEED " + speed
 			},

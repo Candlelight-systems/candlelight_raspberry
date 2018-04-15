@@ -550,10 +550,11 @@ class TrackerController extends InstrumentController {
 		if( this.getInstrumentConfig().relayController ) {
 			if( status.connection == "external" ) {
 
-				HostManager.getHost( this.getInstrumentConfig().relayController ).enableRelay( chanId );
+				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 1 ) );	
+
 			} else {
 
-				HostManager.getHost( this.getInstrumentConfig().relayController ).disableRelay( chanId );
+				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 0 ) );	
 			}
 		}
 
@@ -1728,7 +1729,7 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.generalRelay ) {
-			await this.query( globalConfig.trackerControllers.specialcommands.generalRelay( group.generalRelay.channelId, group.generalRelay.state ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.relay.general( group.generalRelay.channelId, group.generalRelay.state ) );
 		}
 	}
 }
