@@ -3,6 +3,7 @@
 const express = require("express");
 
 const config = require("./config");
+const influx = require('./trackercontroller/influxhandler');
 
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -69,6 +70,7 @@ app.post("/setInfluxDB", function( req, res ) {
 	let cfg = req.body;
 	config.influx = Object.assign( config.influx, cfg );
 
+	influx.changed(); // Notify the influx handler that the data has changed
 	fs.writeFileSync("./config/influx.json", JSON.stringify( config.influx, undefined, "\t" ) );	
 	res.send( "" );
 } );

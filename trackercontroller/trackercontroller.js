@@ -194,8 +194,18 @@ class TrackerController extends InstrumentController {
 				await this.updateInstrumentStatusChanId( chanId, {}, true, false );
 			}
 
-			await this.heatUpdateSSRTarget( groups[ i ].groupName );
-			await this.generalRelayUpdateGroup( groups[ i ].groupName );
+			if( groups[ i ].heatController ) {
+				await this.heatUpdateSSRTarget( groups[ i ].groupName );
+			}
+
+
+			if( groups[ i ].generalRelay ) {
+				await this.generalRelayUpdateGroup( groups[ i ].groupName );
+			}
+
+
+			
+				
 		}
 
 		saveStatus();
@@ -714,14 +724,30 @@ class TrackerController extends InstrumentController {
 
 			if( group.light ) {
 
-				Object.assign( data, {
-					lightOnOff: group.light.on,
-					lightOnOffButton: await this.lightIsEnabled( group.groupName ),
-					lightMode: await this.lightIsAutomatic( group.groupName ) ? 'auto' : 'manual',
-					lightSetpoint: this.lightSetpoint[ group.groupName ],
-					lightValue: await this.measureGroupLightIntensity( group.groupName ),
-				} );
+				switch( group.light.type ) {
 
+					case 'pyranometer_4_20mA':
+
+						Object.assign( data, {
+							lightValue: await this.measureGroupLightIntensity( group.groupName )
+						} );
+
+					break;
+
+					case 'photodiode':
+					default:
+
+						Object.assign( data, {
+							lightOnOff: group.light.on,
+							lightOnOffButton: await this.lightIsEnabled( group.groupName ),
+							lightMode: await this.lightIsAutomatic( group.groupName ) ? 'auto' : 'manual',
+							lightSetpoint: this.lightSetpoint[ group.groupName ],
+							lightValue: await this.measureGroupLightIntensity( group.groupName )
+						} );
+
+					break;
+				}
+				
 			}
 			
 			if( group.temperatureSensors && Array.isArray( group.temperatureSensors ) ) {
@@ -807,15 +833,19 @@ class TrackerController extends InstrumentController {
 				continue;
 			}
 
-			// Normalization of the light switch
-			if( group.light.on ) { 
-				await this.lightEnable( group.groupName );
-			} else {
-				await this.lightDisable( group.groupName );
+			if( group.light.control !== false ) {
+				// Normalization of the light switch
+				if( group.light.on ) { 
+					await this.lightEnable( group.groupName );
+				} else {
+					await this.lightDisable( group.groupName );
+				}
 			}
 
-			// Set the scaling
-			await this.lightSetScaling( group.groupName, group.light.scaling );
+			if( group.light.type == "photodiode" || group.light.type == undefined ) {
+				// Set the photodiode scaling
+				await this.lightSetScaling( group.groupName, group.light.scaling );
+			}
 		}
 	}
 
@@ -918,28 +948,41 @@ class TrackerController extends InstrumentController {
 		const group = this.getGroupFromGroupName( groupName );
 
 		if( ! group.light ) {
-			return -1;
+			return null;
 		}		
 
 		switch( group.light.type ) {
 
 			case "pyranometer_4_20mA":
-				return this.measurePyranometer( group.light.slaveNumber, group.light.address );	
+				const val = await this.measurePyranometer( group.light.slaveNumber, group.light.address );	
+
+				if( val > 20 || val < 4 ) {
+					return null;
+				}
+				return val * group.light.scaling + group.light.offset;
+				//await this.query( globalConfig.trackerControllers.specialcommands.i2c.reader_4_20( slaveNumber, i2cAddress )
 			break;
 
 			case "photodiode":
 			default:
+
+				if( ! group.light.channelId ) {
+					return null;
+				}
+
 				return this.measurePD( group.light.channelId );	
 			break;
 		}
 		
-		return -1;
+		return null;
 	}
 
 	async measureChannelLightIntensity( channelId ) {
 		const group = this.getGroupFromChanId( channelId );
-		const channelIdPD = group.light.channelId;
-		return this.measurePD( channelIdPD );
+
+		return this.measureGroupLightIntensity( group.groupName );
+		/*const channelIdPD = group.light.channelId;
+		return this.measurePD( channelIdPD );*/
 	}
 
 	async getChannelLightIntensity( chanId, defaultValue ) {
@@ -961,7 +1004,6 @@ class TrackerController extends InstrumentController {
 
 
 	async measurePD( channelId ) {
-
 		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD.sun( channelId ), 2 ) );
 	}
 
@@ -970,6 +1012,8 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measurePyranometer( slaveNumber, i2cAddress ) {
+
+
 		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.i2c.reader_4_20( slaveNumber, i2cAddress ), 2 ) );		
 	}
 

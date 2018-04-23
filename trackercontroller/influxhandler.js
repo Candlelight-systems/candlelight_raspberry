@@ -1,9 +1,10 @@
 
 const Influx = require("influx");
-const config = require('../config/influx.json');
-console.log( config );
+const config = require("../config").influx;
 
-const influxClient = new Influx.InfluxDB({
+
+
+let influxClient = new Influx.InfluxDB({
   host: config.host,
   username: config.username,
   password: config.password,
@@ -13,6 +14,17 @@ const influxClient = new Influx.InfluxDB({
 
 
 module.exports = {};
+
+module.exports.changed = () => {
+
+  // Overwrite the previous value
+  influxClient = new Influx.InfluxDB({
+    host: config.host,
+    username: config.username,
+    password: config.password,
+    database: config.db
+  });
+}
 
 module.exports.storeIV = function( measurementName, ivData, sun ) {
 	// Use SQLite ?
