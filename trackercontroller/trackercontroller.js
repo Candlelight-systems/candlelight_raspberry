@@ -194,8 +194,8 @@ class TrackerController extends InstrumentController {
 				await this.updateInstrumentStatusChanId( chanId, {}, true, false );
 			}
 
-			await this.heatUpdateSSRTarget( groupName );
-			await this.generalRelayUpdateGroup( groupName );
+			await this.heatUpdateSSRTarget( groups[ i ].groupName );
+			await this.generalRelayUpdateGroup( groups[ i ].groupName );
 		}
 
 		saveStatus();
@@ -737,24 +737,26 @@ class TrackerController extends InstrumentController {
 						this.temperatures[ group.groupName ][ chan ] = {
 							total: Math.round( ( thermistor + thermopile ) * 10 ) / 10, 
 							thermistor: Math.round( thermistor * 10 ) / 10, 
-							thermopile: Math.round( thermopile * 10 ) / 10 ]
+							thermopile: Math.round( thermopile * 10 ) / 10
 						};
+
+						console.log( this.temperatures[ group.groupName ][ chan ] );
 					}
 				}
 
 
 				if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
-					await this.heaterFeedback( group.groupName, this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total );
+			//		await this.heaterFeedback( group.groupName, this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total );
 				}
 
-				throw "No heat controller for this group, or no temperature sensor, or no SSR channel associated";
+				//throw "No heat controller for this group, or no temperature sensor, or no SSR channel associated";
 			}
 
 
 			if( group.heatController ) {
 
 				Object.assign( data, {
-					heater_reference_temperature: this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total
+					heater_reference_temperature: this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total,
 					heater_target_temperature: group.heatController.target,
 					heater_mode: group.generalRelay.state
 				} );
@@ -959,6 +961,7 @@ class TrackerController extends InstrumentController {
 
 
 	async measurePD( channelId ) {
+
 		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD.sun( channelId ), 2 ) );
 	}
 
@@ -1100,6 +1103,7 @@ class TrackerController extends InstrumentController {
 		const vout = int / 2047 * 2.048; // 12 bit word ( 0 - 2047 ) * PGA value (2.048V)
 		const thermistor = vout * cfg.resistor / ( cfg.vref - vout );
 		const t = ( ( 1 / ( 25 + t0 ) +  ( 1 / thermal_modules[ cfg.model ].thermistor.beta ) * Math.log( thermistor / thermal_modules[ cfg.model ].thermistor.r0 ) ) ** -1 ) - t0;
+
 		return t;
 	}
 
@@ -1187,7 +1191,6 @@ class TrackerController extends InstrumentController {
 					
 					if( ! this.paused ) {
 						intervals[ i ].lastTime = Date.now();
-						console.log( i );
 						await intervals[ i ].callback( intervals[ i ].chanId ); // This must not fail !
 					}
 					
@@ -1706,12 +1709,12 @@ class TrackerController extends InstrumentController {
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
 			// SSR:CH1:FEEDBACK 20.5
-			if( group.heaterController.ssr ) {
+			if( group.heatController.ssr ) {
 				return this.heaterSSRFeedback( groupName, feedbackTemperature );
 			}
 		}
 
-		throw new Error( `No heat controller for this group, or no temperature sensor` );
+		throw new Error( `No heat controller for this group (${ groupName }), or no temperature sensor` );
 	}
 
 
@@ -1719,17 +1722,17 @@ class TrackerController extends InstrumentController {
 	async heaterSSRFeedback( groupName, feedbackTemperature ) {
 
 		const group = this.getGroupFromGroupName( groupName );
-		if( group.heatController && group.heatController.feedbackTemperatureSensor && group.heaterController.ssr ) {
+		if( group.heatController && group.heatController.feedbackTemperatureSensor && group.heatController.ssr ) {
 			// SSR:CH1:FEEDBACK 20.5
 
 			if( isNaN( feedbackTemperature ) ) {
 				return await this.query( globalConfig.trackerControllers.specialcommands.ssr.disable( group.ssr.channelId ) );
 			}
 
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.feedback( group.ssr.channelId, feedbackTemperature ) );
+			return await this.query( globalConfig.trackerControllers.specialcommands.ssr.feedback( group.ssr.channelId, feedbackTemperature ) );
 		}
 
-		throw new Error(`No heat controller for this group, or no temperature sensor, or no SSR channel associated`);
+		throw new Error(`No heat controller for this group (${groupName}), or no temperature sensor, or no SSR channel associated`);
 	}
 
 	async generalRelayUpdate() {

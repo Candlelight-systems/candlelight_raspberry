@@ -87,8 +87,8 @@ class InstrumentController {
 				lineCount = 0,	
 				timeout = setTimeout( () => {
 					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms). Trying to reset the instrument.`);
-					rejecter(); // Reject the current promise
-					this.reset(); // Reset the instrument
+				//	rejecter(); // Reject the current promise
+					//this.reset(); // Reset the instrument
 				}, queryTimeout );
 			
 				// Start by remove all listeners
