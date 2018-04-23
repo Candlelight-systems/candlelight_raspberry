@@ -21,19 +21,26 @@
 				},
 
 
+
 				"light": {
+					"type": "photodiode",
 					"on": true,
 					"channelId": 1,
-					"scaling": 0.5,
-					"factory_scaling": 0.5,
+					"scaling": 0.8,
+					"factory_scaling": 0.8,
 					"scheduling": {
-						"enabled": false,
+						"enable": false,
 						"basis": 3600,
-						"intensities": [ 0, 1, 0 ]
+						"intensities": [
+							0.2,
+							0
+						]
 					},
-					"setPoint": 1,
+					"setPoint": 0.8,
 					"sensing": {}
 				},
+
+				
 
 
 				"temperatureSensors": [

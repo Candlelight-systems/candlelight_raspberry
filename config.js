@@ -29,6 +29,10 @@ module.exports = {
 				data: ( chanId ) => { return { string: `IV:DATA:CH${chanId}`, timeout: 10000 } },
 				status: ( chanId ) => { return { string: `IV:STATUS:CH${chanId}` } }
 			},
+			
+			i2c: {
+				reader_4_20: ( slaveNumber, i2cAddress ) => { return { string: `I2C:4_20MA:CH${ slaveNumber }` } }
+			},
 
 			light: {
 				enable:  ( chanId ) => { return { string: `LIGHT:ENABLE:CH${chanId}` } },

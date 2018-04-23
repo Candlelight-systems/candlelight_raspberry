@@ -914,9 +914,23 @@ class TrackerController extends InstrumentController {
 
 	async measureGroupLightIntensity( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );
-		if( group.light.channelId ) {
-			return this.measurePD( group.light.channelId );	
+
+		if( ! group.light ) {
+			return -1;
+		}		
+
+		switch( group.light.type ) {
+
+			case "pyranometer_4_20mA":
+				return this.measurePyranometer( group.light.slaveNumber, group.light.address );	
+			break;
+
+			case "photodiode":
+			default:
+				return this.measurePD( group.light.channelId );	
+			break;
 		}
+		
 		return -1;
 	}
 
@@ -950,6 +964,10 @@ class TrackerController extends InstrumentController {
 
 	async measurePDCurrent( channelId ) {
 		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readPD.current( channelId ), 2 ) );	
+	}
+
+	async measurePyranometer( slaveNumber, i2cAddress ) {
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.i2c.reader_4_20( slaveNumber, i2cAddress ), 2 ) );		
 	}
 
 	async resetSlave() {
