@@ -8,10 +8,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 
 const HostManager = require('./hostmanager');
-
 const trackerController = require('./trackercontroller/main');
-const relayController = require('./relaycontroller/main');
-
 
 var app = express();
 var server = app.listen( config.express.port, function() { /* callback */ } );
@@ -70,7 +67,7 @@ app.get("/getGroups", function( req, res ) {
 app.post("/setInfluxDB", function( req, res ) {
 
 	let cfg = req.body;
-	config.influx = cfg;
+	config.influx = Object.assign( config.influx, cfg );
 
 	fs.writeFileSync("./config/influx.json", JSON.stringify( config.influx, undefined, "\t" ) );	
 	res.send( "" );

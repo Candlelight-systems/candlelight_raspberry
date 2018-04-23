@@ -236,12 +236,7 @@ module.exports = {
 		await save();
 	},
 
-
-
-
-
-
-	async heatSetTarget: ( groupName, target ) => {
+	heatSetTarget: async( groupName, target ) => {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController ) {
@@ -254,7 +249,7 @@ module.exports = {
 		}
 
 		throw new Error( "No heat controller defined for this group" );
-	}
+	},
 
 	// Set the target in the SSR command for hardware implementation
 	heatUpdateSSRTarget: ( groupName ) => {
@@ -267,7 +262,7 @@ module.exports = {
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
 	},
 
-	heatSetHeating: ( instrumentName, groupName ) => {
+	heatSetHeating: async ( instrumentName, groupName ) => {
 		
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
@@ -277,15 +272,15 @@ module.exports = {
 		}
 
 		throw new Error( "Either no heat controller for this group or cannot execute the requested action");
-	}
+	},
 
 	heatSetCooling: ( instrumentName, groupName ) => {
 		return getInstrument( instrumentName ).heatSetCooling( groupName );
-	}
+	},
 
 	heatGetTemperature: ( instrumentName, groupName ) => {
 		return getInstrument( instrumentName ).heatGetTemperature( groupName );
-	}
+	},
 
 	getAllMeasurements: () => {
 		return allMeasurements;

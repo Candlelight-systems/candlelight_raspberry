@@ -4,7 +4,7 @@
 		"instrumentId": "Small cells",
 		"groups": [
 			{
-				"groupName": "Slot A",
+				"groupName": "Box 1",
 				"groupID": "boxa",
 				"slaveNumber": 1,
 				"defaults": {
@@ -322,8 +322,54 @@
 				"temperatureSensors": [
 					{
 						"thermistor": {
-							"I2CAddress": 73,
+							"I2CAddress": 72,
+							"ADCChannel": 0,
+							"model": "ztp_101t",
+							"vref": 2.5,
+							"resistor": 14300,
+							"offset": -7.5
+						},
+						"thermopile": {
+							"I2CAddress": 72,
+							"ADCChannel": 1,
+							"model": "ztp_101t",
+							"gain": 1023,
+							"offset": 0
+						},
+						"channels": [
+							4,
+							5,
+							7,
+							8
+						]
+					},
+					{
+						"thermistor": {
+							"I2CAddress": 72,
+							"ADCChannel": 2,
+							"model": "ztp_101t",
+							"vref": 2.5,
+							"resistor": 14300,
+							"offset": -7.5
+						},
+						"thermopile": {
+							"I2CAddress": 72,
 							"ADCChannel": 3,
+							"model": "ztp_101t",
+							"gain": 1000,
+							"offset": 0
+						},
+						"channels": [
+							10,
+							11,
+							15,
+							16
+						]
+					},
+					{
+						"thermistor": {
+							"I2CAddress": 73,
+							"ADCChannel": 0,
 							"model": "ztp_101t",
 							"vref": 2.5,
 							"resistor": 14300,
@@ -331,28 +377,39 @@
 						},
 						"thermopile": {
 							"I2CAddress": 73,
+							"ADCChannel": 1,
+							"model": "ztp_101t",
+							"gain": 1000,
+							"offset": 0
+						},
+						"channels": [
+							9,
+							12,
+							13,
+							14
+						]
+					},
+					{
+						"thermistor": {
+							"I2CAddress": 73,
 							"ADCChannel": 2,
 							"model": "ztp_101t",
-							"gain": 909,
+							"vref": 2.5,
+							"resistor": 14300,
+							"offset": -7.5
+						},
+						"thermopile": {
+							"I2CAddress": 73,
+							"ADCChannel": 3,
+							"model": "ztp_101t",
+							"gain": 1000,
 							"offset": 0
 						},
 						"channels": [
 							1,
 							2,
 							3,
-							4,
-							5,
-							6,
-							7,
-							8,
-							9,
-							10,
-							11,
-							12,
-							13,
-							14,
-							15,
-							16
+							6
 						]
 					}
 				],

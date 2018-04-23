@@ -5,7 +5,7 @@
 		"constructorName": "TrackerController",
 		"resetPin": 40,
 		"params": {
-			"baudrate": 57600
+			"baudRate": 57600
 		},
 		"reconnectTimeout": 1
 	}
