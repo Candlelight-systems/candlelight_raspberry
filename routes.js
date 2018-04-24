@@ -392,22 +392,25 @@ module.exports = ( app ) => {
 		try {
 			res.status( 200 ).send( trackerController.lightGetPyranometerScaling( req.query.instrumentId, req.query.groupName ) );
 		} catch ( e ) {
-			res.status( 500 ).send( "Impossible to retrieve the pyranometer scaling" );
+			console.error( e );
+			res.status( 500 ).send( e );
 		}
 	});
 
 	app.post("/light.setPyranometerScaling", ( req, res ) => {
+		
 		try {
-			trackerController.lightSetPyranometerScaling( req.body.instrumentId, req.body.groupName, req.body.scale, req.body.offset ).then( () => {
-				res.send("");
-			}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+			trackerController.lightSetPyranometerScaling( req.body.instrumentId, req.body.groupName, req.body.scale, req.body.offset );
+			res.status(200).send("ok");
 		} catch ( e ) {
-			res.status( 500 ).send( "Impossible to set the pyranometer scaling" );
+			console.error( e );
+			res.status( 500 ).send( e );
 		}
 	});
 
 
 	app.post("/light.setPDScaling", ( req, res ) => {
+
 		trackerController.lightSetScaling( req.body.instrumentId, req.body.groupName, req.body.scaling ).then( () => {
 			res.send("");
 		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
