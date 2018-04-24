@@ -341,6 +341,33 @@ module.exports = {
 	lightSetScaling( instrumentId, groupName, scaling ) {
 		getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
 		save();
+	},
+
+
+	lightSetPyranometerScaling( instrumentId, groupName, scale, offset ) {
+		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
+
+		if( group.light && group.light.type == 'pyranometer' ) {
+
+			group.light.scaling = scale;
+			group.light.offset = offset;
+			save();
+		}
+
+		throw "No pyranometer for this group";
+	},
+
+	lightGetPyranometerScaling( instrumentId, groupName, scaling ) {
+		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
+		
+		if( group.light && group.light.type == 'pyranometer') {
+			return {
+				scale: group.light.scaling,
+				offset: group.light.offset
+			}
+		}
+
+		throw "No pyranometer for this group";
 	}
 };
 
