@@ -285,8 +285,8 @@ class TrackerController extends InstrumentController {
 	}
 
 	async setAcquisitionSpeed( speed ) {
-		await this.query( globalConfig.trackerControllers.specialcommands.acquisition.speed( speed ) )
-		statusGlobal.acquisitionSpeed = speed;
+	//	await this.query( globalConfig.trackerControllers.specialcommands.acquisition.speed( speed ) )
+	//	statusGlobal.acquisitionSpeed = speed;
 		saveStatus();
 	}
 
@@ -1512,14 +1512,17 @@ class TrackerController extends InstrumentController {
 
 		
 		const lightChannel 	= group.light.channelId;
-		const sun 			= await this.getChannelLightIntensity( chanId );
+		let sun 			= await this.getChannelLightIntensity( chanId );
 		//const sun = 1;
 
-		const efficiency 	= ( powerMean / ( status.cellArea / 10000 ) ) / ( sun * 1000 ) * 100;
+		let efficiency 	= ( powerMean / ( status.cellArea / 10000 ) ) / ( sun * 1000 ) * 100;
 
 		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
-			console.error("Efficiency has the wrong format. Check lightRef value: " + sun );
-			return;
+
+			efficiency = -1;
+			sun = -1;
+	//		console.error("Efficiency has the wrong format. Check lightRef value: " + sun );
+	//		return;
 		}
 
 		wsconnection.send( {
@@ -1539,7 +1542,12 @@ class TrackerController extends InstrumentController {
 			},
 
 			action: {
-				data: efficiency
+				data: {
+					pce: efficiency,
+					power: powerMean,
+					current: currentMean,
+					voltage: voltageMean
+				}
 			},
 
 			timer: {
