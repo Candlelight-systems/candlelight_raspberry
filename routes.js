@@ -398,10 +398,10 @@ module.exports = ( app ) => {
 	});
 
 	app.post("/light.setPyranometerScaling", ( req, res ) => {
+		
 		try {
-			trackerController.lightSetPyranometerScaling( req.body.instrumentId, req.body.groupName, req.body.scale, req.body.offset ).then( () => {
-				res.send("");
-			}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+			trackerController.lightSetPyranometerScaling( req.body.instrumentId, req.body.groupName, req.body.scale, req.body.offset );
+			res.status(200).send("ok");
 		} catch ( e ) {
 			console.error( e );
 			res.status( 500 ).send( "Impossible to set the pyranometer scaling" );
@@ -410,6 +410,7 @@ module.exports = ( app ) => {
 
 
 	app.post("/light.setPDScaling", ( req, res ) => {
+
 		trackerController.lightSetScaling( req.body.instrumentId, req.body.groupName, req.body.scaling ).then( () => {
 			res.send("");
 		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
@@ -518,6 +519,49 @@ module.exports = ( app ) => {
 
 
 
+	// pid or fixedPower
+	app.get("/heat.setMode", function( req, res ) {
+
+		trackerController.heatSetMode( req.query.instrumentId, req.query.groupName, req.query.mode ).then( ( power ) => {
+			
+			res.send("Ok");
+			
+		} ).catch( ( error ) => {
+
+			console.log( error );
+			res.status( 500 ).send(`Heating mode could not be changed. Error was "${ error }"` );
+		} );
+	} );
+
+
+// pid or fixedPower
+	app.get("/heat.setPIDParameters", function( req, res ) {
+
+		trackerController.heatSetPIDParameters( req.query.instrumentId, req.query.groupName, req.query.Kp_heating, req.query.Kd_heating, req.query.Ki_heating, req.query.Kp_cooling, req.query.Kd_cooling, req.query.Ki_cooling ).then( ( power ) => {
+			
+			res.send("Ok");
+			
+		} ).catch( ( error ) => {
+
+			console.log( error );
+			res.status( 500 ).send(`Heating mode could not be changed. Error was "${ error }"` );
+		} );
+	} );
+
+	app.get("/heat.getPIDParameters", function( req, res ) {
+
+		trackerController.heatGetPIDParameters( req.query.instrumentId, req.query.groupName ).then( ( parameters ) => {
+			
+			res.type("application/json").send( parameters );
+			
+		} ).catch( ( error ) => {
+
+			console.log( error );
+			res.status( 500 ).send(`Heating mode could not be changed. Error was "${ error }"` );
+		} );
+	} );
+
+
 	app.get("/heat.setHeating", function( req, res ) {
 
 		trackerController.heatSetTarget( req.query.instrumentId, req.query.groupName, req.query.target ).then( ( power ) => {
@@ -552,7 +596,7 @@ module.exports = ( app ) => {
 
 	app.get("/heat.getTemperature", function( req, res ) {
 
-		trackerController.heatSetCooling( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
+		trackerController.heatGetTemperature( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
 			
 			res.send("Ok");
 			
@@ -563,12 +607,6 @@ module.exports = ( app ) => {
 			res.status( 500 ).send(`Cooling could not be enabled. Error was ${ error }` );
 		} );
 	} );
-
-
-		heatGetTemperature: ( instrumentName, groupName ) => {
-			return getInstrument( instrumentName ).heatGetTemperature( groupName );
-		}
-
 
 
 	app.get("instrument.setAcquisitionSpeed", ( req, res ) => {

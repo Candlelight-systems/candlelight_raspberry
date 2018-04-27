@@ -282,6 +282,15 @@ module.exports = {
 		return getInstrument( instrumentName ).heatGetTemperature( groupName );
 	},
 
+
+	heatGetPIDParameters: ( instrumentName, groupName ) => {
+		return getInstrument( instrumentName ).heatGetPIDParameters( groupName );
+	},
+
+	heatSetPIDParameters: ( instrumentName, groupName, parameters ) => {
+		return getInstrument( instrumentName ).heatSetPIDParameters( groupName, parameters. );
+	},
+
 	getAllMeasurements: () => {
 		return allMeasurements;
 	},
@@ -347,11 +356,12 @@ module.exports = {
 	lightSetPyranometerScaling( instrumentId, groupName, scale, offset ) {
 		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
 
-		if( group.light && group.light.type == 'pyranometer' ) {
+		if( group.light && group.light.type == 'pyranometer_4_20mA' ) {
 
 			group.light.scaling = scale;
 			group.light.offset = offset;
 			save();
+			return;
 		}
 
 		throw "No pyranometer for this group";
@@ -360,7 +370,7 @@ module.exports = {
 	lightGetPyranometerScaling( instrumentId, groupName, scaling ) {
 		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
 		
-		if( group.light && group.light.type == 'pyranometer') {
+		if( group.light && group.light.type == 'pyranometer_4_20mA') {
 			return {
 				scale: group.light.scaling,
 				offset: group.light.offset

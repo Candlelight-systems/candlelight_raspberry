@@ -195,7 +195,10 @@ class TrackerController extends InstrumentController {
 			}
 
 			if( groups[ i ].heatController ) {
-				await this.heatUpdateSSRTarget( groups[ i ].groupName );
+				
+				await this._heatUpdatePID( groups[ i ].groupName );
+		//		await this._heatUpdateMode( groups[ i ].groupName );
+				await this._heatUpdatePower( groups[ i ].groupName )
 			}
 
 
@@ -285,8 +288,8 @@ class TrackerController extends InstrumentController {
 	}
 
 	async setAcquisitionSpeed( speed ) {
-		await this.query( globalConfig.trackerControllers.specialcommands.acquisition.speed( speed ) )
-		statusGlobal.acquisitionSpeed = speed;
+	//	await this.query( globalConfig.trackerControllers.specialcommands.acquisition.speed( speed ) )
+	//	statusGlobal.acquisitionSpeed = speed;
 		saveStatus();
 	}
 
@@ -772,7 +775,10 @@ class TrackerController extends InstrumentController {
 
 
 				if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
-			//		await this.heaterFeedback( group.groupName, this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total );
+
+					if( group.heatController.mode == 'pid' ) {
+						await this.heaterFeedback( group.groupName, this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total );
+					}
 				}
 
 				//throw "No heat controller for this group, or no temperature sensor, or no SSR channel associated";
@@ -1513,14 +1519,17 @@ class TrackerController extends InstrumentController {
 
 		
 		const lightChannel 	= group.light.channelId;
-		const sun 			= await this.getChannelLightIntensity( chanId );
+		let sun 			= await this.getChannelLightIntensity( chanId );
 		//const sun = 1;
 
-		const efficiency 	= ( powerMean / ( status.cellArea / 10000 ) ) / ( sun * 1000 ) * 100;
+		let efficiency 	= ( powerMean / ( status.cellArea / 10000 ) ) / ( sun * 1000 ) * 100;
 
 		if( isNaN( efficiency ) || !isFinite( efficiency ) ) {
-			console.error("Efficiency has the wrong format. Check lightRef value: " + sun );
-			return;
+
+			efficiency = -1;
+			sun = -1;
+	//		console.error("Efficiency has the wrong format. Check lightRef value: " + sun );
+	//		return;
 		}
 
 		wsconnection.send( {
@@ -1540,7 +1549,12 @@ class TrackerController extends InstrumentController {
 			},
 
 			action: {
-				data: efficiency
+				data: {
+					pce: efficiency,
+					power: powerMean,
+					current: currentMean,
+					voltage: voltageMean
+				}
 			},
 
 			timer: {
@@ -1688,6 +1702,85 @@ class TrackerController extends InstrumentController {
 	//*** NEW VERSION OF HEAT CONTROLLER **//
 	//*************************************//
 
+
+	heatSetMode( groupName, mode ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController ) {
+			group.heatController.mode = mode;
+			return;
+		}
+
+		throw new Error( "No heat controller defined for this group" );		
+	}
+
+	heatSetPower( groupName, mode ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController ) {
+			
+			if( group.heatController.ssr ) {
+				await this._heatUpdatePower( groupName );
+			}
+
+			return;
+		}
+
+		throw new Error( "No heat controller defined for this group" );		
+	}
+
+	heatSetPIDParameters( groupName, parameters ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController ) {
+			
+			group.heatController.Kp_heating = parameters.Kp_h;
+			group.heatController.Kd_heating = parameters.Kd_h;
+			group.heatController.Ki_heating = parameters.Ki_h;
+			group.heatController.Kp_cooling = parameters.Kp_c;
+			group.heatController.Kd_cooling = parameters.Kd_c;
+			group.heatController.Ki_cooling = parameters.Ki_c;
+
+			group.heatController.bias_heating = parameters.bias_h;
+			group.heatController.bias_cooling = parameters.bias_c;
+
+			await this.heatUpdatePID( groupName );
+			
+			return;
+		}
+
+		throw new Error( "No heat controller defined for this group" );		
+	}
+
+
+
+	heatGetPIDParameters( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+
+		if( group.heatController ) {
+			return {
+
+				heating: {
+					Kp: group.heatController.Kp_heating,
+					Ki: group.heatController.Ki_heating,
+					Kd: group.heatController.Kd_heating,
+					bias: group.heatController.bias_heating
+				},
+
+				cooling: {
+					Kp: group.heatController.Kp_cooling,
+					Ki: group.heatController.Ki_cooling,
+					Kd: group.heatController.Kd_cooling,
+					bias: group.heatController.bias_cooling
+				}
+			}
+			
+		}
+
+		throw new Error( "No heat controller defined for this group" );		
+	}
+
 	async heatSetTarget( groupName, target ) {
 
 		const group = this.getGroupFromGroupName( groupName );
@@ -1695,7 +1788,7 @@ class TrackerController extends InstrumentController {
 			group.heatController.target = 30;
 
 			if( group.heatController.ssr ) {
-				await this.heatUpdateSSRTarget( groupName );
+				await this._heatUpdatePID( groupName );
 			}
 			return;
 		}
@@ -1703,16 +1796,45 @@ class TrackerController extends InstrumentController {
 		throw new Error( "No heat controller defined for this group" );
 	}
 
-	// Set the target in the SSR command for hardware implementation
-	heatUpdateSSRTarget( groupName ) {
+
+	// Update the PID parameters
+	async _heatUpdatePID( groupName ) {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
+
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
+
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'heating', group.heatController.Kp_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'heating', group.heatController.Kd_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'heating', group.heatController.Ki_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'cooling', group.heatController.Kp_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'cooling', group.heatController.Kd_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'cooling', group.heatController.Ki_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'heating', group.heatController.bias_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'cooling', group.heatController.bias_cooling ) );
+
 		}
 
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
 	}
+
+
+
+	// Update the PID parameters
+	async _heatUpdatePower( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController && group.heatController.ssr && group.heatController.mode == 'fixedPower') {
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.power( group.ssr.channelId, group.heatController.power ) );
+		}
+
+		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
+	}
+
+
+
+	
 
 	async heatSetHeating( groupName ) {
 		
