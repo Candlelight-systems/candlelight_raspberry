@@ -1190,7 +1190,8 @@
 			"temperatureMonitoring": true,
 			"humidityMonitoring": true
 		},
-		"startDate": 1524415551052
+		"startDate": 1524415551052,
+		"endDate": 1524817658423
 	},
 	"CH1_1524480442623": {
 		"cellInfo": {

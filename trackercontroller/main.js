@@ -73,7 +73,7 @@ module.exports = {
 				channels: {}
 			};
 
-			if( group.heat ) {
+			if( group.heat || group.heatController ) {
 				returnObject[ group.groupName ].heatController = true;
 //				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
 			}
@@ -236,59 +236,49 @@ module.exports = {
 		await save();
 	},
 
-	heatSetTarget: async( groupName, target ) => {
-
-		const group = this.getGroupFromGroupName( groupName );
-		if( group.heatController ) {
-			group.heatController.target = 30;
-
-			if( group.heatController.ssr ) {
-				await this.heatUpdateSSRTarget( groupName );
-			}
-			return;
-		}
-
-		throw new Error( "No heat controller defined for this group" );
+	heatSetTarget: async( instrumentId, groupName, target ) => {
+		await getInstrument( instrumentId ).heatSetTarget( groupName, target );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
 	},
 
-	// Set the target in the SSR command for hardware implementation
-	heatUpdateSSRTarget: ( groupName ) => {
-
-		const group = this.getGroupFromGroupName( groupName );
-		if( group.heatController && group.heatController.ssr ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
-		}
-
-		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
-	},
-
-	heatSetHeating: async ( instrumentName, groupName ) => {
-		
-		const group = this.getGroupFromGroupName( groupName );
-		if( group.heatController && group.heatController.relay && group.generalRelay ) {
-			group.generalRelay.state = group.heatController.relay_heating;
-			await this.generalRelayUpdateGroup( groupName );
-			return;
-		}
-
-		throw new Error( "Either no heat controller for this group or cannot execute the requested action");
-	},
-
-	heatSetCooling: ( instrumentName, groupName ) => {
-		return getInstrument( instrumentName ).heatSetCooling( groupName );
-	},
-
-	heatGetTemperature: ( instrumentName, groupName ) => {
-		return getInstrument( instrumentName ).heatGetTemperature( groupName );
+	heatSetHeating: async ( instrumentId, groupName ) => {
+		await getInstrument( instrumentId ).heatSetHeating( groupName );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
 	},
 
 
-	heatGetPIDParameters: ( instrumentName, groupName ) => {
-		return getInstrument( instrumentName ).heatGetPIDParameters( groupName );
+	heatSetMode: async ( instrumentId, groupName, mode ) => {
+		await getInstrument( instrumentId ).heatSetMode( groupName, mode );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
 	},
 
-	heatSetPIDParameters: ( instrumentName, groupName, parameters ) => {
-		return getInstrument( instrumentName ).heatSetPIDParameters( groupName, parameters. );
+	heatSetCooling: async ( instrumentId, groupName ) => {
+		await getInstrument( instrumentId ).heatSetCooling( groupName );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
+	},
+
+	heatSetPower: async ( instrumentId, groupName, power ) => {
+		await getInstrument( instrumentId ).heatSetPower( groupName, power );
+		await getInstrument( instrumentId ).measureEnvironment();
+		await save();
+	},
+
+	heatGetTemperature: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).heatGetTemperature( groupName );
+
+	},
+
+
+	heatGetPIDParameters: ( instrumentId, groupName ) => {
+		return getInstrument( instrumentId ).heatGetPIDParameters( groupName );
+	},
+
+	heatSetPIDParameters: ( instrumentId, groupName, parameters ) => {
+		return getInstrument( instrumentId ).heatSetPIDParameters( groupName, parameters );
 	},
 
 	getAllMeasurements: () => {
