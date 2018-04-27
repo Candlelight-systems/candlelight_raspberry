@@ -959,6 +959,7 @@ class TrackerController extends InstrumentController {
 				if( val > 20 || val < 4 ) {
 					return null;
 				}
+				
 				return val * group.light.scaling + group.light.offset;
 				//await this.query( globalConfig.trackerControllers.specialcommands.i2c.reader_4_20( slaveNumber, i2cAddress )
 			break;

@@ -392,6 +392,7 @@ module.exports = ( app ) => {
 		try {
 			res.status( 200 ).send( trackerController.lightGetPyranometerScaling( req.query.instrumentId, req.query.groupName ) );
 		} catch ( e ) {
+			console.error( e );
 			res.status( 500 ).send( "Impossible to retrieve the pyranometer scaling" );
 		}
 	});
@@ -402,6 +403,7 @@ module.exports = ( app ) => {
 				res.send("");
 			}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
 		} catch ( e ) {
+			console.error( e );
 			res.status( 500 ).send( "Impossible to set the pyranometer scaling" );
 		}
 	});

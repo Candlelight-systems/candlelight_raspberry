@@ -6,9 +6,6 @@ const bodyParser = require('body-parser');
 var app = express();
 const routes = require('./routes')(app);
 
-console.log( routes );
-
-
 var server = app.listen( config.express.port, function() { /* callback */ } );
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
