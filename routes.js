@@ -537,7 +537,7 @@ module.exports = ( app ) => {
 // pid or fixedPower
 	app.get("/heat.setPIDParameters", function( req, res ) {
 
-		trackerController.heatSetPIDParameters( req.query.instrumentId, req.query.groupName, req.query.Kp_heating, req.query.Kd_heating, req.query.Ki_heating, req.query.Kp_cooling, req.query.Kd_cooling, req.query.Ki_cooling ).then( ( power ) => {
+		trackerController.heatSetPIDParameters( req.query.instrumentId, req.query.groupName, req.query ).then( ( power ) => {
 			
 			res.send("Ok");
 			
@@ -548,23 +548,19 @@ module.exports = ( app ) => {
 		} );
 	} );
 
-	app.get("/heat.getPIDParameters", function( req, res ) {
-
-		trackerController.heatGetPIDParameters( req.query.instrumentId, req.query.groupName ).then( ( parameters ) => {
-			
-			res.type("application/json").send( parameters );
-			
-		} ).catch( ( error ) => {
-
+	app.get("/heat.getPIDParameters", function( req, res ) {	
+		try {
+			res.type("application/json").send( trackerController.heatGetPIDParameters( req.query.instrumentId, req.query.groupName ) );
+		} catch( error ) {
 			console.log( error );
 			res.status( 500 ).send(`Heating mode could not be changed. Error was "${ error }"` );
-		} );
+		}
 	} );
 
 
 	app.get("/heat.setHeating", function( req, res ) {
 
-		trackerController.heatSetTarget( req.query.instrumentId, req.query.groupName, req.query.target ).then( ( power ) => {
+		trackerController.heatSetHeating( req.query.instrumentId, req.query.groupName ).then( ( power ) => {
 			
 			res.send("Ok");
 			
@@ -589,6 +585,21 @@ module.exports = ( app ) => {
 			console.log( error );
 			console.trace( error );
 			res.status( 500 ).send("Cooling could not be enabled. Error was \"" + error + "\"" );
+		} );
+	} );
+
+
+	app.get("/heat.setPower", function( req, res ) {
+
+		trackerController.heatSetPower( req.query.instrumentId, req.query.groupName, req.query.power ).then( ( power ) => {
+			
+			res.send("Ok");
+			
+		} ).catch( ( error ) => {
+
+			console.log( error );
+			console.trace( error );
+			res.status( 500 ).send("Power could not be set. Error was \"" + error + "\"" );
 		} );
 	} );
 

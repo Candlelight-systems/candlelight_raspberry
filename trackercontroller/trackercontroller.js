@@ -769,7 +769,7 @@ class TrackerController extends InstrumentController {
 							thermopile: Math.round( thermopile * 10 ) / 10
 						};
 
-						console.log( this.temperatures[ group.groupName ][ chan ] );
+					//	console.log( this.temperatures[ group.groupName ][ chan ] );
 					}
 				}
 
@@ -790,7 +790,9 @@ class TrackerController extends InstrumentController {
 				Object.assign( data, {
 					heater_reference_temperature: this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total,
 					heater_target_temperature: group.heatController.target,
-					heater_mode: group.generalRelay.state
+					heater_cooling: group.generalRelay.state,
+					heater_mode: group.heatController.mode,
+					heater_power: group.heatController.power
 				} );
 			}
 
@@ -1708,17 +1710,25 @@ class TrackerController extends InstrumentController {
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController ) {
 			group.heatController.mode = mode;
+
+			if( mode == 'fixedPower' ) {
+				this._heatUpdatePower( groupName );
+			} else {
+				this._heatUpdatePID( groupName );
+			}
 			return;
 		}
 
 		throw new Error( "No heat controller defined for this group" );		
 	}
 
-	heatSetPower( groupName, mode ) {
+	async heatSetPower( groupName, power ) {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController ) {
 			
+			group.heatController.power = power;
+
 			if( group.heatController.ssr ) {
 				await this._heatUpdatePower( groupName );
 			}
@@ -1729,9 +1739,11 @@ class TrackerController extends InstrumentController {
 		throw new Error( "No heat controller defined for this group" );		
 	}
 
-	heatSetPIDParameters( groupName, parameters ) {
+	async heatSetPIDParameters( groupName, parameters ) {
 
 		const group = this.getGroupFromGroupName( groupName );
+
+		console.log( parameters );
 		if( group.heatController ) {
 			
 			group.heatController.Kp_heating = parameters.Kp_h;
@@ -1744,7 +1756,7 @@ class TrackerController extends InstrumentController {
 			group.heatController.bias_heating = parameters.bias_h;
 			group.heatController.bias_cooling = parameters.bias_c;
 
-			await this.heatUpdatePID( groupName );
+			await this._heatUpdatePID( groupName );
 			
 			return;
 		}
@@ -1785,7 +1797,7 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController ) {
-			group.heatController.target = 30;
+			group.heatController.target = target;
 
 			if( group.heatController.ssr ) {
 				await this._heatUpdatePID( groupName );
@@ -1802,18 +1814,20 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr ) {
+			
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );			
 
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
+			if( ! isNaN( group.heatController.target ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) ); }
+			if( ! isNaN( group.heatController.Kp_heating ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'heating', group.heatController.Kp_heating ) ) };
+			if( ! isNaN( group.heatController.Kd_heating ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'heating', group.heatController.Kd_heating ) ); }
+			if( ! isNaN( group.heatController.Ki_heating ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'heating', group.heatController.Ki_heating ) ); }
+			if( ! isNaN( group.heatController.Kp_cooling ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'cooling', group.heatController.Kp_cooling ) ); }
+			if( ! isNaN( group.heatController.Kd_cooling ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'cooling', group.heatController.Kd_cooling ) ); }
+			if( ! isNaN( group.heatController.Ki_cooling ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'cooling', group.heatController.Ki_cooling ) ); }
+			if( ! isNaN( group.heatController.bias_heating ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'heating', group.heatController.bias_heating ) ); }
+			if( ! isNaN( group.heatController.bias_cooling ) ) { await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'cooling', group.heatController.bias_cooling ) ); }
 
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'heating', group.heatController.Kp_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'heating', group.heatController.Kd_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'heating', group.heatController.Ki_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'cooling', group.heatController.Kp_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'cooling', group.heatController.Kd_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'cooling', group.heatController.Ki_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'heating', group.heatController.bias_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'cooling', group.heatController.bias_cooling ) );
-
+			return;
 		}
 
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
@@ -1826,10 +1840,11 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr && group.heatController.mode == 'fixedPower') {
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.power( group.ssr.channelId, group.heatController.power ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );			
+			return this.query( globalConfig.trackerControllers.specialcommands.ssr.power( group.ssr.channelId, group.heatController.power ) );
 		}
 
-		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
+	//	throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
 	}
 
 
@@ -1840,6 +1855,7 @@ class TrackerController extends InstrumentController {
 		
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
+			console.log( group.heatController.relay_heating );
 			group.generalRelay.state = group.heatController.relay_heating;
 			await this.generalRelayUpdateGroup( groupName );
 			return;

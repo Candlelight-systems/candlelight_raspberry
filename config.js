@@ -60,6 +60,7 @@ module.exports = {
 				target: ( chanId, value ) => { return { string: `SSR:TARGET:CH${ chanId } ${ value }` } },
 				enable:  ( chanId ) => { return { string: `SSR:ENABLE:CH${ chanId }` } },
 				disable:  ( chanId ) => { return { string: `SSR:DISABLE:CH${ chanId }` } },
+				power:  ( chanId, power ) => { return { string: `SSR:VALUE:CH${ chanId } ${power}` } },
 				pid_kp:  ( chanId, mode, value ) => { return { string: `SSR:KP_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } },
 				pid_kd:  ( chanId, mode, value ) => { return { string: `SSR:KD_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } },
 				pid_ki:  ( chanId, mode, value ) => { return { string: `SSR:KI_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } },
