@@ -617,7 +617,25 @@ module.exports = ( app ) => {
 
 			console.error( error );
 			console.trace( error );
-			res.status( 500 ).send(`Cannot update the tracking power. Error was "${error}"`);
+			res.status( 500 ).send(`Cannot update the acquisition speed. Error was "${error}"`);
+		} );
+	} );
+
+
+
+
+
+
+	app.get("instrument.autoZero", ( req, res ) => {
+
+		trackerController.autoZero( req.query.instrumentId, req.query.chanId ).then( ( ) => {
+			res.send( "ok" );
+
+		} ).catch( ( error ) => {
+
+			console.error( error );
+			console.trace( error );
+			res.status( 500 ).send(`Cannot auto-zero. Error was "${error}"`);
 		} );
 	} );
 }
