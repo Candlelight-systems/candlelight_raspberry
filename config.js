@@ -23,7 +23,8 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
-
+			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO:CH${ chanId }` } },
+			
 			iv: {
 				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}` } },
 				data: ( chanId ) => { return { string: `IV:DATA:CH${chanId}`, timeout: 10000 } },

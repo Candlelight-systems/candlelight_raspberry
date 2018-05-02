@@ -1936,6 +1936,11 @@ class TrackerController extends InstrumentController {
 			await this.query( globalConfig.trackerControllers.specialcommands.relay.general( group.generalRelay.channelId, group.generalRelay.state ) );
 		}
 	}
+
+	async autoZero( chanId ) {
+
+		await this.query( globalConfig.trackerControllers.specialcommands.autoZero( chanId ) );
+	}
 }
 
 /*

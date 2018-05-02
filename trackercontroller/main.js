@@ -368,6 +368,11 @@ module.exports = {
 		}
 
 		throw "No pyranometer for this group";
+	},
+
+	autoZero: ( instrumentId, chanId ) => {
+
+		return getInstrument( instrumentId ).autoZero( chanId );
 	}
 };
 
