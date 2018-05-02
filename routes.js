@@ -174,7 +174,7 @@ module.exports = ( app ) => {
 			results = {};
 
 		for( let channel of channels ) {
-			results[ channel ] = await trackerController.measureCurrent(  instrumentId, channel );
+			results[ channel ] = await trackerController.measureCurrent( instrumentId, channel );
 		}
 
 		res.type( "application/json" );

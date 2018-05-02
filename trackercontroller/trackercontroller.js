@@ -740,6 +740,8 @@ class TrackerController extends InstrumentController {
 					case 'photodiode':
 					default:
 
+
+					
 						Object.assign( data, {
 							lightOnOff: group.light.on,
 							lightOnOffButton: await this.lightIsEnabled( group.groupName ),
@@ -888,7 +890,7 @@ class TrackerController extends InstrumentController {
 			}
 
 
-		//	await this.lightCheck( group.groupName, force );
+			await this.lightCheck( group.groupName, force );
 		}
 	}
 
@@ -1392,7 +1394,7 @@ class TrackerController extends InstrumentController {
 			while( true ) {
 
 				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
-
+console.log( status );
 				if( status & 0b00000010 ) { // When ALL jV curves are done
 					await this.delay( 1000 );
 					continue;
@@ -1400,7 +1402,7 @@ class TrackerController extends InstrumentController {
 
 
 				return this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 ).then( ( data ) => {
-
+console.log( data );
 					data = data.replace('"', '').replace('"', '')
 						.split(',');			
 					data.pop();
@@ -1411,6 +1413,7 @@ class TrackerController extends InstrumentController {
 		} );
 
 		data.shift();
+		console.log( data );
 		const light = 1;
 		await influx.storeIV( status.measurementName, data, light );
 
@@ -1511,6 +1514,8 @@ class TrackerController extends InstrumentController {
 
 		if( nb == 0 ) {
 			console.warn( "No points collected for chan " + chanId, nb );
+
+			await this.resumeChannels();
 			return;
 		}
 

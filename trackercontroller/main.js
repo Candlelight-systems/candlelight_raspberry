@@ -179,18 +179,18 @@ module.exports = {
 		await getInstrument( instrumentId ).setVoltage( chanId, voltage );
 	},
 
-	measureCurrent: ( instrumentId, groupName, chanNumber ) => {
+	measureCurrent: ( instrumentId, chanNumber ) => {
 
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		let instrument = getInstrument( instrumentId );
-		let group = instument.getGroupFromGroupName( groupName );
+		//let group = instrument.getGroupFromGroupName( groupName );
 		
-		if( ! group.light ) {
-			throw "This group has no light";
-		}
+		//if( ! group.light ) {
+		//	throw "This group has no light";
+		//}
 
 		if( chanNumber.indexOf( '_pd' ) > -1 ) {
-			return instrument.measurePDCurrent( group.light.channelId );
+		//	return instrument.measurePDCurrent( group.light.channelId );
 		} else {
 			return instrument.measureCurrent( chanId );
 		}
