@@ -97,6 +97,10 @@ class InstrumentController {
 				// Listening
 				communication.on( "data", async ( d ) => {
 
+
+					if( queryString.indexOf("IV:DATA")>-1 ) {
+						console.log( d.toString('ascii') );
+					}
 					data = Buffer.concat( [ data, d ] );
 
 					let index;

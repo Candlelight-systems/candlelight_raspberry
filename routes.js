@@ -620,7 +620,7 @@ module.exports = ( app ) => {
 	} );
 
 
-	app.get("instrument.setAcquisitionSpeed", ( req, res ) => {
+	app.get("/instrument.setAcquisitionSpeed", ( req, res ) => {
 
 		trackerController.setAcquisitionSpeed( req.query.instrumentId, req.query.groupName ).then( ( speed ) => {
 			res.send( speed );
@@ -632,14 +632,9 @@ module.exports = ( app ) => {
 		} );
 	} );
 
+	app.get("/instrument.autoZero", ( req, res ) => {
 
-
-
-
-
-	app.get("instrument.autoZero", ( req, res ) => {
-
-		trackerController.autoZero( req.query.instrumentId, req.query.chanId ).then( ( ) => {
+		trackerController.autoZero( req.query.instrumentId, req.query.channelId ).then( ( ) => {
 			res.send( "ok" );
 
 		} ).catch( ( error ) => {
