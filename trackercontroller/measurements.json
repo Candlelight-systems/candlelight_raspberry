@@ -2641,6 +2641,51 @@
 			"temperatureMonitoring": true,
 			"humidityMonitoring": true
 		},
-		"startDate": 1525353604636
+		"startDate": 1525353604636,
+		"endDate": 1525626093230
+	},
+	"CH1_1525630614808": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1525630614833
+	},
+	"CH2_1525630616099": {
+		"cellInfo": {
+			"cellName": "CH2",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1525630616126
+	},
+	"CH3_1525630617244": {
+		"cellInfo": {
+			"cellName": "CH3",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1525630617270
+	},
+	"CH4_1525630618716": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1525630618740
 	}
 }

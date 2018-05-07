@@ -196,6 +196,11 @@ module.exports = {
 		}
 	},
 
+	measurePDCurrent: ( instrumentId, groupName ) => {
+		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
+		return getInstrument( instrumentId ).measurePDCurrent( group.light.channelId );
+	},
+
 	enableChannel: ( instrumentId, chanNumber ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
 		return getInstrument( instrumentId ).enableChannel( chanId );
@@ -337,9 +342,9 @@ module.exports = {
 		save();
 	},
 
-	lightSetScaling( instrumentId, groupName, scaling ) {
-		getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
-		save();
+	async lightSetScaling( instrumentId, groupName, scaling ) {
+		await getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
+		await save();
 	},
 
 

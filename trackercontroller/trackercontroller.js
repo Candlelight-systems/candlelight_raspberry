@@ -495,6 +495,10 @@ class TrackerController extends InstrumentController {
 	}
 
 	measureCurrent( chanId ) {
+
+		if( ! chanId ) {
+			throw "No channel defined in current measurement";
+		}
 		return this.query( globalConfig.trackerControllers.specialcommands.measureCurrent( chanId ), 2 ).then( ( current ) => parseFloat( current ) );
 	}
 
@@ -980,7 +984,7 @@ class TrackerController extends InstrumentController {
 				if( ! group.light.channelId ) {
 					return null;
 				}
-
+console.log( this.measurePD( group.light.channelId ).then( val => console.log( val ) ) );
 				return this.measurePD( group.light.channelId );	
 			break;
 		}
@@ -1713,6 +1717,7 @@ console.log( data );
 	heatSetMode( groupName, mode ) {
 
 		const group = this.getGroupFromGroupName( groupName );
+
 		if( group.heatController ) {
 			group.heatController.mode = mode;
 
