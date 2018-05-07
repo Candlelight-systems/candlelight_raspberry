@@ -78,6 +78,11 @@ module.exports = {
 //				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
 			}
 
+			if( group.dualOutput ) {
+				returnObject[ group.groupName ].dualOutput = true;
+//				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
+			}
+
 			if( group.light ) {
 				returnObject[ group.groupName ].lightController = true;
 			}

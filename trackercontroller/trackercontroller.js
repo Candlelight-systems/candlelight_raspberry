@@ -564,7 +564,7 @@ class TrackerController extends InstrumentController {
 		}
 
 
-		if( this.getInstrumentConfig().relayController ) {
+		if( this.getInstrumentConfig().relayController || group.dualOutput ) {
 			if( status.connection == "external" ) {
 
 				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 1 ) );	

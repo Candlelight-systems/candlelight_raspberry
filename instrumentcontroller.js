@@ -32,7 +32,6 @@ class InstrumentController {
 		return this.instrumentConfig;
 	}
 
-
 	query( query, linesExpected = 1, executeBefore = undefined, prepend = false, rawOutput = false, expectedBytes = 0 ) {
 
 
