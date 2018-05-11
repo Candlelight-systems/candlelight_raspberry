@@ -403,7 +403,7 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "tracking_bwfwthreshold", Math.min( 1, Math.max( 0, parseFloat( newStatus.tracking_bwfwthreshold ) ) ), newStatus );	
 
 		// Step size
-		this._setStatus( chanId, "tracking_step", Math.max( 0, parseFloat( newStatus.tracking_stepsize ) ), newStatus );	
+		this._setStatus( chanId, "tracking_step", Math.max( 0, parseInt( newStatus.tracking_stepsize ) ), newStatus );	
 
 		// Delay upon direction switch
 		this._setStatus( chanId, "tracking_switchdelay", Math.max( 0, parseFloat( newStatus.tracking_switchdelay ) ), newStatus );	
@@ -657,7 +657,7 @@ class TrackerController extends InstrumentController {
 
 						
 					if( ! isNaN( maxEffVoltage ) ) {
-						await this.setVoltage( chanId, maxEffVoltage );
+						await this.setVoltage( chanId, Math.round( maxEffVoltage * 100 ) / 100 );
 						setTrackTimer();
 					} else {
 						console.log( "Error in finding the maximum voltage" );
@@ -907,11 +907,17 @@ class TrackerController extends InstrumentController {
 		}
 
 
+		if( group.light.channelSlave ) {
+
+			if( command !== 'check' && command !== 'forcecheck' ) {
+
+				await this.query( globalConfig.trackerControllers.specialcommands.light[ command ]( group.light.channelSlave, value ), request ? 2 : 1 );	
+			}
+		}
+
 		if( group.light.channelId ) {
 			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ]( group.light.channelId, value ), request ? 2 : 1 );	
 		}
-
-		
 		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
 	}
 
@@ -984,7 +990,7 @@ class TrackerController extends InstrumentController {
 				if( ! group.light.channelId ) {
 					return null;
 				}
-console.log( this.measurePD( group.light.channelId ).then( val => console.log( val ) ) );
+
 				return this.measurePD( group.light.channelId );	
 			break;
 		}
