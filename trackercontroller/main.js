@@ -78,6 +78,11 @@ module.exports = {
 //				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
 			}
 
+			if( group.dualOutput ) {
+				returnObject[ group.groupName ].dualOutput = true;
+//				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
+			}
+
 			if( group.light ) {
 				returnObject[ group.groupName ].lightController = true;
 			}
@@ -194,6 +199,11 @@ module.exports = {
 		} else {
 			return instrument.measureCurrent( chanId );
 		}
+	},
+
+	measurePDCurrent: ( instrumentId, groupName ) => {
+		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
+		return getInstrument( instrumentId ).measurePDCurrent( group.light.channelId );
 	},
 
 	enableChannel: ( instrumentId, chanNumber ) => {
@@ -337,9 +347,9 @@ module.exports = {
 		save();
 	},
 
-	lightSetScaling( instrumentId, groupName, scaling ) {
-		getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
-		save();
+	async lightSetScaling( instrumentId, groupName, scaling ) {
+		await getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
+		await save();
 	},
 
 
@@ -373,6 +383,10 @@ module.exports = {
 	autoZero: ( instrumentId, chanId ) => {
 
 		return getInstrument( instrumentId ).autoZero( chanId );
+	},
+
+	batchIV: ( instrumentId, parameters ) => {
+		return getInstrument()._batchIV( parameters );
 	}
 };
 

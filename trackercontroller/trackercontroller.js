@@ -15,6 +15,7 @@ const wsconnection					= require('../wsconnection' );
 let connections = {};
 let intervals = {};
 let thermal_modules = {};
+const lightValues = {};
 
 thermal_modules.ztp_101t = require( '../config/sensors/ztp_101t' );
 
@@ -403,7 +404,7 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "tracking_bwfwthreshold", Math.min( 1, Math.max( 0, parseFloat( newStatus.tracking_bwfwthreshold ) ) ), newStatus );	
 
 		// Step size
-		this._setStatus( chanId, "tracking_step", Math.max( 0, parseFloat( newStatus.tracking_stepsize ) ), newStatus );	
+		this._setStatus( chanId, "tracking_step", Math.max( 0, parseInt( newStatus.tracking_stepsize ) ), newStatus );	
 
 		// Delay upon direction switch
 		this._setStatus( chanId, "tracking_switchdelay", Math.max( 0, parseFloat( newStatus.tracking_switchdelay ) ), newStatus );	
@@ -495,6 +496,10 @@ class TrackerController extends InstrumentController {
 	}
 
 	measureCurrent( chanId ) {
+
+		if( ! chanId ) {
+			throw "No channel defined in current measurement";
+		}
 		return this.query( globalConfig.trackerControllers.specialcommands.measureCurrent( chanId ), 2 ).then( ( current ) => parseFloat( current ) );
 	}
 
@@ -560,8 +565,8 @@ class TrackerController extends InstrumentController {
 		}
 
 
-		if( this.getInstrumentConfig().relayController || this.getInstrumentConfig().dualOutput ) {
-			
+		if( this.getInstrumentConfig().relayController || group.dualOutput ) {
+
 			if( status.connection == "external" ) {
 
 				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 1 ) );	
@@ -654,7 +659,7 @@ class TrackerController extends InstrumentController {
 
 						
 					if( ! isNaN( maxEffVoltage ) ) {
-						await this.setVoltage( chanId, maxEffVoltage );
+						await this.setVoltage( chanId, Math.round( maxEffVoltage * 100 ) / 100 );
 						setTrackTimer();
 					} else {
 						console.log( "Error in finding the maximum voltage" );
@@ -866,7 +871,8 @@ class TrackerController extends InstrumentController {
 
 		for( let group of groups ) {
 
-			if( ! group.light ) {
+			// If there's no light control, don't check it !
+			if( ! group.light ||  group.light.control === false ) {
 				continue;
 			}
 
@@ -879,7 +885,6 @@ class TrackerController extends InstrumentController {
 				const intensityValue = w.getY( index );
 
 				if( intensityValue !== this.lightSetpoint[ group.groupName ] ) {
-
 					await this.lightSetSetpoint( group.groupName, intensityValue );
 					this.lightSetpoint[ group.groupName ] = intensityValue;
 				}
@@ -890,8 +895,12 @@ class TrackerController extends InstrumentController {
 				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 
+			// Let's be sure no IV curve is running before we check the light
+			await this.getManager('IV').addQuery( async () => {
+				
+				await this.lightCheck( group.groupName, force );
+			} );
 
-			await this.lightCheck( group.groupName, force );
 		}
 	}
 
@@ -904,11 +913,17 @@ class TrackerController extends InstrumentController {
 		}
 
 
+		if( group.light.channelSlave ) {
+
+			if( command !== 'check' && command !== 'forcecheck' ) {
+
+				await this.query( globalConfig.trackerControllers.specialcommands.light[ command ]( group.light.channelSlave, value ), request ? 2 : 1 );	
+			}
+		}
+
 		if( group.light.channelId ) {
 			return this.query( globalConfig.trackerControllers.specialcommands.light[ command ]( group.light.channelId, value ), request ? 2 : 1 );	
 		}
-
-		
 		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
 	}
 
@@ -960,7 +975,18 @@ class TrackerController extends InstrumentController {
 
 		if( ! group.light ) {
 			return null;
-		}		
+		}
+
+		if( ! this.lightValues[ groupName ] ) {
+			this.lightValues[ groupName ] = { time: 0, value: 0 };
+		}
+
+		// Buffer the reading of the light value
+		if( Date.now() - this.lightValues[ groupName ].time < ( group.light.refreshTime || 10000 ) ) {
+			return this.lightValues[ groupName ].value;
+		}
+
+		this.lightValues[ groupName ].time = Date.now();
 
 		switch( group.light.type ) {
 
@@ -971,7 +997,7 @@ class TrackerController extends InstrumentController {
 					return null;
 				}
 				
-				return val * group.light.scaling + group.light.offset;
+				return this.lightValues[ groupName ].value = val * group.light.scaling + group.light.offset;
 				//await this.query( globalConfig.trackerControllers.specialcommands.i2c.reader_4_20( slaveNumber, i2cAddress )
 			break;
 
@@ -982,11 +1008,19 @@ class TrackerController extends InstrumentController {
 					return null;
 				}
 
-				return this.measurePD( group.light.channelId );	
+				return this.lightValues[ groupName ].value = this.measurePD( group.light.channelId );	
 			break;
 		}
 		
 		return null;
+	}
+
+	async measureUVIntensity( groupName ) {
+
+		if( group.light.uv ) {
+
+			await this.lightSenseUV( group.groupName );
+		}	
 	}
 
 	async measureChannelLightIntensity( channelId ) {
@@ -1360,7 +1394,7 @@ class TrackerController extends InstrumentController {
 
 	async makeIV( chanId ) {
 		
-		this._setStatus( chanId, 'iv_booked', true, undefined, true );
+	//	this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
 		var status = this.getStatus( chanId );
 		this.preventMPPT[ chanId ] = true;
@@ -1395,7 +1429,7 @@ class TrackerController extends InstrumentController {
 			while( true ) {
 
 				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
-console.log( status );
+
 				if( status & 0b00000010 ) { // When ALL jV curves are done
 					await this.delay( 1000 );
 					continue;
@@ -1403,7 +1437,7 @@ console.log( status );
 
 
 				return this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 ).then( ( data ) => {
-console.log( data );
+
 					data = data.replace('"', '').replace('"', '')
 						.split(',');			
 					data.pop();
@@ -1414,7 +1448,7 @@ console.log( data );
 		} );
 
 		data.shift();
-		console.log( data );
+		
 		const light = 1;
 		await influx.storeIV( status.measurementName, data, light );
 
@@ -1429,7 +1463,7 @@ console.log( data );
 		} );
 
 		this.preventMPPT[ chanId ] = false;
-		this._setStatus( chanId, 'iv_booked', false, undefined, true );
+	//	this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
 		const wave = new waveform();
 
@@ -1440,6 +1474,97 @@ console.log( data );
 
 		return wave;
 	}
+
+	async _batchIV( properties ) {
+		
+		properties.channels = properties.channels || [];
+
+		if( properties.channels.length == 0 ) {
+			throw "No channel for batch measurement";
+		}
+
+		var status = this.getStatus( chanId );
+		this.preventMPPT[ chanId ] = true;
+
+		if( ! status.enable ) {
+			throw "Channel not enabled";
+		}
+
+		for( var i = 0; i < properties.channels.length; i ++ ) {
+			await this.getManager('IV').addQuery( async () => {	
+
+				await this.query( `IV:START:CH${ properties.channels[ i ] } ${ parseFloat( properties.fromV ) }` );
+				await this.query( `IV:STOP:CH${ properties.channels[ i ] } ${ parseFloat( properties.toV ) }` );
+				await this.query( `IV:RATE:CH${ properties.channels[ i ] } ${ parseFloat( properties.rate ) }` );
+				await this.query( globalConfig.trackerControllers.specialcommands.iv.execute( properties.channels[ i ] ), 1 );
+			} );
+		}
+		await this.delay( 200 );
+/*
+		while( true ) {
+
+			let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
+
+			if( status & 0b00000001 ) { // If this particular jv curve is still running
+				await this.delay( 1000 );
+				continue;
+			}
+
+			break; // That one IV curve has stopped
+
+			// Now we must ask the IV manager to fetch them all and pause any new start
+		}
+*/
+		// This will delay any further jV curve beginning until they are all done
+		let data = await this.getManager('IV').addQuery( async () => {
+				
+			while( true ) {
+
+				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
+
+				if( status & 0b00000010 ) { // When ALL jV curves are done
+					await this.delay( 20 );
+					continue;
+				}
+
+
+				for( var i = 0; i < properties.channels.length; i ++ ) {
+					
+					
+					data[ properties.channels[ i ] ] = this.query( globalConfig.trackerControllers.specialcommands.iv.data( properties.channels[ i ] ), 2 ).then( ( data ) => {
+
+						data = data
+							.replace('"', '')
+							.replace('"', '')
+							.split(',');			
+
+						data.pop();
+						data.shift();
+
+
+						wsconnection.send( {
+
+							instrumentId: this.getInstrumentId(),
+							chanId: properties.channels[ i ],
+								
+							action: {
+								ivCurve: true
+							},
+
+							data: data
+						} );
+
+
+						return data;
+					} );
+				}
+			}
+		} );
+
+
+		this.preventMPPT[ chanId ] = false;
+	}
+
 
 	
 
@@ -1714,6 +1839,7 @@ console.log( data );
 	heatSetMode( groupName, mode ) {
 
 		const group = this.getGroupFromGroupName( groupName );
+
 		if( group.heatController ) {
 			group.heatController.mode = mode;
 

@@ -95,7 +95,7 @@ module.exports = {
 			},
 
 			setVoltage: ( channel, value ) => "SOURCE:VOLTAGE:CH" + channel + " " + value,
-			measureCurrent: ( channel ) => "MEASURE:CURRENT:CH" + channel,
+			measureCurrent: ( channel ) => `MEASURE:CURRENT:CH${ channel }`,
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",

@@ -174,7 +174,12 @@ module.exports = ( app ) => {
 			results = {};
 
 		for( let channel of channels ) {
-			results[ channel ] = await trackerController.measureCurrent( instrumentId, channel );
+
+			if( channel ) {
+				results[ channel ] = await trackerController.measureCurrent( instrumentId, channel );
+			}
+
+			results.pd = await trackerController.measurePDCurrent( instrumentId, req.query.groupName );
 		}
 
 		res.type( "application/json" );
@@ -411,7 +416,7 @@ module.exports = ( app ) => {
 
 	app.post("/light.setPDScaling", ( req, res ) => {
 
-		trackerController.lightSetScaling( req.body.instrumentId, req.body.groupName, req.body.scaling ).then( () => {
+		trackerController.lightSetScaling( req.body.instrumentId, req.body.groupName, req.body.pdScale ).then( () => {
 			res.send("");
 		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
 	});
@@ -644,4 +649,10 @@ module.exports = ( app ) => {
 			res.status( 500 ).send(`Cannot auto-zero. Error was "${error}"`);
 		} );
 	} );
+
+
+	app.post("/measurement.batchIV", ( req, res ) => {
+
+		trackerController.batchIV( req.query.instrumentId, req.body );
+	});
 }
