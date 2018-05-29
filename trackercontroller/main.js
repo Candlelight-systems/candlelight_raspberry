@@ -332,9 +332,11 @@ module.exports = {
 	},
 
 	async lightEnable( instrumentId, groupName ) {
-	
+	console.log('a');
 		await getInstrument( instrumentId ).lightEnable( groupName );
+		console.log('b');
 		await getInstrument( instrumentId ).measureEnvironment();
+		console.log('c');
 		await save();
 	},
 
