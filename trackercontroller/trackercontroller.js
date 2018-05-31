@@ -41,6 +41,7 @@ class TrackerController extends InstrumentController {
 		this.groupLightIntensity = {};
 		this.temperatures = {};
 		this.lightSetpoint = {};
+		this.lightValues = {};
 		
 		this.preventMPPT = {};
 		this.pdIntensity = {};
@@ -1184,7 +1185,7 @@ class TrackerController extends InstrumentController {
 	async readBaseTemperature( cfg, group ) {
 		const t0 = 273.15;
 		const buffer = await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelBase( group.slaveNumber, cfg.I2CAddress, cfg.ADCChannel ), 2, undefined, false, true, 2 );
-
+console.log( buffer );
 		if( buffer[ 0 ] == 0x00 && buffer[ 1 ] == 0x00 ) { // Sensor did not respond
 			return undefined;
 		}
@@ -1201,8 +1202,7 @@ class TrackerController extends InstrumentController {
 	async readIRTemperature( cfg, group ) {
 
 		const buffer = await this.query( globalConfig.trackerControllers.specialcommands.readTemperatureChannelIR( group.slaveNumber, cfg.I2CAddress, cfg.ADCChannel ), 2, undefined, false, true, 2 );
-
-
+console.log( buffer );
 		if( buffer[ 0 ] == 0x00 && buffer[ 1 ] == 0x00 ) { // Sensor did not respond
 			return undefined;
 		}
@@ -1246,7 +1246,7 @@ class TrackerController extends InstrumentController {
 	async measureGroupHumidityTemperature( group ) {
 
 		let data = await this.query( globalConfig.trackerControllers.specialcommands.readHumidity( group.slaveNumber, group.humiditySensor.address ), 3 )
-
+	
 		this.groupHumidity[ group.groupName ] = Math.round( 1000 * parseFloat( data[ 1 ] ) ) / 10 ;
 		this.groupTemperature[ group.groupName ] = Math.round( 10 * parseFloat( data[ 0 ] ) ) / 10;
 
