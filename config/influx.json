@@ -1,10 +1,7 @@
 {
-	"db": "matahari",
-	"host": "192.168.1.100",
-	"password": "",
+	"db": "GMF",
+	"host": "influxdb2.epfl.ch",
+	"password": "lpi77",
 	"port": "8086",
-	"username": "",
-	"db_authentification": "User not found",
-	"db_connection": "ok",
-	"db_dbexists": "ok"
+	"username": "lpi"
 }

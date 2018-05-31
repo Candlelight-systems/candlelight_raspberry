@@ -3159,5 +3159,397 @@
 		},
 		"startDate": 1527585962272,
 		"endDate": 1527588764375
+	},
+	"Channel4_1527603001379": {
+		"cellInfo": {
+			"cellName": "Channel4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527603001392,
+		"endDate": 1527603780596
+	},
+	"CH13_1527603126929": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527603126940,
+		"endDate": 1527603469494
+	},
+	"CH13_1527603481654": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527603481671,
+		"endDate": 1527603844697
+	},
+	"CH4_1527603790158": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527603790177,
+		"endDate": 1527603843134
+	},
+	"CH4_1527604104245": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527604104267,
+		"endDate": 1527604108974
+	},
+	"CH4_1527604126345": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527604126382,
+		"endDate": 1527604449532
+	},
+	"CH13_1527604189556": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527604189575,
+		"endDate": 1527690101995
+	},
+	"CH4_1527604369457": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527604369485,
+		"endDate": 1527757988137
+	},
+	"CH4_1527604461915": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527604461935,
+		"endDate": 1527690521943
+	},
+	"CH13_1527690114731": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527690114378,
+		"endDate": 1527690518496
+	},
+	"CH4_1527690531262": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527690530908,
+		"endDate": 1527690842469
+	},
+	"CH4_1527690855737": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527690855385,
+		"endDate": 1527691775818
+	},
+	"CH4_1527691785761": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527691785413,
+		"endDate": 1527692024534
+	},
+	"CH4_1527692037206": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527692036859,
+		"endDate": 1527692504497
+	},
+	"CH4_1527692536633": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527692536259,
+		"endDate": 1527692788054
+	},
+	"CH4_1527692799322": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527692798935,
+		"endDate": 1527694095096
+	},
+	"IVTST_1527694127206": {
+		"cellInfo": {
+			"cellName": "IVTST",
+			"cellArea": 0,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527694127214,
+		"endDate": 1527699768648
+	},
+	"CH1_1527699810319": {
+		"cellInfo": {
+			"cellName": "CH1",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527699810985,
+		"endDate": 1527757569492
+	},
+	"CH5_1527753035919": {
+		"cellInfo": {
+			"cellName": "CH5",
+			"cellArea": 0.57,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": false,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527753035961,
+		"endDate": 1527756864648
+	},
+	"CH4_1527757584006": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527757584035,
+		"endDate": 1527757608778
+	},
+	"CH5_1527757620827": {
+		"cellInfo": {
+			"cellName": "CH5",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": false,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527757620856,
+		"endDate": 1527757744169
+	},
+	"CHTest_1527758000260": {
+		"cellInfo": {
+			"cellName": "CHTest",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527758000287,
+		"endDate": 1527758491404
+	},
+	"CHRe_1527758505281": {
+		"cellInfo": {
+			"cellName": "CHRe",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527758505306,
+		"endDate": 1527761645669
+	},
+	"CH4_1527761605140": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527761605162,
+		"endDate": 1527761674658
+	},
+	"CH4_1527761987088": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527761987117,
+		"endDate": 1527762101930
+	},
+	"CH4_1527762064292": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527762064311,
+		"endDate": 1527771172943
+	},
+	"CH13_1527762204854": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527762204875,
+		"endDate": 1527765157183
+	},
+	"CH13_1527762229963": {
+		"cellInfo": {
+			"cellName": "CH13",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527762229985,
+		"endDate": 1527762289862
+	},
+	"1_1527762644947": {
+		"cellInfo": {
+			"cellName": "1",
+			"cellArea": 0.6,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": false,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527762642831,
+		"endDate": 1527762907851
+	},
+	"13_1527763214359": {
+		"cellInfo": {
+			"cellName": "13",
+			"cellArea": 0.6,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527763212244
+	},
+	"4_1527765052256": {
+		"cellInfo": {
+			"cellName": "4",
+			"cellArea": 0.6,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527765050125
+	},
+	"1_1527765120506": {
+		"cellInfo": {
+			"cellName": "1",
+			"cellArea": 0.6,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": false,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527765118370
+	},
+	"CH4_1527794722224": {
+		"cellInfo": {
+			"cellName": "CH4",
+			"cellArea": 1,
+			"trackingMode": "MPP",
+			"lightMonitoring": true,
+			"temperatureMonitoring": true,
+			"humidityMonitoring": true
+		},
+		"startDate": 1527794722251
 	}
 }
