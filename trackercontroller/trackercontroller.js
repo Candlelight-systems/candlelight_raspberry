@@ -73,7 +73,7 @@ class TrackerController extends InstrumentController {
 		await this.scheduleEnvironmentSensing( 10000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.normalizeLightController(); // Normalize the light sensing
-		await this.dcdcUpdate(); // Normalize the DC DC converter
+//		await this.dcdcUpdate(); // Normalize the DC DC converter
 
 		this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
 		await this.query( "RESERVED:CONFIGURED" );

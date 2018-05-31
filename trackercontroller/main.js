@@ -59,11 +59,10 @@ module.exports = {
 
 		chanNumber = parseInt( chanNumber );
 		const chanId = lookupChanId( instrumentId, chanNumber );
-
-		
 		let instrument = getInstrument( instrumentId ),
 			groups = instrument.getGroups(),
 			returnObject = {
+				_error: instrument.error
 			};
 
 		groups.forEach( ( group ) => {
