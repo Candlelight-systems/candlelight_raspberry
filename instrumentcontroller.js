@@ -2,7 +2,7 @@
 const serialport 	= require("serialport");
 const queryManager	= require("./queryhandler")
 const rpio 			= require("rpio");
-
+const wsconnection	= require('./wsconnection' );
 
 class InstrumentController {
 	
@@ -85,7 +85,17 @@ class InstrumentController {
 				dOut = [], 
 				lineCount = 0,	
 				timeout = setTimeout( () => {
-					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms). Trying to reset the instrument.`);
+					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms).`);
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'error',
+							message: `Query ${ queryString } has timed out (${ queryTimeout } ms).`
+						}
+					} );
+
 				//	rejecter(); // Reject the current promise
 					//this.reset(); // Reset the instrument
 				}, queryTimeout );
