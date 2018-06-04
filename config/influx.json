@@ -1,7 +1,10 @@
 {
 	"db": "GMF",
-	"host": "influxdb2.epfl.ch",
-	"password": "lpi77",
-	"port": "8086",
-	"username": "lpi"
+	"host": "isicgesrv10.epfl.ch",
+	"password": "Jd8h38dh_1.",
+	"port": "80",
+	"username": "GMF",
+	"db_authentication": "Bad credentials",
+	"db_connection": "ok",
+	"db_dbexists": "ok"
 }
