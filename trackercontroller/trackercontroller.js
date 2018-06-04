@@ -1357,6 +1357,18 @@ class TrackerController extends InstrumentController {
 				throw "Channel not enabled";
 			}
 
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				log: {
+					type: 'info',
+					channel: chanId,
+					message: `Request j-V sweep`
+				}
+			} );
+
+
 			await this.getManager('IV').addQuery( async () => {
 				
 				return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 );
@@ -1368,6 +1380,19 @@ class TrackerController extends InstrumentController {
 				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
 
 				if( status & 0b00000001 ) { // If this particular jv curve is still running
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						
+						log: {
+							type: 'info',
+							channel: chanId,
+							message: `j-V sweep in progress`
+						}
+					} );
+
+
 					await this.delay( 1000 );
 					continue;
 				}
@@ -1386,9 +1411,32 @@ class TrackerController extends InstrumentController {
 
 					if( status & 0b00000010 ) { // When ALL jV curves are done
 						await this.delay( 1000 );
+
+
+						wsconnection.send( {
+
+							instrumentId: this.getInstrumentId(),
+							
+							log: {
+								type: 'info',
+								channel: chanId,
+								message: `Waiting for all j-V sweeps to terminate`
+							}
+						} );
+
 						continue;
 					}
 
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'info',
+							channel: chanId,
+							message: `j-V sweep terminated`
+						}
+					} );
 
 					return this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 ).then( ( data ) => {
 
@@ -1503,6 +1551,19 @@ class TrackerController extends InstrumentController {
 
 		if( nb == 0 ) {
 			console.warn( "No points collected for chan " + chanId, nb );
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				
+				log: {
+					type: 'warning',
+					channel: chanId,
+					message: "No data point for this channel. You should reboot the instrument if this problem persists"
+				}
+			} );
+
+
 			return;
 		}
 
@@ -1546,6 +1607,12 @@ class TrackerController extends InstrumentController {
 				jsc: this.getTimerNext( 'jsc', chanId ),
 				aquisition: 0,
 				ellapsed: Date.now() - measurements[ status.measurementName ].startDate
+			},
+
+			log: {
+				type: 'info',
+				channel: chanId,
+				message: "Getting tracking info"
 			}
 
 		} );
