@@ -39,10 +39,11 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
       }
 
     ]).then( ( result ) => {
-      
+      console.log('done');
+      console.log( result );
       return result; 
 
-    }).catch(err => {
+    }).catch( err => {
 
       console.error( `Error saving data to InfluxDB! ${err.stack}` );
     });

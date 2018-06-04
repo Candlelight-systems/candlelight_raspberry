@@ -136,7 +136,6 @@ module.exports = {
 		return getInstrument( instrumentId ).measureJsc( chanId );
 	},
 
-
 	pauseChannels: async ( instrumentId ) => {
 		const instrument = getInstrument( instrumentId );
 		await instrument.pauseChannels();
@@ -352,7 +351,6 @@ module.exports = {
 		await getInstrument( instrumentId ).lightSetScaling( groupName, scaling );
 		await save();
 	},
-
 
 	lightSetPyranometerScaling( instrumentId, groupName, scale, offset ) {
 		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );

@@ -34,7 +34,6 @@ class InstrumentController {
 
 	query( query, linesExpected = 1, executeBefore = undefined, prepend = false, rawOutput = false, expectedBytes = 0 ) {
 
-
 		let communication = this.connection;
 
 		if( query === undefined ) {
@@ -63,8 +62,7 @@ class InstrumentController {
 
 		if( ! communication ) {
 			throw "Could not find communication based on the instrument id";
-		}	
-
+		}
 
 		return communication.queryManager.addQuery( async () => {
 
@@ -96,7 +94,8 @@ class InstrumentController {
 						}
 					} );
 
-				//	rejecter(); // Reject the current promise
+//					this.query("*RST");
+					rejecter(); // Reject the current promise
 					//this.reset(); // Reset the instrument
 				}, queryTimeout );
 			
