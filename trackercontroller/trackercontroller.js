@@ -596,7 +596,7 @@ class TrackerController extends InstrumentController {
 				)
 
 				) {
-
+				console.info(`New Voc timer for channel ${ chanId }`);
 				this.setTimer("voc", chanId, this.measureVoc, status.tracking_measure_voc_interval );				
 			} else {
 				this.removeTimer("voc", chanId );
@@ -646,8 +646,6 @@ class TrackerController extends InstrumentController {
 						maxEff = pow.getMax(),
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
-
-
 						
 					if( ! isNaN( maxEffVoltage ) ) {
 						await this.setVoltage( chanId, maxEffVoltage );
@@ -873,14 +871,14 @@ class TrackerController extends InstrumentController {
 					this.lightSetpoint[ group.groupName ] = intensityValue;
 				}
 
-			} else if ( group.light.setPoint !== this.lightSetpoint[ group.groupName ] ) {
+			} else if ( group.light.setPoint !== this.lightSetpoint[ group.groupName ] || force ) {
 
 				await this.lightSetSetpoint( group.groupName, group.light.setPoint );
 				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 
 
-		//	await this.lightCheck( group.groupName, force );
+			await this.lightCheck( group.groupName, force );
 		}
 	}
 
@@ -1596,7 +1594,7 @@ class TrackerController extends InstrumentController {
 	}
 
 	async measureVoc( chanId, extend ) {
-
+		console.info(`Measuring open circuit voltage on channel ${chanId}`);
 		return this
 			.getStateManager()
 			.addQuery( async () => {
@@ -1631,6 +1629,8 @@ class TrackerController extends InstrumentController {
 
 				let voc = await this.query( globalConfig.trackerControllers.specialcommands.voc.data( chanId ), 2 ).then( val => parseFloat( val ) );
 				
+				console.info(`Voc for channel ${chanId}: ${voc}`);
+
 				await influx.storeVoc( status.measurementName, voc );
 
 				wsconnection.send( {
