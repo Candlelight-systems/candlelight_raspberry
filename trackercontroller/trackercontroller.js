@@ -1269,12 +1269,12 @@ class TrackerController extends InstrumentController {
 		}
 	}
 
-	getTimerNext( timerName, chanId ) {
+	getTimerNext( timerName, chanId, defaultValue = undefined ) {
 
 		const intervalId = this.getIntervalName( timerName, chanId );
 
-		if( ! intervals[ intervalId ] ) {
-			return undefined;
+		if( ! intervals[ intervalId ] || ! intervals[ intervalId ].activated ) {
+			return defaultValue;
 		}
 
 		return intervals[ intervalId ].interval + intervals[ intervalId ].lastTime - Date.now();
@@ -1327,7 +1327,7 @@ class TrackerController extends InstrumentController {
 
 	timerExists( timerName, chanId ) {
 
-		return !! intervals[ this.getIntervalName( timerName, chanId ) ];
+		return !! intervals[ this.getIntervalName( timerName, chanId ) ] && intervals[ this.getIntervalName( timerName, chanId ) ].activated === true;
 	}
 
 	removeTimer( timerName, chanId ) {
@@ -1602,9 +1602,9 @@ class TrackerController extends InstrumentController {
 			},
 
 			timer: {
-				iv: this.getTimerNext( 'iv', chanId ),
-				voc: this.getTimerNext( 'voc', chanId ),
-				jsc: this.getTimerNext( 'jsc', chanId ),
+				iv: this.getTimerNext( 'iv', chanId, null ),
+				voc: this.getTimerNext( 'voc', chanId, null ),
+				jsc: this.getTimerNext( 'jsc', chanId, null ),
 				aquisition: 0,
 				ellapsed: Date.now() - measurements[ status.measurementName ].startDate
 			},
@@ -1662,6 +1662,19 @@ class TrackerController extends InstrumentController {
 
 	async measureVoc( chanId, extend ) {
 		console.info(`Measuring open circuit voltage on channel ${chanId}`);
+
+
+		wsconnection.send( {
+
+			instrumentId: this.getInstrumentId(),
+			log: {
+				type: 'info',
+				channel: chanId,
+				message: `Requesting an open circuit voltage measurement.`
+			}
+		} );
+
+
 		return this
 			.getStateManager()
 			.addQuery( async () => {
@@ -1689,6 +1702,19 @@ class TrackerController extends InstrumentController {
 					i++;
 
 					if( i > 20 ) {
+
+
+						wsconnection.send( {
+
+							instrumentId: this.getInstrumentId(),
+							log: {
+								type: 'error',
+								channel: chanId,
+								message: `Failed to find the open circuit voltage.`
+							}
+						} );
+
+
 						break;
 					}
 					await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
@@ -1696,6 +1722,17 @@ class TrackerController extends InstrumentController {
 
 				let voc = await this.query( globalConfig.trackerControllers.specialcommands.voc.data( chanId ), 2 ).then( val => parseFloat( val ) );
 				
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					log: {
+						type: 'info',
+						channel: chanId,
+						message: `Open circuit voltage found: ${ voc }V.`
+					}
+				} );
+
 				console.info(`Voc for channel ${chanId}: ${voc}`);
 
 				await influx.storeVoc( status.measurementName, voc );
@@ -1722,6 +1759,18 @@ class TrackerController extends InstrumentController {
 
 	async measureJsc( chanId, extend ) {
 		// Cannot do it while measuring a j-V curve
+
+
+		wsconnection.send( {
+
+			instrumentId: this.getInstrumentId(),
+			log: {
+				type: 'info',
+				channel: chanId,
+				message: `Requesting a short circuit current measurement.`
+			}
+		} );
+
 		return this
 			.getStateManager()
 			.addQuery( async () => {
@@ -1747,14 +1796,40 @@ class TrackerController extends InstrumentController {
 					i++;
 
 					if( i > 20 ) {
+
+						wsconnection.send( {
+
+							instrumentId: this.getInstrumentId(),
+							log: {
+								type: 'error',
+								channel: chanId,
+								message: `Failed to find the short circuit current.`
+							}
+						} );
+
+
+
 						break;
 					}
+
 					await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
 				}
 
 				let jsc = await this.query( globalConfig.trackerControllers.specialcommands.jsc.data( chanId ), 2 ).then( val => parseFloat( val ) );
 				
 				await influx.storeJsc( status.measurementName, jsc );
+
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					log: {
+						type: 'info',
+						channel: chanId,
+						message: `Short circuit voltage found: ${ jsc }A.`
+					}
+				} );
+
 
 				wsconnection.send( {
 
