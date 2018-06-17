@@ -55,7 +55,7 @@ class TrackerController extends InstrumentController {
 	init() {
 
 		this.trackData = [];		
-
+ 
 		this.openConnection( async () => {
 			
 			await this.configure();
@@ -224,7 +224,7 @@ class TrackerController extends InstrumentController {
 	 *	@returns the status of a particular channel
 	 */
 	getStatus( chanId ) {
-			
+		
 		return status[ this.getStatusIndex( chanId ) ];
 	}
 

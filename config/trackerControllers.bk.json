@@ -1,0 +1,107 @@
+{
+	"Outdoor modules": {
+
+		"fullScaleCurrent": 0.015,
+		"instrumentId": "Outdoor modules",
+		
+		"groups": [
+			{	
+				"groupName": "Box 1",
+				"groupID": "boxa",
+				
+				"humiditySensor": {
+					"address": 65
+				},
+
+				"light": {
+					"type": "photodiode",
+					"on": true,
+					"channelId": 1,
+					"scaling": 0.5,
+					"factory_scaling": 0.5,
+					"scheduling": {
+						"enabled": false,
+						"basis": 3600,
+						"intensities": [ 0, 1, 0 ]
+					},
+					"setPoint": 1,
+					"sensing": {}
+				},
+
+				
+
+
+				"temperatureSensors": [
+					
+				],
+
+				"channels": [
+					{
+						"chanId": 1,
+						"chanName": "Channel 1"
+					},
+					{
+						"chanId": 2,
+						"chanName": "Channel 2"
+					},
+					{
+						"chanId": 3,
+						"chanName": "Channel 3"
+					},
+					{
+						"chanId": 4,
+						"chanName": "Channel 4"
+					},
+					{
+						"chanId": 5,
+						"chanName": "Channel 5"
+					},
+					{
+						"chanId": 6,
+						"chanName": "Channel 6"
+					},
+					{
+						"chanId": 7,
+						"chanName": "Channel 7"
+					},
+					{
+						"chanId": 8,
+						"chanName": "Channel 8"
+					},
+					{
+						"chanId": 9,
+						"chanName": "Channel 9"
+					},
+					{
+						"chanId": 10,
+						"chanName": "Channel 10"
+					},
+					{
+						"chanId": 11,
+						"chanName": "Channel 11"
+					},
+					{
+						"chanId": 12,
+						"chanName": "Channel 12"
+					},
+					{
+						"chanId": 13,
+						"chanName": "Channel 13"
+					},
+					{
+						"chanId": 14,
+						"chanName": "Channel 14"
+					},
+					{
+						"chanId": 15,
+						"chanName": "Channel 15"
+					},
+					{
+						"chanId": 16,
+						"chanName": "Channel 16"
+					}
+				]
+			}
+		]
+	}
+}
