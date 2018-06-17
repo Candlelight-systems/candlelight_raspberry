@@ -1,3 +1,5 @@
 node_modules/
 config/hosts.json
 config/trackerControllers.json
+trackercontroller/measurements.json
+trackercontroller/status.json
