@@ -72,6 +72,7 @@ class TrackerController extends InstrumentController {
 		await this.scheduleEnvironmentSensing( 10000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.normalizeLightController(); // Normalize the light sensing
+		await this.normalizeHeatController(); // Normalize the light sensing
 //		await this.dcdcUpdate(); // Normalize the DC DC converter
 
 		this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
@@ -153,10 +154,11 @@ class TrackerController extends InstrumentController {
 	 *	@param {String} command - The command string to send
 	 */
 	query( command, lines = 1, executeBefore, prependToQueue = false, rawOutput, expectedBytes ) {
-	
+	console.log( command );
 		if( ! this.open ) {
-			console.trace();
-			throw "Cannot write command \"" + command + "\" to the instrument. The instrument communication is closed."
+			console.error("Cannot execute command");
+			//throw "Cannot write command \"" + command + "\" to the instrument. The instrument communication is closed."
+			return new Promise( ( resolver, rejecter ) => rejecter() );
 		}
 
 		return super.query( command, lines, executeBefore, prependToQueue, rawOutput, expectedBytes );
@@ -764,13 +766,13 @@ class TrackerController extends InstrumentController {
 							thermopile: Math.round( thermopile * 10 ) / 10
 						};
 
-						console.log( this.temperatures[ group.groupName ][ chan ] );
+				//		console.log( this.temperatures[ group.groupName ][ chan ] );
 					}
 				}
 
 
 				if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
-			//		await this.heaterFeedback( group.groupName, this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total );
+					await this.heaterFeedback( group.groupName );
 				}
 
 				//throw "No heat controller for this group, or no temperature sensor, or no SSR channel associated";
@@ -782,7 +784,9 @@ class TrackerController extends InstrumentController {
 				Object.assign( data, {
 					heater_reference_temperature: this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total,
 					heater_target_temperature: group.heatController.target,
-					heater_mode: group.generalRelay.state
+					heater_power: group.heatController.power,
+					heater_cooling: group.generalRelay ? group.generalRelay.state == group.heatController.relay_cooling : undefined,
+					heater_mode: group.heatController.mode
 				} );
 			}
 
@@ -1156,7 +1160,7 @@ class TrackerController extends InstrumentController {
 
 
 		if( buffer[ 0 ] == 0x00 && buffer[ 1 ] == 0x00 ) { // Sensor did not respond
-			return undefined;
+			return 0;
 		}
 //		console.log( buffer.readInt16BE( 0 ), buffer.readInt16BE( 0 ) / 16 / 2047 * 2.048 );
 		let vout = ( buffer.readInt16BE( 0 ) / 16 - cfg.offset ) / 2047 * 2.048 / cfg.gain; // Sensor voltage
@@ -1175,7 +1179,6 @@ class TrackerController extends InstrumentController {
 						+ ( vout ** 8 ) * coeffs[ 8 ];
 
 
-		console.log( vout, deltaT );
 		return deltaT;
 	}
 
@@ -1865,15 +1868,85 @@ class TrackerController extends InstrumentController {
 	//*** NEW VERSION OF HEAT CONTROLLER **//
 	//*************************************//
 
+
+
+	async normalizeHeatController( force = false ) {
+
+		let groups = this.getInstrumentConfig().groups;
+
+		for( let group of groups ) {
+
+			if( ! group.heatController ) {
+				continue;
+			}
+
+			if( group.heatController.target ) {
+				await this.heatUpdateSSRTarget( group.groupName );
+			}
+			
+			if( group.heatController.relay && group.generalRelay ) {
+
+				if( group.generalRelay.state == group.heatController.relay_heating ) {
+				
+					await this.heatSetHeating( group.groupName );
+				
+				} else if( group.generalRelay.state === group.heatController.relay_cooling ) {
+				
+					await this.heatSetCooling( group.groupName );
+				}
+			} else if( group.heatController.mode_heating == true ) {
+
+				await this.heatSetHeating( group.groupName );
+			
+			} else if( group.heatController.mode_cooling == true ) {
+
+				await this.heatSetCooling( group.groupName );
+			}
+
+			if( group.heatController.ssr ) {
+				this.normalizeHeatControllerSSR( group.groupName, force );
+			}
+		}
+	}
+
+	async normalizeHeatControllerSSR( groupName, force ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+
+		if( ! group.heatController.pid ) {
+			return new Promise( ( resolver, rejecter ) => resolver() );
+		}
+
+	
+	//	await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );			
+
+
+		if( group.heatController.pid.kp_heating !== undefined ) {
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'heating', group.heatController.pid.kp_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'heating', group.heatController.pid.kd_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'heating', group.heatController.pid.ki_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'heating', group.heatController.pid.bias_heating ) );
+		}
+
+		if( group.heatController.pid.kp_cooling !== undefined ) {
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'cooling', group.heatController.pid.kp_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'cooling', group.heatController.pid.kd_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'cooling', group.heatController.pid.ki_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'cooling', group.heatController.pid.bias_cooling ) );
+		}
+	}
+
+
 	async heatSetTarget( groupName, target ) {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController ) {
-			group.heatController.target = 30;
+			group.heatController.target = target;
 
 			if( group.heatController.ssr ) {
 				await this.heatUpdateSSRTarget( groupName );
 			}
+
 			return;
 		}
 
@@ -1898,6 +1971,9 @@ class TrackerController extends InstrumentController {
 			group.generalRelay.state = group.heatController.relay_heating;
 			await this.generalRelayUpdateGroup( groupName );
 			return;
+		} else {
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.heating( group.ssr.channelId ) );
+			return;
 		}
 
 		throw new Error( "Either no heat controller for this group or cannot execute the requested action");
@@ -1909,6 +1985,9 @@ class TrackerController extends InstrumentController {
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
 			group.generalRelay.state = group.heatController.relay_cooling;
 			await this.generalRelayUpdateGroup( groupName );
+			return;
+		} else {
+			await this.query( globalConfig.trackerControllers.specialcommands.ssr.cooling( group.ssr.channelId ) );
 			return;
 		}
 
@@ -1925,18 +2004,92 @@ class TrackerController extends InstrumentController {
 		throw new Error( "Either no heat controller for this group or no feedback temperature sensor");
 	}
 
-	// So far the only feedback mode is through the SSR controller
-	async heaterFeedback( groupName, feedbackTemperature ) {
+	heatSetPIDParameters( groupName, parameters ) {
 
 		const group = this.getGroupFromGroupName( groupName );
-		if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
-			// SSR:CH1:FEEDBACK 20.5
-			if( group.heatController.ssr ) {
-				return this.heaterSSRFeedback( groupName, feedbackTemperature );
-			}
+		if( group.heatController ) {
+			group.heatController.pid = {
+				kp_cooling: parameters.Kp_c,
+				kd_cooling: parameters.Kd_c,
+				ki_cooling: parameters.Ki_c,
+				bias_cooling: parameters.bias_c,
+				kp_heating: parameters.Kp_h,
+				kd_heating: parameters.Kd_h,
+				ki_heating: parameters.Ki_h,
+				bias_heating: parameters.bias_h,
+			};
 		}
 
-		throw new Error( `No heat controller for this group (${ groupName }), or no temperature sensor` );
+		return this.normalizeHeatControllerSSR( groupName );
+	}
+
+	heatGetPIDParameters( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+
+		if( ! group.heatController.pid ) {
+			return {
+				heating: {},
+				cooling: {}
+			};
+		}
+		
+		return {
+
+			heating: {
+				Kp: group.heatController.pid.kp_cooling,
+				Kd: group.heatController.pid.kd_cooling,
+				Ki: group.heatController.pid.ki_cooling,
+				bias: group.heatController.pid.bias_cooling,
+			},
+			cooling: {
+				Kp: group.heatController.pid.kp_heating,
+				Kd: group.heatController.pid.kd_heating,
+				Ki: group.heatController.pid.ki_heating,
+				bias: group.heatController.pid.bias_heating
+			}
+		};
+	}
+
+	// So far the only feedback mode is through the SSR controller
+	async heaterFeedback( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+	//	console.log( this.temperatures[ groupName ], group.heatController.feedbackTemperatureSensor );
+		const feedbackTemperature = this.temperatures[ groupName ][ group.heatController.feedbackTemperatureSensor ].total;
+		
+		if( ! group.heatController ) {
+			throw new Error( `No heat controller for this group (${ groupName }), or no temperature sensor` );
+			return;
+		}
+
+		if( group.heatController.mode == 'pid' ) {
+
+			if( group.heatController.feedbackTemperatureSensor ) {
+			
+				if( group.heatController.ssr ) {
+					await this.heaterSSRFeedback( groupName, feedbackTemperature );
+				}
+			}
+			//}
+		} else {
+			await this.heatSetPower( groupName, group.heatController.power );
+		}
+	}
+
+	async heatSetMode( groupName, mode ) {
+		this.getGroupFromGroupName( groupName ).heatController.mode = mode;
+		this.heaterFeedback( groupName );
+	}
+
+
+	async heatSetPower( groupName, power ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		group.heatController.power = power;
+
+		await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );
+		await this.query( globalConfig.trackerControllers.specialcommands.ssr.power( group.ssr.channelId, group.heatController.power ) );
 	}
 
 
@@ -1949,6 +2102,8 @@ class TrackerController extends InstrumentController {
 
 			if( isNaN( feedbackTemperature ) ) {
 				return await this.query( globalConfig.trackerControllers.specialcommands.ssr.disable( group.ssr.channelId ) );
+			} else {
+				await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );
 			}
 
 			return await this.query( globalConfig.trackerControllers.specialcommands.ssr.feedback( group.ssr.channelId, feedbackTemperature ) );
@@ -1974,6 +2129,12 @@ class TrackerController extends InstrumentController {
 		if( group.generalRelay ) {
 			await this.query( globalConfig.trackerControllers.specialcommands.relay.general( group.generalRelay.channelId, group.generalRelay.state ) );
 		}
+	}
+
+
+	async autoZero( chanId ) {
+
+		await this.query( globalConfig.trackerControllers.specialcommands.autoZero( chanId ) );
 	}
 }
 

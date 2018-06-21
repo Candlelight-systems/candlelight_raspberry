@@ -4,6 +4,7 @@ const queryManager	= require("./queryhandler")
 const rpio 			= require("rpio");
 const wsconnection	= require('./wsconnection' );
 
+let resetted = false;
 class InstrumentController {
 	
 	
@@ -59,7 +60,7 @@ class InstrumentController {
 		queryTimeout = queryTimeout || 1000; // Default to 1 second
 
 		let statusByte;
-
+		
 		if( ! communication ) {
 			throw "Could not find communication based on the instrument id";
 		}
@@ -83,6 +84,8 @@ class InstrumentController {
 				dOut = [], 
 				lineCount = 0,	
 				timeout = setTimeout( () => {
+
+				
 					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms).`);
 
 					wsconnection.send( {
@@ -96,7 +99,7 @@ class InstrumentController {
 
 //					this.query("*RST");
 					rejecter(); // Reject the current promise
-					//this.reset(); // Reset the instrument
+					this.reset(); // Reset the instrument
 				}, queryTimeout );
 			
 				// Start by remove all listeners
@@ -107,7 +110,7 @@ class InstrumentController {
 
 
 					if( queryString.indexOf("IV:DATA")>-1 ) {
-						console.log( d.toString('ascii') );
+				//		console.log( d.toString('ascii') );
 					}
 					data = Buffer.concat( [ data, d ] );
 
@@ -167,6 +170,14 @@ class InstrumentController {
 							// Flush the connection
 							communication.flush();
 
+
+							if( queryString == 'DATA:TRACKER:CH1' && ! resetted ) {
+								resetted = true;
+							
+								await delay( 10000 );
+							}
+
+
 							// Inform about the communication time
 							if( timeout ) {
 								clearTimeout( timeout );
@@ -177,8 +188,14 @@ class InstrumentController {
 							
 
 							if( dOut.length == 1 ) {
+
+
 								resolver( dOut[ 0 ] );
+
+
 							} else {
+
+
 								resolver( dOut );
 							}
 							
@@ -188,7 +205,7 @@ class InstrumentController {
 				} );
 
 				console.time( "query:" + queryString );
-				//console.log( queryString );
+			//	console.log( queryString );
 				communication.write( queryString + "\n" );
 				communication.drain( );
 			} );
@@ -229,7 +246,7 @@ class InstrumentController {
 	 		return;
 	 	}
 	 	this.resetting = true;
-
+	 	this.open = false;
 
 
 	 	if( this.connection && this.connection.isOpen ) {
@@ -251,7 +268,10 @@ class InstrumentController {
 
 
 		await this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
-
+		this.emptyQueryQueue();
+		this.connection.lease = Promise.resolve();
+		
+		await this.configure();
 
 		this.emptyQueryQueue();
 		this.connection.lease = Promise.resolve();
@@ -270,7 +290,7 @@ class InstrumentController {
 		}
 
 		if( this.connection ) {
-			console.log('alr');
+		//	console.log('alr');
 			this.connection.open();
 			callback();
 			return;
@@ -280,9 +300,10 @@ class InstrumentController {
 		this.connection = connection;
 		
 		connection.on("error", ( err ) => {
-			console.log( "Error:" + err );
+			
+			console.log( err );
 			this.reset();
-			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+		//	this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );
 
@@ -322,12 +343,28 @@ class InstrumentController {
 
 	async waitAndReconnect() {
 
+		try {
+
+			if( this.connection.isOpen() ) {
+				this.connection.close();	
+			}
+		} catch( e ) {}
+
 		let _delay = this.getConfig().reconnectTimeout;
 		await this.delay( _delay * 1000 );
+		console.log('open connection');
+
+		this.connection.once("open", async () => {
+			this.connection.flush();
+			console.log("Serial connection is open");
+			this.open = true;
+		} );
+
 		this.connection.open();
-		this.getConnection().queryManager.block();
+		console.log('opened');
+		//this.getConnection().queryManager.block();
 		await this.delay( _delay * 1000 );
-		this.getConnection().queryManager.unblock();
+		//this.getConnection().queryManager.unblock();
 	}
 
 	

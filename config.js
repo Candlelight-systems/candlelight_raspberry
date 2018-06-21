@@ -59,6 +59,8 @@ module.exports = {
 			ssr: {
 				feedback: ( chanId, value ) => { return { string: `SSR:FEEDBACK:CH${ chanId } ${ value }` } },
 				target: ( chanId, value ) => { return { string: `SSR:TARGET:CH${ chanId } ${ value }` } },
+				heating:  ( chanId ) => { return { string: `SSR:HEATING:CH${ chanId }` } },
+				cooling:  ( chanId ) => { return { string: `SSR:COOLING:CH${ chanId }` } },
 				enable:  ( chanId ) => { return { string: `SSR:ENABLE:CH${ chanId }` } },
 				disable:  ( chanId ) => { return { string: `SSR:DISABLE:CH${ chanId }` } },
 				power:  ( chanId, power ) => { return { string: `SSR:VALUE:CH${ chanId } ${power}` } },
