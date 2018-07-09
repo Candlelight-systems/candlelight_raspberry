@@ -74,6 +74,7 @@ module.exports = {
 
 			if( group.heat || group.heatController ) {
 				returnObject[ group.groupName ].heatController = true;
+
 //				returnObject[ group.groupName ].heatingPower = instrument.getHeatingPower( group.groupName );
 			}
 
@@ -289,8 +290,10 @@ module.exports = {
 		return getInstrument( instrumentId ).heatGetPIDParameters( groupName );
 	},
 
-	heatSetPIDParameters: ( instrumentId, groupName, parameters ) => {
-		return getInstrument( instrumentId ).heatSetPIDParameters( groupName, parameters );
+	heatSetPIDParameters: async ( instrumentId, groupName, parameters ) => {
+		await getInstrument( instrumentId ).heatSetPIDParameters( groupName, parameters );
+		await getInstrument( instrumentId ).heaterFeedback( groupName );
+		await save();
 	},
 
 	getAllMeasurements: () => {
@@ -334,11 +337,11 @@ module.exports = {
 	},
 
 	async lightEnable( instrumentId, groupName ) {
-	console.log('a');
+	
 		await getInstrument( instrumentId ).lightEnable( groupName );
-		console.log('b');
+	
 		await getInstrument( instrumentId ).measureEnvironment();
-		console.log('c');
+	
 		await save();
 	},
 
