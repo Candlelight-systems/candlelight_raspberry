@@ -109,7 +109,11 @@ module.exports = {
 	},
 
 	getInstrumentConfig: ( instrumentId ) => {
-		return getInstrument( instrumentId ).getInstrumentConfig();
+		try {
+			return getInstrument( instrumentId ).getInstrumentConfig();
+		} catch( e ) {
+			console.error("No instrument " + instrumentId );
+		}
 	},
 
 	getGroupConfig: ( instrumentId, groupName ) => {
