@@ -170,14 +170,14 @@ class InstrumentController {
 							// Flush the connection
 							communication.flush();
 
-
+/*
 							if( queryString == 'DATA:TRACKER:CH1' && ! resetted ) {
 								resetted = true;
 							
 								await delay( 10000 );
 							}
 
-
+*/
 							// Inform about the communication time
 							if( timeout ) {
 								clearTimeout( timeout );
