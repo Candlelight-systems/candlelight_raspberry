@@ -46,6 +46,8 @@ class InstrumentController {
 			return new Promise( ( resolver, rejecter ) => rejecter( "Port is closed" ) );
 		}
 
+		return new Promise( ( resolver ) => resolver() );
+		
 		let queryString;
 		let queryTimeout;
 

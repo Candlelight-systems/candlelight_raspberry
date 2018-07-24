@@ -437,6 +437,9 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "cellArea", parseFloat( newStatus.cellArea ), newStatus );
 		this._setStatus( chanId, "lightRefValue", parseFloat( newStatus.lightRefValue ), newStatus );
 
+		this._setStatus( chanId, "correctionFactor_type", newStatus.correctionFactor_type, newStatus );
+		this._setStatus( chanId, "correctionFactor_value", parseFloat( newStatus.correctionFactor_value ), newStatus );
+
 		
 		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
 			possibleNewMeasurement( newStatus.measurementName, newStatus, this.getGroupFromChanId( chanId ), chanId );
@@ -981,8 +984,23 @@ class TrackerController extends InstrumentController {
 
 	async measureChannelLightIntensity( channelId ) {
 		const group = this.getGroupFromChanId( channelId );
+		const lightIntensity = this.measureGroupLightIntensity( group.groupName );
+		const status = this.getStatus( chanId );
 
-		return this.measureGroupLightIntensity( group.groupName );
+		switch( status.correctionFactor_type ) {
+			case 'factory':
+				let cfg = this.getInstrumentConfig( group.groupName, channelId );
+				return lightIntensity / ( cfg.correctionFactor || 1 );
+			break;
+
+			case 'manual':
+				return lightIntensity / status.correctionFactor_value;
+			break;
+
+			default:
+				return lightIntensity;
+			break;
+		}
 		/*const channelIdPD = group.light.channelId;
 		return this.measurePD( channelIdPD );*/
 	}
@@ -1576,6 +1594,9 @@ class TrackerController extends InstrumentController {
 		const lightChannel 	= group.light.channelId;
 		const sun 			= await this.getChannelLightIntensity( chanId );
 		//const sun = 1;
+
+
+
 
 		const efficiency 	= ( powerMean / ( status.cellArea / 10000 ) ) / ( sun * 1000 ) * 100;
 
