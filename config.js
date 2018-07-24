@@ -153,7 +153,9 @@ module.exports = {
 			"connection": "group",
 			"lightRefValue": undefined,
 			"measurementName": null,
-			"cellName": null
+			"cellName": null,
+			"correctionFactor_type": "manual",
+			"correctionFactor_value": 1
 		},
 	},
 

@@ -1,10 +1,10 @@
 {
 	"db": "matahari",
-	"host": "192.168.0.101",
+	"host": "localhost",
 	"password": "",
 	"port": "8086",
 	"username": "",
-	"db_authentication": "No user defined",
-	"db_connection": "ok",
+	"db_authentication": "",
+	"db_connection": "The address must not be local (the tracker must also access it)",
 	"db_dbexists": "ok"
 }

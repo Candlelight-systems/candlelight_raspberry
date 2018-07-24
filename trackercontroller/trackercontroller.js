@@ -1,6 +1,13 @@
 'use strict';
 
 const fs = require("fs");
+const path = require("path");
+
+const statusPath = path.join( __dirname, './status.json' );
+
+if( ! fs.existsSync( statusPath ) ) {
+	fs.writeFileSync( statusPath, JSON.stringify( { channels: [] } ) );
+}
 
 let statusGlobal					= require("./status.json");
 let status 							= statusGlobal.channels;
