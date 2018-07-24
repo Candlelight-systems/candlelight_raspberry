@@ -999,8 +999,8 @@ class TrackerController extends InstrumentController {
 
 	async measureChannelLightIntensity( channelId ) {
 		const group = this.getGroupFromChanId( channelId );
-		const lightIntensity = this.measureGroupLightIntensity( group.groupName );
-		const status = this.getStatus( chanId );
+		const lightIntensity = await this.measureGroupLightIntensity( group.groupName );
+		const status = this.getStatus( channelId );
 
 		switch( status.correctionFactor_type ) {
 			case 'factory':
@@ -1331,7 +1331,7 @@ class TrackerController extends InstrumentController {
 
 		} catch( error ) {
 
-
+			console.log( error );
 			wsconnection.send( {
 
 				instrumentId: this.getInstrumentId(),
@@ -1397,7 +1397,7 @@ class TrackerController extends InstrumentController {
 
 	async makeIV( chanId ) {
 		
-		return this.getStateManager().addQuery( async () => {
+		return this.getManager('state_' + chanId ).addQuery( async () => {
 
 			//this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
@@ -1503,29 +1503,47 @@ class TrackerController extends InstrumentController {
 			data.shift();
 			const light = await this.getChannelLightIntensity( chanId );
 
-			try {
-				await influx.storeIV( status.measurementName, data, light );
-			} catch ( e ) {
+			if( isNaN( light ) ) {
 
 				wsconnection.send( {
 
 					instrumentId: this.getInstrumentId(),
 					log: {
 						type: 'error',
-						message: `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`
+						chanId: chanId,
+						message: `Light intensity could not be determined. The j-V curve won't be saved`
+					}
+
+				} );
+
+			} else {
+
+
+				try {
+					await influx.storeIV( status.measurementName, data, light );
+				} catch ( error ) {
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'error',
+							chanId: chanId,
+							message: `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`
+						}
+					} );
+				}
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					chanId: chanId,
+
+					action: {
+						ivCurve: true
 					}
 				} );
 			}
-
-			wsconnection.send( {
-
-				instrumentId: this.getInstrumentId(),
-				chanId: chanId,
-
-				action: {
-					ivCurve: true
-				}
-			} );
 
 			this.preventMPPT[ chanId ] = false;
 	//		this._setStatus( chanId, 'iv_booked', false, undefined, true );
@@ -1743,7 +1761,7 @@ class TrackerController extends InstrumentController {
 
 
 		return this
-			.getStateManager()
+			.getManager('state_' + chanId )
 			.addQuery( async () => {
 
 				const status = this.getStatus( chanId );
@@ -1806,6 +1824,8 @@ class TrackerController extends InstrumentController {
 					await influx.storeVoc( status.measurementName, voc );
 				} catch( error ) {
 
+					console.log( error );
+
 					wsconnection.send( {
 
 						instrumentId: this.getInstrumentId(),
@@ -1852,7 +1872,7 @@ class TrackerController extends InstrumentController {
 		} );
 
 		return this
-			.getStateManager()
+			.getManager('state_' + chanId )
 			.addQuery( async () => {
 
 				const status = this.getStatus( chanId );

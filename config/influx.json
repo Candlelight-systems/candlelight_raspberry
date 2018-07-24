@@ -1,10 +1,10 @@
 {
-	"db": "matahari",
-	"host": "localhost",
-	"password": "",
+	"db": "GMF",
+	"host": "isicgesrv10.epfl.ch",
+	"password": "Jd8h38dh_1.",
 	"port": "8086",
-	"username": "",
-	"db_authentication": "",
-	"db_connection": "The address must not be local (the tracker must also access it)",
+	"username": "GMF",
+	"db_authentication": "Bad credentials",
+	"db_connection": "ok",
 	"db_dbexists": "ok"
 }
