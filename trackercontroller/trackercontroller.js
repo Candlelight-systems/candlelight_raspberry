@@ -9,6 +9,14 @@ if( ! fs.existsSync( statusPath ) ) {
 	fs.writeFileSync( statusPath, JSON.stringify( { channels: [] } ) );
 }
 
+
+const measurementsPath = path.join( __dirname, './measurements.json' );
+
+if( ! fs.existsSync( measurementsPath ) ) {
+	fs.writeFileSync( measurementsPath, JSON.stringify( { } ) );
+}
+
+
 let statusGlobal					= require("./status.json");
 let status 							= statusGlobal.channels;
 let measurements					= require("./measurements.json");
