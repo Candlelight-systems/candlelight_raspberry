@@ -154,7 +154,7 @@ class TrackerController extends InstrumentController {
 	 *	@param {String} command - The command string to send
 	 */
 	query( command, lines = 1, executeBefore, prependToQueue = false, rawOutput, expectedBytes ) {
-	console.log( command );
+	
 		if( ! this.open ) {
 			console.error("Cannot execute command");
 			//throw "Cannot write command \"" + command + "\" to the instrument. The instrument communication is closed."
@@ -1310,7 +1310,22 @@ class TrackerController extends InstrumentController {
 			return;
 		}
 		
-		await influx.saveTrackData( this.trackData.map( ( data ) => { chans.add( data.chanId ); return data.influx; } ) );
+		try {
+
+			await influx.saveTrackData( this.trackData.map( ( data ) => { chans.add( data.chanId ); return data.influx; } ) );
+
+		} catch( error ) {
+
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				log: {
+					type: 'error',
+					message: `Did not manage to save the tracking data into the database. Check that it is running and accessible.`
+				}
+			} );
+		}
 
 		chans.forEach( chan => {
 
@@ -1472,7 +1487,20 @@ class TrackerController extends InstrumentController {
 
 			data.shift();
 			const light = await this.getChannelLightIntensity( chanId );
-			await influx.storeIV( status.measurementName, data, light );
+
+			try {
+				await influx.storeIV( status.measurementName, data, light );
+			} catch ( e ) {
+
+				wsconnection.send( {
+
+					instrumentId: this.getInstrumentId(),
+					log: {
+						type: 'error',
+						message: `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`
+					}
+				} );
+			}
 
 			wsconnection.send( {
 
@@ -1759,7 +1787,20 @@ class TrackerController extends InstrumentController {
 
 				console.info(`Voc for channel ${chanId}: ${voc}`);
 
-				await influx.storeVoc( status.measurementName, voc );
+				try {
+					await influx.storeVoc( status.measurementName, voc );
+				} catch( error ) {
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'error',
+							message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
+						}
+					} );
+
+				}
 
 				wsconnection.send( {
 
@@ -1841,7 +1882,19 @@ class TrackerController extends InstrumentController {
 
 				let jsc = await this.query( globalConfig.trackerControllers.specialcommands.jsc.data( chanId ), 2 ).then( val => parseFloat( val ) );
 				
-				await influx.storeJsc( status.measurementName, jsc );
+				try {
+					await influx.storeJsc( status.measurementName, jsc );
+				} catch( error ) {
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'error',
+							message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
+						}
+					} );
+				}
 
 
 				wsconnection.send( {

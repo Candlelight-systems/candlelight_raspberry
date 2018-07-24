@@ -1,7 +1,6 @@
 
-const Influx = require("influx");
-const config = require("../config").influx;
-
+const Influx          = require("influx");
+const config          = require("../config").influx;
 
 
 let influxClient = new Influx.InfluxDB({
@@ -38,15 +37,7 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
         }
       }
 
-    ]).then( ( result ) => {
-      console.log('done');
-      console.log( result );
-      return result; 
-
-    }).catch( err => {
-
-      console.error( `Error saving data to InfluxDB! ${err.stack}` );
-    });
+    ]);
 }
 
 module.exports.saveTrackData = function( trackData ) {
@@ -56,9 +47,6 @@ module.exports.saveTrackData = function( trackData ) {
       
       return result; 
 
-    }).catch(err => {
-
-      console.error( `Error saving data to InfluxDB! ${err.stack}` );
     });
 }
 
@@ -74,10 +62,7 @@ module.exports.storeVoc = function( measurementName, voc ) {
         }
       }
 
-    ]).catch(err => {
-
-      console.error( `Error saving data to InfluxDB! ${err.stack}` );
-    });
+    ]);
 }
 
 
@@ -92,12 +77,8 @@ module.exports.storeJsc = function( measurementName, jsc ) {
         },
       }
 
-    ] ).catch( ( err ) => {
-
-      console.error( `Error saving data to InfluxDB! ${err.stack}` );
-    });
+    ] );
 }
-
 
 
 module.exports.storeEnvironment = function( measurementName, temperature, humidity, lights ) {
@@ -111,16 +92,12 @@ module.exports.storeEnvironment = function( measurementName, temperature, humidi
     fields[ "light" + ( index + 1 ) ] = val;
   });
 
+  return influxClient.writePoints( [
+    {
+      measurement: encodeURIComponent( measurementName ),
+      timestamp: Date.now() * 1000000, // nano seconds
+      fields: fields
+    }
 
-    return influxClient.writePoints( [
-      {
-        measurement: encodeURIComponent( measurementName ),
-        timestamp: Date.now() * 1000000, // nano seconds
-        fields: fields
-      }
-
-    ] ).catch( ( err ) => {
-
-      console.error( `Error saving data to InfluxDB! ${err.stack}` );
-    });
+  ] );
 }
