@@ -386,6 +386,20 @@ class InstrumentController {
 	delay( delayMS = 100 ) {
 		return new Promise( ( resolver ) => { setTimeout( () => { resolver() }, delayMS ) } );
 	}
+
+	error( message, chanId ) {
+
+		wsconnection.send( {
+			instrumentId: this.getInstrumentId(),
+			log: {
+				type: 'info',
+				channel: chanId,
+				message: message
+			}
+		} );
+
+		throw message;
+	}
 }
 
 function delay( time ) {

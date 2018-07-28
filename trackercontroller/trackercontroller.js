@@ -511,6 +511,10 @@ class TrackerController extends InstrumentController {
 		return this.saveStatus( chanId, { enable: false } );
 	}
 
+	isChannelEnabled( chanId ) {
+		return this.getStatus( chanId ).enable;
+	}
+
 	measureCurrent( chanId ) {
 		return this.query( globalConfig.trackerControllers.specialcommands.measureCurrent( chanId ), 2 ).then( ( current ) => parseFloat( current ) );
 	}
@@ -1401,12 +1405,8 @@ class TrackerController extends InstrumentController {
 
 			//this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
-			var status = this.getStatus( chanId );
+			//var status = this.getStatus( chanId );
 			this.preventMPPT[ chanId ] = true;
-
-			if( ! status.enable ) {
-				throw "Channel not enabled";
-			}
 
 
 			wsconnection.send( {
@@ -1420,6 +1420,13 @@ class TrackerController extends InstrumentController {
 			} );
 
 
+			if( ! this.isChannelEnabled( chanId ) ) {
+				throw "Channel not enabled";
+			}
+
+			let startTime = Date.now();
+			let safetyExpiracy = 1000 * 300; // 300 seconds max = 5 minutes.
+
 			await this.getManager('IV').addQuery( async () => {
 				
 				return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 );
@@ -1427,6 +1434,14 @@ class TrackerController extends InstrumentController {
 			await this.delay( 1000 );
 
 			while( true ) {
+
+				if( Date.now() - startTime > safetyExpiracy ) {
+					this.error( "Timeout for j-V curve", chanId );
+				}
+
+				if( ! this.isChannelEnabled( chanId ) ) {
+					this.error( "Channel not enabled. Cannot continue the j-V curve", chanId );
+				}
 
 				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
 
@@ -1458,11 +1473,18 @@ class TrackerController extends InstrumentController {
 					
 				while( true ) {
 
+					if( ! this.isChannelEnabled( chanId ) ) {
+						this.error("Channel not enabled. Cannot continue the j-V curve", chanId );
+					}
+
+					if( Date.now() - startTime > safetyExpiracy ) {
+						this.error("Timeout for j-V curve", chanId );
+					}
+
 					let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
 
 					if( status & 0b00000010 ) { // When ALL jV curves are done
 						await this.delay( 1000 );
-
 
 						wsconnection.send( {
 
@@ -1505,17 +1527,8 @@ class TrackerController extends InstrumentController {
 
 			if( isNaN( light ) ) {
 
-				wsconnection.send( {
-
-					instrumentId: this.getInstrumentId(),
-					log: {
-						type: 'error',
-						chanId: chanId,
-						message: `Light intensity could not be determined. The j-V curve won't be saved`
-					}
-
-				} );
-
+				this.error( `Light intensity could not be determined. The j-V curve won't be saved`, chanId );
+				
 			} else {
 
 
@@ -1523,15 +1536,7 @@ class TrackerController extends InstrumentController {
 					await influx.storeIV( status.measurementName, data, light );
 				} catch ( error ) {
 
-					wsconnection.send( {
-
-						instrumentId: this.getInstrumentId(),
-						log: {
-							type: 'error',
-							chanId: chanId,
-							message: `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`
-						}
-					} );
+					this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
 				}
 
 				wsconnection.send( {
