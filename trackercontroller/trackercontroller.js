@@ -1501,21 +1501,24 @@ class TrackerController extends InstrumentController {
 					}
 
 
-					wsconnection.send( {
-
-						instrumentId: this.getInstrumentId(),
-						log: {
-							type: 'info',
-							channel: chanId,
-							message: `j-V sweep terminated`
-						}
-					} );
 
 					return this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 ).then( ( data ) => {
 
 						data = data.replace('"', '').replace('"', '')
 							.split(',');			
 						data.pop();
+
+
+						wsconnection.send( {
+
+							instrumentId: this.getInstrumentId(),
+							log: {
+								type: 'info',
+								channel: chanId,
+								message: `j-V sweep terminated`
+							}
+						} );
+
 						return data;
 					});
 				}
@@ -1533,7 +1536,21 @@ class TrackerController extends InstrumentController {
 
 
 				try {
+
+					console.log( data, light );
 					await influx.storeIV( status.measurementName, data, light );
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'info',
+							channel: chanId,
+							message: `j-V sweep saved into the database`
+						}
+					} );
+					
+
 				} catch ( error ) {
 
 					this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );

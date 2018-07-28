@@ -392,7 +392,7 @@ class InstrumentController {
 		wsconnection.send( {
 			instrumentId: this.getInstrumentId(),
 			log: {
-				type: 'info',
+				type: 'error',
 				channel: chanId,
 				message: message
 			}
