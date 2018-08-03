@@ -1009,11 +1009,11 @@ class TrackerController extends InstrumentController {
 		switch( status.correctionFactor_type ) {
 			case 'factory':
 				let cfg = this.getInstrumentConfig( group.groupName, channelId );
-				return lightIntensity / ( cfg.correctionFactor || 1 );
+				return lightIntensity * ( cfg.correctionFactor || 1 );
 			break;
 
 			case 'manual':
-				return lightIntensity / status.correctionFactor_value;
+				return lightIntensity * status.correctionFactor_value;
 			break;
 
 			default:
@@ -1405,7 +1405,7 @@ class TrackerController extends InstrumentController {
 
 			//this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
-			//var status = this.getStatus( chanId );
+			var status = this.getStatus( chanId );
 			this.preventMPPT[ chanId ] = true;
 
 
