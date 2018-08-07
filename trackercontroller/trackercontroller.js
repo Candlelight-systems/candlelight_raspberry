@@ -675,7 +675,7 @@ class TrackerController extends InstrumentController {
 						await this.setVoltage( chanId, maxEffVoltage );
 						setTrackTimer();
 					} else {
-						console.log( "Error in finding the maximum voltage" );
+						console.error( "Error in finding the maximum voltage" );
 						setTrackTimer();
 					}
 
@@ -723,6 +723,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group );
+				
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -877,6 +878,13 @@ class TrackerController extends InstrumentController {
 
 		let groups = this.getInstrumentConfig().groups;
 
+		// Do nothing while IVs are being recorded
+		let IVstatus = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( 1 ), 2 ) );
+		if( IVstatus > 0 ) {
+			return;
+		}			
+
+
 		for( let group of groups ) {
 
 			if( ! group.light ) {
@@ -904,7 +912,8 @@ class TrackerController extends InstrumentController {
 			}
 
 
-			await this.lightCheck( group.groupName, force );
+			
+			return this.lightCheck( group.groupName, force );
 		}
 	}
 
@@ -1258,39 +1267,52 @@ class TrackerController extends InstrumentController {
 	//////////////////////////////////////
 
 
-	async processTimer() {
+	async processCallback( interval ) {
+
+		try {
+
+			await interval.callback( interval.chanId );
+
+		} catch( error ) {
+
+			console.error( error );
+
+		} finally {
+
+			interval.lastTime = Date.now();
+			interval.processing = false;
+		}
+	}
+
+
+
+	processTimer() {
 
 		let now;
 
+		try {
+			for( var i in intervals ) {
 
-		for( var i in intervals ) {
+				now = Date.now();
 
-			now = Date.now();
-
-			if( now - intervals[ i ].lastTime > intervals[ i ].interval && intervals[ i ].activated ) {
-
-				try {
-					
+				if( now - intervals[ i ].lastTime > intervals[ i ].interval && intervals[ i ].activated && ! intervals[ i ].processing ) {	
+				
 					if( ! this.paused ) {
+				
 						intervals[ i ].lastTime = Date.now();
-						await intervals[ i ].callback( intervals[ i ].chanId ); // This must not fail !
+						// Removed the "await". The method does not need to fail before being started again
+						intervals[ i ].processing = true;
+
+						this.processCallback( intervals[ i ] );
 					}
-					
-				} catch( e ) {
-
-					console.warn( e );
-					//throw( e );
-
-				} finally { // If it does, restart the timer anyway
-
-					intervals[ i ].lastTime = Date.now();
 				}
 			}
+		} catch( e ) {
+
 		}
 
 		setTimeout( this.processTimer, 1000 );
 	}
-
 
 	setTimer( timerName, chanId, callback, interval, lastTime = Date.now() ) {
 
@@ -1335,7 +1357,7 @@ class TrackerController extends InstrumentController {
 
 		} catch( error ) {
 
-			console.log( error );
+			console.error( error );
 			wsconnection.send( {
 
 				instrumentId: this.getInstrumentId(),
@@ -1401,90 +1423,58 @@ class TrackerController extends InstrumentController {
 
 	async makeIV( chanId ) {
 		
-		return this.getManager('state_' + chanId ).addQuery( async () => {
+		let light;
 
-			//this._setStatus( chanId, 'iv_booked', true, undefined, true );
-
-			var status = this.getStatus( chanId );
-			this.preventMPPT[ chanId ] = true;
+		try {
 
 
-			wsconnection.send( {
+			return this.getManager('state_' + chanId ).addQuery( async () => {
 
-				instrumentId: this.getInstrumentId(),
-				log: {
-					type: 'info',
-					channel: chanId,
-					message: `Request j-V sweep`
-				}
-			} );
+				//this._setStatus( chanId, 'iv_booked', true, undefined, true );
+
+				var status = this.getStatus( chanId );
+				this.preventMPPT[ chanId ] = true;
 
 
-			if( ! this.isChannelEnabled( chanId ) ) {
-				throw "Channel not enabled";
-			}
+				wsconnection.send( {
 
-			let startTime = Date.now();
-			let safetyExpiracy = 1000 * 300; // 300 seconds max = 5 minutes.
+					instrumentId: this.getInstrumentId(),
+					log: {
+						type: 'info',
+						channel: chanId,
+						message: `Request j-V sweep`
+					}
+				} );
 
-			await this.getManager('IV').addQuery( async () => {
-				
-				return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 );
-			} );
-			await this.delay( 1000 );
-
-			while( true ) {
-
-				if( Date.now() - startTime > safetyExpiracy ) {
-					this.error( "Timeout for j-V curve", chanId );
-				}
 
 				if( ! this.isChannelEnabled( chanId ) ) {
-					this.error( "Channel not enabled. Cannot continue the j-V curve", chanId );
+					throw "Channel not enabled";
 				}
 
-				let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
+				let startTime = Date.now();
+				let safetyExpiracy = 1000 * 300; // 300 seconds max = 5 minutes.
 
-				if( status & 0b00000001 ) { // If this particular jv curve is still running
-
-					wsconnection.send( {
-
-						instrumentId: this.getInstrumentId(),
-						
-						log: {
-							type: 'info',
-							channel: chanId,
-							message: `j-V sweep in progress`
-						}
-					} );
-
-
-					await this.delay( 1000 );
-					continue;
-				}
-
-				break; // That one IV curve has stopped
-
-				// Now we must ask the IV manager to fetch them all and pause any new start
-			}
-
-			// This will delay any further jV curve beginning until they are all done
-			let data = await this.getManager('IV').addQuery( async () => {
+				await this.getManager('IV').addQuery( async () => {
 					
+					return this.query( globalConfig.trackerControllers.specialcommands.iv.execute( chanId ), 1 );
+				} );
+				await this.delay( 3000 );
+
+
 				while( true ) {
 
-					if( ! this.isChannelEnabled( chanId ) ) {
-						this.error("Channel not enabled. Cannot continue the j-V curve", chanId );
+					if( Date.now() - startTime > safetyExpiracy ) {
+						this.error( "Timeout for j-V curve", chanId );
 					}
 
-					if( Date.now() - startTime > safetyExpiracy ) {
-						this.error("Timeout for j-V curve", chanId );
+					if( ! this.isChannelEnabled( chanId ) ) {
+						this.error( "Channel not enabled. Cannot continue the j-V curve", chanId );
 					}
+
 
 					let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
-
-					if( status & 0b00000010 ) { // When ALL jV curves are done
-						await this.delay( 1000 );
+console.log( status, chanId );
+					if( status & 0b00000001 ) { // If this particular jv curve is still running
 
 						wsconnection.send( {
 
@@ -1493,21 +1483,106 @@ class TrackerController extends InstrumentController {
 							log: {
 								type: 'info',
 								channel: chanId,
-								message: `Waiting for all j-V sweeps to terminate`
+								message: `j-V sweep in progress`
 							}
 						} );
 
+
+						await this.delay( 1000 );
 						continue;
 					}
 
+					break; // That one IV curve has stopped
+
+					// Now we must ask the IV manager to fetch them all and pause any new start
+				}
 
 
-					return this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 ).then( ( data ) => {
+				// This will delay any further jV curve beginning until they are all done
+				let data = await this.getManager('IV').addQuery( async () => {
+					
+					let data;
 
-						data = data.replace('"', '').replace('"', '')
-							.split(',');			
-						data.pop();
+					while( true ) {
 
+						if( ! this.isChannelEnabled( chanId ) ) {
+							this.error("Channel not enabled. Cannot continue the j-V curve", chanId );
+						}
+
+						if( Date.now() - startTime > safetyExpiracy ) {
+							this.error("Timeout for j-V curve", chanId );
+						}
+
+						try {
+							let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
+							
+console.log( status, chanId );
+							if( status & 0b00000010 ) { // When ALL jV curves are done
+								await this.delay( 1000 );
+
+								wsconnection.send( {
+
+									instrumentId: this.getInstrumentId(),
+									
+									log: {
+										type: 'info',
+										channel: chanId,
+										message: `Waiting for all j-V sweeps to terminate`
+									}
+								} );
+
+								continue;
+							}
+							
+							data = await this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 )
+
+							data = data.replace('"', '').replace('"', '')
+								.split(',');			
+							data.pop();
+
+
+							wsconnection.send( {
+
+								instrumentId: this.getInstrumentId(),
+								log: {
+									type: 'info',
+									channel: chanId,
+									message: `j-V sweep terminated`
+								}
+							} );
+
+							data.shift();
+							light = await this.getChannelLightIntensity( chanId );
+
+						} catch( e ) {
+							this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
+						}
+
+
+						break;
+					}
+
+					return data;
+
+				} );
+
+
+
+				if( isNaN( light ) ) {
+
+					this.error( `Light intensity could not be determined. The j-V curve won't be saved`, chanId );
+					
+				} else {
+
+
+					try {
+
+					//	console.log( data, light );
+
+						await this.lease( () => {
+							influx.storeIV( status.measurementName, data, light );		
+						} )
+						//await influx.storeIV( status.measurementName, data, light );
 
 						wsconnection.send( {
 
@@ -1515,70 +1590,44 @@ class TrackerController extends InstrumentController {
 							log: {
 								type: 'info',
 								channel: chanId,
-								message: `j-V sweep terminated`
+								message: `j-V sweep saved into the database`
 							}
 						} );
+						
 
-						return data;
-					});
-				}
-
-			} );
-
-			data.shift();
-			const light = await this.getChannelLightIntensity( chanId );
-
-			if( isNaN( light ) ) {
-
-				this.error( `Light intensity could not be determined. The j-V curve won't be saved`, chanId );
-				
-			} else {
-
-
-				try {
-
-					console.log( data, light );
-					await influx.storeIV( status.measurementName, data, light );
+					} catch ( error ) {
+						console.error( error );
+						this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
+						this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
+					}
 
 					wsconnection.send( {
 
 						instrumentId: this.getInstrumentId(),
-						log: {
-							type: 'info',
-							channel: chanId,
-							message: `j-V sweep saved into the database`
+						chanId: chanId,
+
+						action: {
+							ivCurve: true
 						}
 					} );
-					
-
-				} catch ( error ) {
-
-					this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
 				}
 
-				wsconnection.send( {
+				this.preventMPPT[ chanId ] = false;
+		//		this._setStatus( chanId, 'iv_booked', false, undefined, true );
 
-					instrumentId: this.getInstrumentId(),
-					chanId: chanId,
+				const wave = new waveform();
 
-					action: {
-						ivCurve: true
-					}
-				} );
-			}
-
-			this.preventMPPT[ chanId ] = false;
-	//		this._setStatus( chanId, 'iv_booked', false, undefined, true );
-
-			const wave = new waveform();
-
-			for( let i = 0; i < data.length; i += 2 ) {
-				wave.append( data[ i ], data[ i + 1 ] );	
-			}
+				for( let i = 0; i < data.length; i += 2 ) {
+					wave.append( data[ i ], data[ i + 1 ] );	
+				}
 
 
-			return wave;
-		});
+				return wave;
+			});
+		} catch( e ) {
+			console.log('rejection');
+			this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
+		}
 	}
 
 	
@@ -1633,6 +1682,8 @@ class TrackerController extends InstrumentController {
 		if( this.preventMPPT[ chanId ] ) {
 			return;
 		}
+
+
 
 		const data = await this._getTrackData( chanId );
 		let temperature;
@@ -1797,83 +1848,106 @@ class TrackerController extends InstrumentController {
 				// Change the mode to Voc tracking, with low interval
 				// Update the cell status. Wait for it to be done
 				
-				await this.query( globalConfig.trackerControllers.specialcommands.voc.trigger( chanId ) );
-				/*
-				let triggered = await this.query( globalConfig.trackerControllers.specialcommands.voc.trigger( chanId ), 2 );
-				if( triggered == 0 ) {
-					return;
-				}
-*/
-				let i = 0;
-				while( await this.query( globalConfig.trackerControllers.specialcommands.voc.status( chanId ), 2 ) == '1' ) {
-					i++;
+				try {
+					await this.query( globalConfig.trackerControllers.specialcommands.voc.trigger( chanId ) );
+					/*
+					let triggered = await this.query( globalConfig.trackerControllers.specialcommands.voc.trigger( chanId ), 2 );
+					if( triggered == 0 ) {
+						return;
+					}
+	*/
+					let i = 0;
+					while( await this.query( globalConfig.trackerControllers.specialcommands.voc.status( chanId ), 2 ) == '1' ) {
+						i++;
 
-					if( i > 20 ) {
+						if( i > 20 ) {
 
+
+							wsconnection.send( {
+
+								instrumentId: this.getInstrumentId(),
+								log: {
+									type: 'error',
+									channel: chanId,
+									message: `Failed to find the open circuit voltage.`
+								}
+							} );
+
+
+							break;
+						}
+						await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
+					}
+
+					let voc = await this.query( globalConfig.trackerControllers.specialcommands.voc.data( chanId ), 2 ).then( val => parseFloat( val ) );
+					
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'info',
+							channel: chanId,
+							message: `Open circuit voltage found: ${ voc }V.`
+						}
+					} );
+
+					console.info(`Voc for channel ${chanId}: ${voc}`);
+
+					try {
+
+
+						await this.lease( () => {
+							return influx.storeVoc( status.measurementName, voc );
+						} )
+
+						
+					} catch( error ) {
+
+						console.log( error );
 
 						wsconnection.send( {
 
 							instrumentId: this.getInstrumentId(),
 							log: {
 								type: 'error',
-								channel: chanId,
-								message: `Failed to find the open circuit voltage.`
+								message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
 							}
 						} );
 
-
-						break;
 					}
-					await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
-				}
 
-				let voc = await this.query( globalConfig.trackerControllers.specialcommands.voc.data( chanId ), 2 ).then( val => parseFloat( val ) );
-				
+					wsconnection.send( {
 
-				wsconnection.send( {
+						instrumentId: this.getInstrumentId(),
+						chanId: chanId,
+						state: {
+							voc: voc
+						},
 
-					instrumentId: this.getInstrumentId(),
-					log: {
-						type: 'info',
-						channel: chanId,
-						message: `Open circuit voltage found: ${ voc }V.`
-					}
-				} );
+						timer: {
+							voc: this.getTimerNext( 'voc', chanId )
+						}
 
-				console.info(`Voc for channel ${chanId}: ${voc}`);
+					} );
 
-				try {
-					await influx.storeVoc( status.measurementName, voc );
+					await delay( 5000 ); // Re equilibration
+
 				} catch( error ) {
 
-					console.log( error );
+
+					console.error( error );
 
 					wsconnection.send( {
 
 						instrumentId: this.getInstrumentId(),
 						log: {
 							type: 'error',
-							message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
+							message: `An unknown error occured while measurement the open circuit voltage.`
 						}
 					} );
-
 				}
 
-				wsconnection.send( {
-
-					instrumentId: this.getInstrumentId(),
-					chanId: chanId,
-					state: {
-						voc: voc
-					},
-
-					timer: {
-						voc: this.getTimerNext( 'voc', chanId )
-					}
-
-				} );
-
-				await delay( 5000 ); // Re equilibration
 				this.preventMPPT[ chanId ] = false;
 			} );
 	}
@@ -1905,80 +1979,101 @@ class TrackerController extends InstrumentController {
 
 				this.preventMPPT[ chanId ] = true;
 
-				// Change the mode to Voc tracking, with low interval
-				// Update the cell status. Wait for it to be done
-				await this.query( globalConfig.trackerControllers.specialcommands.jsc.trigger( chanId ) );	
-				/*let triggered = await this.query( globalConfig.trackerControllers.specialcommands.jsc.trigger( chanId ), 2 );	
-				if( triggered == 0 ) {
-					return;
-				}
-*/
-				let i = 0;
-				while( await this.query( globalConfig.trackerControllers.specialcommands.jsc.status( chanId ), 2 ) == '1' ) {
-					i++;
+				try {
+					// Change the mode to Voc tracking, with low interval
+					// Update the cell status. Wait for it to be done
+					await this.query( globalConfig.trackerControllers.specialcommands.jsc.trigger( chanId ) );	
+					/*let triggered = await this.query( globalConfig.trackerControllers.specialcommands.jsc.trigger( chanId ), 2 );	
+					if( triggered == 0 ) {
+						return;
+					}
+	*/
+					let i = 0;
+					while( await this.query( globalConfig.trackerControllers.specialcommands.jsc.status( chanId ), 2 ) == '1' ) {
+						i++;
 
-					if( i > 20 ) {
+						if( i > 20 ) {
+
+							wsconnection.send( {
+
+								instrumentId: this.getInstrumentId(),
+								log: {
+									type: 'error',
+									channel: chanId,
+									message: `Failed to find the short circuit current.`
+								}
+							} );
+
+
+
+							break;
+						}
+
+						await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
+					}
+
+					let jsc = await this.query( globalConfig.trackerControllers.specialcommands.jsc.data( chanId ), 2 ).then( val => parseFloat( val ) );
+					
+					try {
+
+						await this.lease( () => {
+							return influx.storeJsc( status.measurementName, jsc );
+						} );
+						
+					} catch( error ) {
 
 						wsconnection.send( {
 
 							instrumentId: this.getInstrumentId(),
 							log: {
 								type: 'error',
-								channel: chanId,
-								message: `Failed to find the short circuit current.`
+								message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
 							}
 						} );
-
-
-
-						break;
 					}
 
-					await delay( 1000 ); // Let's wait 1 second until the next one. In the meantime, no MPP data is measured (see preventMPPT)
-				}
 
-				let jsc = await this.query( globalConfig.trackerControllers.specialcommands.jsc.data( chanId ), 2 ).then( val => parseFloat( val ) );
-				
-				try {
-					await influx.storeJsc( status.measurementName, jsc );
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						log: {
+							type: 'info',
+							channel: chanId,
+							message: `Short circuit voltage found: ${ jsc }A.`
+						}
+					} );
+
+
+					wsconnection.send( {
+
+						instrumentId: this.getInstrumentId(),
+						chanId: chanId,
+						state: {
+							jsc: jsc // in mA (not normalized by area)
+						},
+
+						timer: {
+							jsc: this.getTimerNext( 'jsc', chanId )
+						}
+					} );
+
+					await delay( 5000 ); // Re equilibration
 				} catch( error ) {
+
+					
+					console.error( error );
 
 					wsconnection.send( {
 
 						instrumentId: this.getInstrumentId(),
 						log: {
 							type: 'error',
-							message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
+							message: `An unknown error occured while measurement the short circuit current.`
 						}
 					} );
+			
+
 				}
-
-
-				wsconnection.send( {
-
-					instrumentId: this.getInstrumentId(),
-					log: {
-						type: 'info',
-						channel: chanId,
-						message: `Short circuit voltage found: ${ jsc }A.`
-					}
-				} );
-
-
-				wsconnection.send( {
-
-					instrumentId: this.getInstrumentId(),
-					chanId: chanId,
-					state: {
-						jsc: jsc // in mA (not normalized by area)
-					},
-
-					timer: {
-						jsc: this.getTimerNext( 'jsc', chanId )
-					}
-				} );
-
-				await delay( 5000 ); // Re equilibration
 				this.preventMPPT[ chanId ] = false;
 			} );
 

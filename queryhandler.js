@@ -51,11 +51,13 @@ class queryManager {
 	doQuery( query ) {
 
 		query.query().then( ( results ) => {
+				
+			query.resolver( results );
 			
 			this.processing = false;
 			this.processQueue();
 
-			query.resolver( results );
+			
 		} ).catch( ( error ) => {
 			query.rejecter( error );
 
