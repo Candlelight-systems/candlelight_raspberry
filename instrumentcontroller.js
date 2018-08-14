@@ -33,6 +33,30 @@ class InstrumentController {
 		return this.instrumentConfig;
 	}
 
+	lease( callback ) {
+
+
+		let communication = this.connection;
+
+
+		return communication.queryManager.addQuery( async () => {
+
+			// The query can fail, in which case we should keep going.
+			// Hence the try catch
+			try {
+				await communication.lease;
+			} catch( e ) {}
+
+			// Wait for the lease the be released
+			return communication.lease = new Promise( async ( resolver, rejecter ) => {
+
+				await callback();
+				resolver();
+			} );
+		} );
+
+	}
+
 	query( query, linesExpected = 1, executeBefore = undefined, prepend = false, rawOutput = false, expectedBytes = 0 ) {
 
 		let communication = this.connection;
@@ -50,13 +74,16 @@ class InstrumentController {
 
 		let queryString;
 		let queryTimeout;
+		let queryAfterWait;
 
 		if( typeof query == "object" ) {
 			queryString = query.string;
 			queryTimeout = query.timeout;
+			queryAfterWait = query.waitAfter;
 		} else {
 			queryString = query;
 			queryTimeout = 1000;
+			queryAfterWait = 10;
 		}
 
 		queryTimeout = queryTimeout || 1000; // Default to 1 second
@@ -69,7 +96,11 @@ class InstrumentController {
 
 		return communication.queryManager.addQuery( async () => {
 
-			await communication.lease;
+			// The query can fail, in which case we should keep going.
+			// Hence the try catch
+			try {
+				await communication.lease;
+			} catch( e ) {}
 
 			if( executeBefore ) {
 				if( ! executeBefore() ) {
@@ -101,7 +132,7 @@ class InstrumentController {
 
 //					this.query("*RST");
 					rejecter(); // Reject the current promise
-					this.reset(); // Reset the instrument
+				//	this.reset(); // Reset the instrument
 				}, queryTimeout );
 			
 				// Start by remove all listeners
@@ -111,9 +142,6 @@ class InstrumentController {
 				communication.on( "data", async ( d ) => {
 
 
-					if( queryString.indexOf("IV:DATA")>-1 ) {
-				//		console.log( d.toString('ascii') );
-					}
 					data = Buffer.concat( [ data, d ] );
 
 					let index;
@@ -186,7 +214,7 @@ class InstrumentController {
 							}
 
 							console.timeEnd( "query:" + queryString );
-							await delay( 10 );
+							await delay( queryAfterWait );
 							
 
 							if( dOut.length == 1 ) {

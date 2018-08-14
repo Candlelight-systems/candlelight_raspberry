@@ -26,7 +26,7 @@ module.exports = {
 			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : null }` } },
 			
 			iv: {
-				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}` } },
+				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}`, waitAfter: 1000 } },
 				data: ( chanId ) => { return { string: `IV:DATA:CH${chanId}`, timeout: 10000 } },
 				status: ( chanId ) => { return { string: `IV:STATUS:CH${chanId}` } }
 			},
