@@ -29,7 +29,7 @@ module.exports.storeIV = function( measurementName, ivData, sun ) {
 	// Use SQLite ?
   return influxClient.writePoints([
       {
-        measurement: measurementName + "_iv",
+        measurement: encodeURIComponent( measurementName ) + "_iv",
         timestamp: Date.now() * 1000000, // nano seconds
         fields: { 
           iv: '"' + ivData + '"',

@@ -4,7 +4,7 @@
 	"password": "Jd8h38dh_1.",
 	"port": "8086",
 	"username": "GMF",
-	"db_authentication": "No user defined",
+	"db_authentication": "Bad credentials",
 	"db_connection": "ok",
 	"db_dbexists": "ok"
 }
