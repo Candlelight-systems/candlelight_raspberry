@@ -394,8 +394,6 @@ class TrackerController extends InstrumentController {
 
 		let previousStatus = Object.assign( {}, this.getStatus( chanId ) );
 
-		// IV curve interval
-		this._setStatus( chanId, "iv_interval", parseInt( newStatus.iv_interval ), newStatus );	
 		
 		// Tracking output interval
 		this._setStatus( chanId, "tracking_record_interval", parseInt( newStatus.tracking_record_interval ), newStatus );
@@ -440,6 +438,9 @@ class TrackerController extends InstrumentController {
 		// IV scan rate
 		this._setStatus( chanId, "iv_rate", Math.max( 0.001, parseFloat( newStatus.iv_rate ) ), newStatus );	
 
+		// IV curve interval
+		this._setStatus( chanId, "iv_interval", parseInt( newStatus.iv_interval ), newStatus );	
+		
 		this._setStatus( chanId, "connection", newStatus.connection, newStatus );
 
 		this._setStatus( chanId, "enable", newStatus.enable ? 1 : 0, newStatus );
@@ -455,7 +456,15 @@ class TrackerController extends InstrumentController {
 		this._setStatus( chanId, "correctionFactor_type", newStatus.correctionFactor_type, newStatus );
 		this._setStatus( chanId, "correctionFactor_value", parseFloat( newStatus.correctionFactor_value ), newStatus );
 
+		this._setStatus( chanId, "iv_measurement_interval_auto_pdrop", parseFloat( newStatus.iv_measurement_interval_auto_pdrop ), newStatus );
+		this._setStatus( chanId, "iv_measurement_interval_auto_minTime", parseInt( newStatus.iv_measurement_interval_auto_minTime ), newStatus );
+		this._setStatus( chanId, "iv_measurement_interval_auto_maxTime", parseInt( newStatus.iv_measurement_interval_auto_maxTime ), newStatus );
+
+		this._setStatus( chanId, "iv_measurement_interval_type", newStatus.iv_measurement_interval_type, newStatus );
+
 		
+		
+
 		if( newStatus.measurementName !== previousStatus.measurementName && newStatus.measurementName ) {
 			possibleNewMeasurement( newStatus.measurementName, newStatus, this.getGroupFromChanId( chanId ), chanId );
 		}
@@ -656,7 +665,9 @@ class TrackerController extends InstrumentController {
 					&& status.tracking_record_interval !== null 
 					&& status.tracking_record_interval !== undefined ) {
 
-					this.setTimer( "track", chanId, this.getTrackDataInterval, status.tracking_record_interval ); // Setup the timer
+					this.setTimer( "track", chanId, this.getTrackDataInterval, status.tracking_record_interval, Date.now(), ( ) => { // Allow timed IV measurement when the interval type is "fixed"
+						return status.iv_measurement_interval_type == 'fixed'
+					} ); // Setup the timer
 
 				}
 			}
@@ -1270,9 +1281,15 @@ class TrackerController extends InstrumentController {
 			if( now - intervals[ i ].lastTime > intervals[ i ].interval && intervals[ i ].activated ) {
 
 				try {
-					
+	
+
 					if( ! this.paused ) {
 						intervals[ i ].lastTime = Date.now();
+
+						if( intervals[ i ].executionCheck.call( intervals[ i ] ) === false ) {
+							continue;
+						}
+
 						await intervals[ i ].callback( intervals[ i ].chanId ); // This must not fail !
 					}
 					
@@ -1292,7 +1309,7 @@ class TrackerController extends InstrumentController {
 	}
 
 
-	setTimer( timerName, chanId, callback, interval, lastTime = Date.now() ) {
+	setTimer( timerName, chanId, callback, interval, lastTime = Date.now(), executionCheck = () => { return true } ) {
 
 				// Let's set another time
 		const intervalId = this.getIntervalName( timerName, chanId );
@@ -1305,7 +1322,8 @@ class TrackerController extends InstrumentController {
 			chanId: chanId,
 			lastTime: lastTime,
 			activated: true,
-			callback: callback
+			callback: callback,
+			executionCheck: executionCheck
 		}
 	}
 
@@ -1519,6 +1537,8 @@ class TrackerController extends InstrumentController {
 							}
 						} );
 
+						this._setStatus( chanId, "__iv_lastTime", Date.now(), true );
+
 						return data;
 					});
 				}
@@ -1537,7 +1557,6 @@ class TrackerController extends InstrumentController {
 
 				try {
 
-					console.log( data, light );
 					await influx.storeIV( status.measurementName, data, light );
 
 					wsconnection.send( {
@@ -1765,6 +1784,14 @@ class TrackerController extends InstrumentController {
 		      }
 			}
     	);
+
+		if( status.iv_measurement_interval_type == 'auto' ) {
+			const timeSinceLastIV = Date.now() - status.__iv_lastTime;
+	    	if( ( Math.abs( powerMean - status.__iv_lastPower ) > status.iv_measurement_interval_auto_pdrop && timeSinceLastIV > status.iv_measurement_interval_auto_minTime ) || ( timeSinceLastIV > status.iv_measurement_interval_auto_maxTime && status.iv_measurement_interval_auto_maxTime > -1 ) ) {
+	    		this._setStatus( chanId, "__iv_lastPower", powerMean );
+	    		this.makeIV();
+	    	}
+	    }
 	}
 
 	async measureVoc( chanId, extend ) {
