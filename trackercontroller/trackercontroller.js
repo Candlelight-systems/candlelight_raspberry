@@ -1683,7 +1683,7 @@ console.log( thermistor, thermopile );
 			
 			out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
 			out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
-	
+		console.log( data );
 			return out; 
 		
 	}
