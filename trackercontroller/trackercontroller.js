@@ -26,6 +26,7 @@ const InstrumentController			= require("../instrumentcontroller");
 const HostManager					= require("../hostmanager");
 const waveform						= require("jsgraph-waveform");
 const wsconnection					= require('../wsconnection' );
+const calculateCRC 					= require('./crc').calculateCRC;
 
 let connections = {};
 let intervals = {};
@@ -84,7 +85,7 @@ class TrackerController extends InstrumentController {
 		await this.query( "RESERVED:SETUP" );
 		await this.normalizeStatus();
 		await this.resumeChannels();
-		await this.scheduleEnvironmentSensing( 10000 );
+		await this.scheduleEnvironmentSensing( 1000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.normalizeLightController(); // Normalize the light sensing
 		await this.normalizeHeatController(); // Normalize the light sensing
@@ -178,8 +179,6 @@ class TrackerController extends InstrumentController {
 
 		return super.query( command, lines, executeBefore, prependToQueue, rawOutput, expectedBytes );
 	}
-
-
 
 	/**
 	 *	Upload the default status of the state
@@ -723,7 +722,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group );
-				
+				console.log( humidity );
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -779,7 +778,7 @@ class TrackerController extends InstrumentController {
 
 					let thermistor = await this.readBaseTemperature( sensor.thermistor, group );
 					let thermopile = await this.readIRTemperature( sensor.thermopile, group );
-
+console.log( thermistor, thermopile );
 					for( let chan of sensor.channels ) {
 						
 						this.temperatures[ group.groupName ] = this.temperatures[ group.groupName ] || {}; 
@@ -911,8 +910,6 @@ class TrackerController extends InstrumentController {
 				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 
-
-			
 			return this.lightCheck( group.groupName, force );
 		}
 	}
@@ -1645,31 +1642,50 @@ class TrackerController extends InstrumentController {
 	//////////////////////////////////////
 
 
-	_getTrackData( chanId ) {
+	async _getTrackData( chanId, iterator = 0 ) {
 
-		return this.query( globalConfig.trackerControllers.specialcommands.getTrackData( chanId ), 2, () => {
+		const cfg = this.getInstrumentConfig();
+
+		const data = await this.query( globalConfig.trackerControllers.specialcommands.getTrackData( chanId ), 2, () => {
 
 			return this.getStatus( chanId ).enable && this.getStatus( chanId ).tracking_mode
 
-		}, false, true, 38 ).then( ( data ) => { 
+		}, false, true, cfg.crc_check ? 39 : 38 );
 
-			try {
-				// data is buffer
-				let out = [];
-				for( var i = 0; i < 9; i ++ ) {
-					out.push( data.readFloatLE( i * 4 ) ); // New float every 4 byte
+			if( cfg.crc_check ) {
+
+				if( calculateCRC( data, 38 ) !== data[ 38 ] ) {
+					this.error( "Data corruption. Retrying...", chanId );
+
+					if( iterator == 10 ) {
+						this.error( "Data corruption doesn't seem to resolve itself. Abandoning...", chanId );						
+						throw "Data corruption";
+					} else {
+
+						return this._getTrackData( chanId, iterator + 1 );
+					}
+
 				}
-				
-				out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
-				out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
-		
-				return out; 
-			} catch( e ) {
-				console.log( data );
-				console.log( e );
+
+//				await this.query( globalConfig.trackerControllers.specialcommands.trackingResetData( chanId ) );
+
+			} else {
+
+//				await this.query( globalConfig.trackerControllers.specialcommands.trackingResetData( chanId ) );
+			}
+
+
+			// data is buffer
+			let out = [];
+			for( var i = 0; i < 9; i ++ ) {
+				out.push( data.readFloatLE( i * 4 ) ); // New float every 4 byte
 			}
 			
-		} ); // Ask for raw output
+			out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
+			out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
+	
+			return out; 
+		
 	}
 
 

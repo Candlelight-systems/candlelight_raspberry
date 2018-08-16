@@ -158,13 +158,14 @@ class InstrumentController {
 
 						} else {
 
-							return data.indexOf( 0x0d0a ) - 1;
+							return data.indexOf( Buffer.from( [0x0d, 0x0a] ) );
 						}
 					}
 
 					while( ( index = condition( expectedBytes ) ) >= 0 ) { // CRLF detection
 						
 						
+
 						expectedBytes = 0;
 						lineCount++; // Found a new line, increment the counter
 
@@ -184,6 +185,7 @@ class InstrumentController {
 						}
 
 						data = data.slice( index + 2 );
+
 
 						if( lineCount >= linesExpected ) {	// End of the transmission
 

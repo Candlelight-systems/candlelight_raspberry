@@ -23,6 +23,7 @@ module.exports = {
 
 		specialcommands: {
 			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
+			trackingResetData: ( chanId ) => { return { string: `TRACKING:RESET:CH${ chanId }`, timeout: 1000 } },
 			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : null }` } },
 			
 			iv: {
@@ -101,7 +102,7 @@ module.exports = {
 			resetSlave: "RESERVED:RESETSLAVE",
 			pauseHardware: "RESERVED:PAUSE",
 			resumeHardware: "RESERVED:RESUME",
-			readTemperatureChannelBase: ( slaveNumber, slaveId, chanId ) => `ENVI:TBASE?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
+			readTemperatureChannelBase: ( slaveNumber, slaveId, chanId ) => { return { string: `ENVI:TBASE?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`, timeout: 20000 } },
 			readTemperatureChannelIR: ( slaveNumber, slaveId, chanId ) => `ENVI:TIR?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
 			readTemperature: ( slaveNumber, slaveId ) => `ENVI:TEMPBOX?:SLAVE${slaveNumber} ${slaveId}`,
 			readHumidity: ( slaveNumber, slaveId ) => `ENVI:HUMIDITY?:SLAVE${slaveNumber} ${slaveId}`,
