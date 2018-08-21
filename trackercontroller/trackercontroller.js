@@ -722,7 +722,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group );
-				console.log( humidity );
+				
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -1576,7 +1576,7 @@ console.log( thermistor, thermopile );
 					//	console.log( data, light );
 
 						await this.lease( () => {
-							influx.storeIV( status.measurementName, data, light );		
+							return influx.storeIV( status.measurementName, data, light );		
 						} )
 						//await influx.storeIV( status.measurementName, data, light );
 
@@ -1754,6 +1754,7 @@ console.log( thermistor, thermopile );
 			return;
 		}
 
+
 		wsconnection.send( {
 
 			instrumentId: this.getInstrumentId(),
@@ -1767,7 +1768,7 @@ console.log( thermistor, thermopile );
 				sun: sun,
 				temperature: temperature ? temperature.thermistor : -1,
 				temperature_junction: temperature ? temperature.total : -1,
-				humidity: this.groupHumidity[ group.groupName ] || -1
+				humidity: isNaN( this.groupHumidity[ group.groupName ] ) ? -1 : this.groupHumidity[ group.groupName ]
 			},
 
 			action: {
