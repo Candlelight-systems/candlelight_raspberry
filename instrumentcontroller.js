@@ -335,6 +335,7 @@ class InstrumentController {
 			
 			console.log( err );
 			this.reset();
+			this.error("Error in communicating with the serial interface. The acquisition board may not be recognized.")
 		//	this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );

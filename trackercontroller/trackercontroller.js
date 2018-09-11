@@ -769,7 +769,34 @@ class TrackerController extends InstrumentController {
 
 					break;
 				}
-				
+
+
+
+
+				if( group.light.uv ) {
+
+					switch( light.uv.intensityMode ) {
+
+						case 'calibration':
+
+							Object.assign( data, {
+								lightUVSetpoint: group.light.uv.setPoint
+							});
+
+							if( await this.lightIsAutomatic( group.groupName ) ) {
+
+								Object.assign( data, {
+									lightUVSetpoint: "Following calibration"
+								});
+							}		
+
+						break;
+
+						case 'sensor':
+
+						break;
+					}
+				}
 			}
 			
 			if( group.temperatureSensors && Array.isArray( group.temperatureSensors ) ) {
@@ -778,7 +805,7 @@ class TrackerController extends InstrumentController {
 
 					let thermistor = await this.readBaseTemperature( sensor.thermistor, group );
 					let thermopile = await this.readIRTemperature( sensor.thermopile, group );
-console.log( thermistor, thermopile );
+
 					for( let chan of sensor.channels ) {
 						
 						this.temperatures[ group.groupName ] = this.temperatures[ group.groupName ] || {}; 
@@ -869,6 +896,10 @@ console.log( thermistor, thermopile );
 			if( group.light.type == "photodiode" || group.light.type == undefined ) {
 				// Set the photodiode scaling
 				await this.lightSetScaling( group.groupName, group.light.scaling );
+
+				if( ! isNaN( group.light.offset ) ) {
+					await this.lightSetOffset( group.groupName, group.light.offset );
+				}
 			}
 		}
 	}
@@ -961,10 +992,33 @@ console.log( thermistor, thermopile );
 
 	async lightCheck( groupName, force ) {
 		const group = this.getGroupFromGroupName( groupName );
+		const light = group.light;
+
 		if( force ) {
 			return this._lightCommand( groupName, 'forcecheck', undefined, true ).then( val => console.log( val ) );
 		} else {
 			return this._lightCommand( groupName, 'check', undefined, true ).then( val => console.log( val ) );
+		}
+
+
+		if( light.uv ) {
+
+			switch( light.uv.intensityMode ) {
+
+				case 'calibration':
+
+					const value = light.uv.calibrateOffset + light.uv.calibrateGain * light.uv.setPoint;
+
+					if( light.uv.controlMode == 'lightExpander' ) {
+						await this.query( globalConfig.trackerControllers.specialcommands.light( group.light.channelId, value.toFixed( 2 ) ), request ? 2 : 1 );	
+					}
+
+				break;
+
+				case 'sensor':
+
+				break;
+			}
 		}
 	}
 
@@ -973,6 +1027,14 @@ console.log( thermistor, thermopile );
 		group.light.scaling = scaling;
 		return this._lightCommand( groupName, 'setScaling', scaling );
 	}
+
+
+	async lightSetOffset( groupName, offset ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.offset = offset;
+		return this._lightCommand( groupName, 'setOffset', offset );
+	}
+
 
 	async measureGroupLightIntensity( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );

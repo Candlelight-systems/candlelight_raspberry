@@ -24,7 +24,7 @@ module.exports = {
 		specialcommands: {
 			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
 			trackingResetData: ( chanId ) => { return { string: `TRACKING:RESET:CH${ chanId }`, timeout: 1000 } },
-			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : null }` } },
+			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : '' }` } },
 			
 			iv: {
 				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}`, waitAfter: 1000 } },
@@ -43,8 +43,14 @@ module.exports = {
 				isAutomatic:  ( chanId ) => { return { string: `LIGHT:AUTOMATIC?:CH${chanId}` } },
 				setSetpoint:  ( chanId, value ) => { return { string: `LIGHT:SETPOINT:CH${chanId} ${value}` } },
 				setScaling:  ( chanId , value) => { return { string: `LIGHT:SCALING:CH${chanId} ${value}` } },
+				setOffset:  ( chanId , value) => { return { string: `LIGHT:OFFSET:CH${chanId} ${value}` } },
 				check:  ( chanId ) => { return { string: `LIGHT:CHECK:CH${chanId}`, timeout: 30000 } },
 				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } }
+			},
+
+			lightExpander: {
+
+				setIntensity: ( chanId, value ) => { return { string: `I2C:LIGHTEXPANDER:SETPWM:CH${ chanId } ${ value }`}}
 			},
 
 			dcdc: {
@@ -141,6 +147,7 @@ module.exports = {
 			"iv_hysteresis": 0,
 			"iv_rate": 0.1,
 			"iv_interval": 24 * 3600 * 1000,
+			"iv_measurement_interval_type": "fixed",
 			"enable": 0,
 			"tracking_gain": -1,
 			"tracking_measure_jsc": 0,

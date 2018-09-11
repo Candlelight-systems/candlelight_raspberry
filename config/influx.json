@@ -1,9 +1,9 @@
 {
-	"db": "GMF",
-	"host": "isicgesrv10.epfl.ch",
-	"password": "Jd8h38dh_1.",
+	"db": "matahari",
+	"host": "localhost",
+	"password": "",
 	"port": "8086",
-	"username": "GMF",
+	"username": "",
 	"db_authentication": "Bad credentials",
 	"db_connection": "ok",
 	"db_dbexists": "ok"
