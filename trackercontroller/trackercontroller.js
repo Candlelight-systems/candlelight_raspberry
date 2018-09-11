@@ -869,6 +869,10 @@ console.log( thermistor, thermopile );
 			if( group.light.type == "photodiode" || group.light.type == undefined ) {
 				// Set the photodiode scaling
 				await this.lightSetScaling( group.groupName, group.light.scaling );
+
+				if( !isNaN( group.light.offset ) ) {
+					await this.lightSetOffset( group.groupName, group.light.offset );
+				}
 			}
 		}
 	}
@@ -972,6 +976,13 @@ console.log( thermistor, thermopile );
 		const group = this.getGroupFromGroupName( groupName );
 		group.light.scaling = scaling;
 		return this._lightCommand( groupName, 'setScaling', scaling );
+	}
+
+	async lightSetOffset( groupName, offset ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.offset = offset;
+		console.log(offset);
+		return this._lightCommand( groupName, 'setOffset', offset );
 	}
 
 	async measureGroupLightIntensity( groupName ) {
@@ -1683,7 +1694,7 @@ console.log( thermistor, thermopile );
 			
 			out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
 			out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
-		console.log( data );
+		console.log( out );
 			return out; 
 		
 	}
