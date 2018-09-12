@@ -981,7 +981,6 @@ console.log( thermistor, thermopile );
 	async lightSetOffset( groupName, offset ) {
 		const group = this.getGroupFromGroupName( groupName );
 		group.light.offset = offset;
-		console.log(offset);
 		return this._lightCommand( groupName, 'setOffset', offset );
 	}
 
