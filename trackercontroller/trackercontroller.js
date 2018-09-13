@@ -42,6 +42,7 @@ function saveStatus() {
 	);
 }
 
+
 class TrackerController extends InstrumentController {
 
 	constructor( config ) {
@@ -578,6 +579,7 @@ class TrackerController extends InstrumentController {
 		if( pauseChannels ) {
 			await this.resumeChannels();	
 		}
+
 
 
 		if( this.getInstrumentConfig().relayController ) {
@@ -1586,8 +1588,13 @@ console.log( thermistor, thermopile );
 
 					//	console.log( data, light );
 
-						await this.lease( () => {
-							return influx.storeIV( status.measurementName, data, light );		
+						await this.lease( async () => {
+
+							try {
+								await influx.storeIV( status.measurementName, data, light );		
+							} catch( e ) {
+								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
+							}
 						} )
 						//await influx.storeIV( status.measurementName, data, light );
 

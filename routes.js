@@ -3,6 +3,7 @@ const HostManager = require('./hostmanager');
 const trackerController = require('./trackercontroller/main');
 const influx = require('./trackercontroller/influxhandler');
 const config = require("./config");
+const pm2 = require('pm2');
 
 module.exports = ( app ) => {
 
@@ -367,6 +368,14 @@ module.exports = ( app ) => {
 		})
 
 	} );
+
+
+	app.get("/restart", ( req, res ) => {
+		pm2.restart('main');
+	} );
+
+
+
 
 	app.get("/light.enable", ( req, res ) => {
 		trackerController.lightEnable( req.query.instrumentId, req.query.groupName ).then( () => {

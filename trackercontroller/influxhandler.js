@@ -27,22 +27,24 @@ module.exports.changed = () => {
 
 module.exports.storeIV = function( measurementName, ivData, sun ) {
 	// Use SQLite ?
-  return influxClient.writePoints([
-      {
-        measurement: encodeURIComponent( measurementName ) + "_iv",
-        timestamp: Date.now() * 1000000, // nano seconds
-        fields: { 
-          iv: '"' + ivData + '"',
-          sun: sun
-        }
-      }
 
-    ]);
+    return influxClient.writePoints([
+        {
+          measurement: encodeURIComponent( measurementName ) + "_iv",
+          timestamp: Date.now() * 1000000, // nano seconds
+          fields: { 
+            iv: '"' + ivData + '"',
+            sun: sun
+          }
+        }
+
+      ]);
+
 }
 
 module.exports.saveTrackData = function( trackData ) {
 
-  
+    
     return influxClient.writePoints( trackData ).then( ( result ) => {
       
       return result; 
@@ -74,7 +76,7 @@ module.exports.storeJsc = function( measurementName, jsc ) {
         timestamp: Date.now() * 1000000, // nano seconds
         fields: { 
           jsc: jsc
-        },
+        }
       }
 
     ] );

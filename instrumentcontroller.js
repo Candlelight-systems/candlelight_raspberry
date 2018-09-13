@@ -335,7 +335,17 @@ class InstrumentController {
 			
 			console.log( err );
 			this.reset();
-		//	this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				log: {
+					type: 'error',
+					message: `Error while connecting to the serial interface ${ cfg.host }. The controller has lost sight of the acquisition board. You should contact us immediately.`
+				}
+			} );
+
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );
 
