@@ -30,6 +30,10 @@ class InstrumentController {
 	}
 
 	getInstrumentConfig( ) {
+
+		if( ! this.instrumentConfig ) {
+			throw "No instrument configuration was defined. Check that the host file name corresponds to the trackerController.json file";
+		}
 		return this.instrumentConfig;
 	}
 
