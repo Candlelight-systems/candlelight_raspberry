@@ -30,6 +30,10 @@ class InstrumentController {
 	}
 
 	getInstrumentConfig( ) {
+
+		if( ! this.instrumentConfig ) {
+			throw "No instrument configuration was defined. Check that the host file name corresponds to the trackerController.json file";
+		}
 		return this.instrumentConfig;
 	}
 
@@ -335,8 +339,19 @@ class InstrumentController {
 			
 			console.log( err );
 			this.reset();
-			this.error("Error in communicating with the serial interface. The acquisition board may not be recognized.")
-		//	this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+
+			this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
+
+			wsconnection.send( {
+
+				instrumentId: this.getInstrumentId(),
+				log: {
+					type: 'error',
+					message: `Error while connecting to the serial interface ${ cfg.host }. The controller has lost sight of the acquisition board. You should contact us immediately.`
+				}
+			} );
+
+
 			console.warn(`Error thrown by the serial communication: ${ err }`); 
 		} );
 
