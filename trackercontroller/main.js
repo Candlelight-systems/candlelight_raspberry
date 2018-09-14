@@ -105,7 +105,13 @@ module.exports = {
 	},
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
-		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
+		await getInstrument( instrumentId ).lightSetScaling( pdRef, pdScale );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
+	},
+
+
+	setPDOffset: async ( instrumentId, pdRef, pdOffset ) => {
+		await getInstrument( instrumentId ).lightSetOffset( pdRef, pdOffset );
 		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
 	},
 

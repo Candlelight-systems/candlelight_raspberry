@@ -45,7 +45,8 @@ module.exports = {
 				setScaling:  ( chanId , value) => { return { string: `LIGHT:SCALING:CH${chanId} ${value}` } },
 				setOffset:  ( chanId , value) => { return { string: `LIGHT:OFFSET:CH${chanId} ${value}` } },
 				check:  ( chanId ) => { return { string: `LIGHT:CHECK:CH${chanId}`, timeout: 30000 } },
-				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } }
+				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } },
+				setPWM:  ( chanId, value ) => { return { string: `LIGHT:PWM:CH${chanId} ${value}` } }
 			},
 
 			lightExpander: {
@@ -112,6 +113,7 @@ module.exports = {
 			readTemperatureChannelIR: ( slaveNumber, slaveId, chanId ) => `ENVI:TIR?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
 			readTemperature: ( slaveNumber, slaveId ) => `ENVI:TEMPBOX?:SLAVE${slaveNumber} ${slaveId}`,
 			readHumidity: ( slaveNumber, slaveId ) => `ENVI:HUMIDITY?:SLAVE${slaveNumber} ${slaveId}`,
+			readUVIntensity: ( slaveNumber ) => `ENVI:UVINTENSITY?:SLAVE${slaveNumber}`,
 			reset: ( chanId ) => `TRACKING:RESET:CH${ chanId }`
 			
 		},

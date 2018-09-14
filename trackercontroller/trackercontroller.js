@@ -13,13 +13,21 @@ if( ! fs.existsSync( statusPath ) ) {
 const measurementsPath = path.join( __dirname, './measurements.json' );
 
 if( ! fs.existsSync( measurementsPath ) ) {
-	fs.writeFileSync( measurementsPath, JSON.stringify( { } ) );
+	fs.writeFileSync( measurementsPath, JSON.stringify( {} ) );
 }
 
 
 let statusGlobal					= require("./status.json");
 let status 							= statusGlobal.channels;
-let measurements					= require("./measurements.json");
+
+try {
+	let measurements					= require("./measurements.json");
+} catch( e ) {
+	fs.writeFileSync( measurementsPath, JSON.stringify( {} ) );
+	measurements = {};	
+}
+
+
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
 const InstrumentController			= require("../instrumentcontroller");
@@ -722,7 +730,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group );
-				console.log( humidity );
+			console.log( humidity );	
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -775,7 +783,7 @@ class TrackerController extends InstrumentController {
 
 				if( group.light.uv ) {
 
-					switch( light.uv.intensityMode ) {
+					switch( group.light.uv.intensityMode ) {
 
 						case 'calibration':
 
@@ -786,13 +794,17 @@ class TrackerController extends InstrumentController {
 							if( await this.lightIsAutomatic( group.groupName ) ) {
 
 								Object.assign( data, {
-									lightUVSetpoint: "Following calibration"
+									lightUVValue: "Following calibration"
 								});
 							}		
 
 						break;
 
 						case 'sensor':
+
+							Object.assign( data, {
+								lightUVValue: await this.lightMeasureUV( group.groupName )
+							});
 
 						break;
 					}
@@ -815,7 +827,7 @@ class TrackerController extends InstrumentController {
 							thermopile: Math.round( thermopile * 10 ) / 10
 						};
 
-				//		console.log( this.temperatures[ group.groupName ][ chan ] );
+						console.log( this.temperatures[ group.groupName ][ chan ] );
 					}
 				}
 
@@ -897,7 +909,9 @@ class TrackerController extends InstrumentController {
 				// Set the photodiode scaling
 				await this.lightSetScaling( group.groupName, group.light.scaling );
 
+
 				if( ! isNaN( group.light.offset ) ) {
+			
 					await this.lightSetOffset( group.groupName, group.light.offset );
 				}
 			}
@@ -990,6 +1004,14 @@ class TrackerController extends InstrumentController {
 		return this._lightCommand( groupName, 'setSetpoint', setpoint );
 	}
 
+	async lightSetPWM( groupName, chanId, value ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.setPoint = setpoint;
+		return this.query( globalConfig.trackerControllers.specialcommands.light.setPWM( chanId, value ) );
+	}
+
+
+
 	async lightCheck( groupName, force ) {
 		const group = this.getGroupFromGroupName( groupName );
 		const light = group.light;
@@ -1017,6 +1039,31 @@ class TrackerController extends InstrumentController {
 
 				case 'sensor':
 
+					if( light.uv.controlMode == 'direct' ) {
+						let i = 0;
+						while( true ) {
+
+
+							let uvIntensity = this.lightMeasureUV( groupName );
+console.log( uvIntensity );
+							if( Math.abs( light.uv.setPoint - uvIntensity ) < 1 ) {
+								break;
+							}
+
+							if( light.uv.setPoint < uvIntensity ) {
+								light.uv.pwm ++;
+							} else {
+								light.uv.pwm --;
+							}
+
+							this.lightSetPWM( groupName, light.uv.channel, light.uv.pwm );
+
+							if( i > 1000 ) {
+								break;
+							}
+						}
+					}
+
 				break;
 			}
 		}
@@ -1035,6 +1082,10 @@ class TrackerController extends InstrumentController {
 		return this._lightCommand( groupName, 'setOffset', offset );
 	}
 
+	async lightMeasureUV( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readUVIntensity( group.slaveNumber ), 2 ) );
+	}
 
 	async measureGroupLightIntensity( groupName ) {
 		const group = this.getGroupFromGroupName( groupName );
@@ -1638,7 +1689,7 @@ class TrackerController extends InstrumentController {
 					//	console.log( data, light );
 
 						await this.lease( () => {
-							influx.storeIV( status.measurementName, data, light );		
+							return influx.storeIV( status.measurementName, data, light );		
 						} )
 						//await influx.storeIV( status.measurementName, data, light );
 
@@ -1745,7 +1796,7 @@ class TrackerController extends InstrumentController {
 			
 			out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
 			out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
-		console.log( data );
+		console.log( out );
 			return out; 
 		
 	}
@@ -1816,6 +1867,7 @@ class TrackerController extends InstrumentController {
 			return;
 		}
 
+
 		wsconnection.send( {
 
 			instrumentId: this.getInstrumentId(),
@@ -1829,7 +1881,7 @@ class TrackerController extends InstrumentController {
 				sun: sun,
 				temperature: temperature ? temperature.thermistor : -1,
 				temperature_junction: temperature ? temperature.total : -1,
-				humidity: this.groupHumidity[ group.groupName ] || -1
+				humidity: isNaN( this.groupHumidity[ group.groupName ] ) ? -1 : this.groupHumidity[ group.groupName ]
 			},
 
 			action: {
