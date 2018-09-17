@@ -19,9 +19,11 @@ if( ! fs.existsSync( measurementsPath ) ) {
 
 let statusGlobal					= require("./status.json");
 let status 							= statusGlobal.channels;
+	
+let measurements;
 
 try {
-	let measurements					= require("./measurements.json");
+	measurements					= require("./measurements.json");
 } catch( e ) {
 	fs.writeFileSync( measurementsPath, JSON.stringify( {} ) );
 	measurements = {};	
@@ -680,6 +682,9 @@ class TrackerController extends InstrumentController {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 						
+
+					console.log( iv );
+
 					if( ! isNaN( maxEffVoltage ) ) {
 						await this.setVoltage( chanId, maxEffVoltage );
 						setTrackTimer();
@@ -1661,7 +1666,7 @@ console.log( uvIntensity );
 									message: `j-V sweep terminated`
 								}
 							} );
-
+						console.log( data );
 							data.shift();
 							light = await this.getChannelLightIntensity( chanId );
 
@@ -1684,12 +1689,12 @@ console.log( uvIntensity );
 					this.error( `Light intensity could not be determined. The j-V curve won't be saved`, chanId );
 					
 				} else {
-
+console.log('a');
 
 					try {
 
 					//	console.log( data, light );
-
+console.log('b');
 						await this.lease( async () => {
 
 							try {
@@ -2389,7 +2394,7 @@ console.log( uvIntensity );
 
 		const group = this.getGroupFromGroupName( groupName );
 
-		if( ! group.heatController.pid ) {
+		if( ! group.heatController || ! group.heatController.pid ) {
 			return {
 				heating: {},
 				cooling: {}
