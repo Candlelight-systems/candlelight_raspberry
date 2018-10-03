@@ -1621,7 +1621,7 @@ console.log( thermistor, thermopile );
 				return wave;
 			});
 		} catch( e ) {
-			console.log('rejection');
+			
 			this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
 		}
 	}
@@ -1931,6 +1931,9 @@ console.log( thermistor, thermopile );
 							}
 						} );
 
+
+						this.preventMPPT[ chanId ] = false;
+
 					}
 
 					wsconnection.send( {
@@ -2046,6 +2049,9 @@ console.log( thermistor, thermopile );
 								message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
 							}
 						} );
+
+
+						this.preventMPPT[ chanId ] = true;
 					}
 
 
