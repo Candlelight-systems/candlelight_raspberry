@@ -1,81 +1,52 @@
 {
 	"Small cells": {
-
 		"fullScaleCurrent": 0.015,
-		"instrumentId": "Slot left",
-		
+		"instrumentId": "Small cells",
 		"groups": [
-			{	
-				"groupName": "Sample holder",
-				"groupID": "boxa",
+			{
 				
+				"groupName": "Box 1",
+				"groupID": "boxa",
 				"slaveNumber": 1,
+
+				"defaults": {
+					"connection": "group",
+					"lightRefValue": null
+				},
 
 				"humiditySensor": {
 					"address": 64
 				},
 
-				"light": {
-					"type": "photodiode",
-					"on": true,
+				"heatController": {
+					"target": 30,
+					"feedbackTemperatureSensor": 1,
+					"ssr": true,
+					"relay": true,
+					"relay_heating": 1,
+					"relay_cooling": 0
+				},
+				
+				"generalRelay": {
 					"channelId": 1,
-					"scaling": 0.5,
-					"factory_scaling": 0.5,
-					"scheduling": {
-						"enabled": false,
-						"basis": 3600,
-						"intensities": [ 0, 1, 0 ]
-					},
-					"setPoint": 1,
-					"sensing": {}
+					"state": false
 				},
 
-				
+				"ssr": {
+					"channelId": 1
+				},
+			
+				"light": {
+					"type": "photodiode",
+					"slaveNumber": 1,
+					"factory_scaling": 0.026,
+					"factory_offset": -4,
+					"scaling": 0.026,
+					"offset": -4,
+					"control": false
+				},
+
 				"temperatureSensors": [
-					
-					{
-						"thermistor": {
-							"I2CAddress": 73,
-							"ADCChannel": 0,
-							"model": "ztp_101t",
-							"vref": 2.5,
-							"resistor": 14300,
-							"offset": -7.5
-						},
-
-						"thermopile": {
-							"I2CAddress": 73,
-							"ADCChannel": 1,
-							"model": "ztp_101t",
-							"gain": 430.528,
-							"offset": 0
-						},
-
-						"channels": [ 1, 2, 3, 4 ]
-					},
-
-					{
-						"thermistor": {
-							"I2CAddress": 73,
-							"ADCChannel": 2,
-							"model": "ztp_101t",
-							"vref": 2.5,
-							"resistor": 14300,
-							"offset": -7.5
-						},
-
-						"thermopile": {
-							"I2CAddress": 73,
-							"ADCChannel": 3,
-							"model": "ztp_101t",
-							"gain": 430.528,
-							"offset": 0
-						},
-
-						"channels": [ 5, 6, 7, 8 ]
-					},
-
-
 					{
 						"thermistor": {
 							"I2CAddress": 72,
@@ -85,19 +56,20 @@
 							"resistor": 14300,
 							"offset": -7.5
 						},
-
 						"thermopile": {
 							"I2CAddress": 72,
 							"ADCChannel": 1,
 							"model": "ztp_101t",
-							"gain": 430.528,
+							"gain": 1023,
 							"offset": 0
 						},
-
-						"channels": [ 9, 10, 11, 12 ]
+						"channels": [
+							4,
+							5,
+							7,
+							8
+						]
 					},
-
-
 					{
 						"thermistor": {
 							"I2CAddress": 72,
@@ -107,19 +79,67 @@
 							"resistor": 14300,
 							"offset": -7.5
 						},
-
 						"thermopile": {
 							"I2CAddress": 72,
 							"ADCChannel": 3,
 							"model": "ztp_101t",
-							"gain": 430.528,
+							"gain": 1000,
 							"offset": 0
 						},
-
-						"channels": [ 13, 14, 15, 16 ]
-					}	
+						"channels": [
+							10,
+							11,
+							15,
+							16
+						]
+					},
+					{
+						"thermistor": {
+							"I2CAddress": 73,
+							"ADCChannel": 0,
+							"model": "ztp_101t",
+							"vref": 2.5,
+							"resistor": 14300,
+							"offset": -7.5
+						},
+						"thermopile": {
+							"I2CAddress": 73,
+							"ADCChannel": 1,
+							"model": "ztp_101t",
+							"gain": 1000,
+							"offset": 0
+						},
+						"channels": [
+							9,
+							12,
+							13,
+							14
+						]
+					},
+					{
+						"thermistor": {
+							"I2CAddress": 73,
+							"ADCChannel": 2,
+							"model": "ztp_101t",
+							"vref": 2.5,
+							"resistor": 14300,
+							"offset": -7.5
+						},
+						"thermopile": {
+							"I2CAddress": 73,
+							"ADCChannel": 3,
+							"model": "ztp_101t",
+							"gain": 1000,
+							"offset": 0
+						},
+						"channels": [
+							1,
+							2,
+							3,
+							6
+						]
+					}
 				],
-
 				"channels": [
 					{
 						"chanId": 1,

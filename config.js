@@ -24,7 +24,7 @@ module.exports = {
 		specialcommands: {
 			getTrackData: ( chanId ) => { return { string: `DATA:TRACKER:CH${chanId}`, timeout: 1000 } },
 			trackingResetData: ( chanId ) => { return { string: `TRACKING:RESET:CH${ chanId }`, timeout: 1000 } },
-			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : null }` } },
+			autoZero: ( chanId ) => { return { string: `RESERVED:AUTOZERO${ chanId ? `:CH${ chanId }` : '' }` } },
 			
 			iv: {
 				execute: ( chanId ) => { return { string: `IV:EXECUTE:CH${chanId}`, waitAfter: 1000 } },
@@ -43,21 +43,23 @@ module.exports = {
 				isAutomatic:  ( chanId ) => { return { string: `LIGHT:AUTOMATIC?:CH${chanId}` } },
 				setSetpoint:  ( chanId, value ) => { return { string: `LIGHT:SETPOINT:CH${chanId} ${value}` } },
 				setScaling:  ( chanId , value) => { return { string: `LIGHT:SCALING:CH${chanId} ${value}` } },
+				setOffset:  ( chanId , value) => { return { string: `LIGHT:OFFSET:CH${chanId} ${value}` } },
 				check:  ( chanId ) => { return { string: `LIGHT:CHECK:CH${chanId}`, timeout: 30000 } },
-				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } }
+				forcecheck:  ( chanId ) => { return { string: `LIGHT:FORCECHECK:CH${chanId}`, timeout: 30000 } },
+				setPWM:  ( chanId, value ) => { return { string: `LIGHT:PWM:CH${chanId} ${value}` } }
+			},
+
+			lightExpander: {
+
+				setIntensity: ( chanId, value ) => { return { string: `I2C:LIGHTEXPANDER:SETPWM:CH${ chanId } ${ value }`}}
 			},
 
 			dcdc: {
-
-				isEnabled: ( chanId ) => { return { string: `DCDC:ENABLED?:CH${ chanId }` } },
-				setPower: ( chanId, value ) => { return { string: `DCDC:VALUE:CH${ chanId } ${ value }` } },
-				enable:  ( chanId ) => { return { string: `DCDC:ENABLE:CH${ chanId }` } },
-				disable:  ( chanId ) => { return { string: `DCDC:DISABLE:CH${ chanId }` } },
 				getVoltage:  ( chanId ) => { return { string: `DCDC:VOLTAGE:CH${ chanId }` } },
 				getCurrent:  ( chanId ) => { return { string: `DCDC:CURRENT:CH${ chanId }` } }
 			},
 
-			ssr: {
+			heat: {
 				feedback: ( chanId, value ) => { return { string: `SSR:FEEDBACK:CH${ chanId } ${ value }` } },
 				target: ( chanId, value ) => { return { string: `SSR:TARGET:CH${ chanId } ${ value }` } },
 				heating:  ( chanId ) => { return { string: `SSR:HEATING:CH${ chanId }` } },
@@ -70,6 +72,7 @@ module.exports = {
 				pid_ki:  ( chanId, mode, value ) => { return { string: `SSR:KI_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } },
 				pid_bias:  ( chanId, mode, value ) => { return { string: `SSR:BIAS_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } }
 			},
+
 
 			relay: {
 				external: ( chanId, enabled ) => { return { string: `RELAY:EXTERNAL:CH${ chanId } ${ enabled ? 1 : 0 }` } },
@@ -106,6 +109,7 @@ module.exports = {
 			readTemperatureChannelIR: ( slaveNumber, slaveId, chanId ) => `ENVI:TIR?:CH${chanId}:SLAVE${slaveNumber} ${slaveId}`,
 			readTemperature: ( slaveNumber, slaveId ) => `ENVI:TEMPBOX?:SLAVE${slaveNumber} ${slaveId}`,
 			readHumidity: ( slaveNumber, slaveId ) => `ENVI:HUMIDITY?:SLAVE${slaveNumber} ${slaveId}`,
+			readUVIntensity: ( slaveNumber ) => `ENVI:UVINTENSITY?:SLAVE${slaveNumber}`,
 			reset: ( chanId ) => `TRACKING:RESET:CH${ chanId }`
 			
 		},
@@ -141,6 +145,7 @@ module.exports = {
 			"iv_hysteresis": 0,
 			"iv_rate": 0.1,
 			"iv_interval": 24 * 3600 * 1000,
+			"iv_measurement_interval_type": "fixed",
 			"enable": 0,
 			"tracking_gain": -1,
 			"tracking_measure_jsc": 0,

@@ -9,17 +9,31 @@ if( ! fs.existsSync( statusPath ) ) {
 	fs.writeFileSync( statusPath, JSON.stringify( { channels: [] } ) );
 }
 
-
 const measurementsPath = path.join( __dirname, './measurements.json' );
 
 if( ! fs.existsSync( measurementsPath ) ) {
-	fs.writeFileSync( measurementsPath, JSON.stringify( { } ) );
+	fs.writeFileSync( measurementsPath, JSON.stringify( {} ) );
+}
+
+let statusGlobal;
+try {
+	statusGlobal = require("./status.json");
+} catch ( e ) {
+	statusGlobal = { channels: [] };
 }
 
 
-let statusGlobal					= require("./status.json");
-let status 							= statusGlobal.channels;
-let measurements					= require("./measurements.json");
+let status = statusGlobal.channels;
+let measurements;
+
+try {
+	measurements					= require("./measurements.json");
+} catch( e ) {
+	fs.writeFileSync( measurementsPath, JSON.stringify( {} ) );
+	measurements = {};	
+}
+
+
 const influx 						= require("./influxhandler");
 const globalConfig					= require("../config");
 const InstrumentController			= require("../instrumentcontroller");
@@ -41,6 +55,7 @@ function saveStatus() {
 		JSON.stringify( statusGlobal, undefined, "\t" ) 
 	);
 }
+
 
 class TrackerController extends InstrumentController {
 
@@ -90,6 +105,9 @@ class TrackerController extends InstrumentController {
 		await this.normalizeLightController(); // Normalize the light sensing
 		await this.normalizeHeatController(); // Normalize the light sensing
 //		await this.dcdcUpdate(); // Normalize the DC DC converter
+	
+		//await this.heatUpdate(); // Normalize the light sensing
+
 
 		this.setTimer( "saveTrackData", "", this.saveTrackData, 60000 ); // Save the data every 60 seconds
 		await this.query( "RESERVED:CONFIGURED" );
@@ -210,12 +228,12 @@ class TrackerController extends InstrumentController {
 				await this.updateInstrumentStatusChanId( chanId, {}, true, false );
 			}
 
-			if( groups[ i ].heatController ) {
+			if( groups[ i ].heatController && groups[ i ].heatController.ssr ) {
 				await this.heatUpdateSSRTarget( groups[ i ].groupName );
 			}
 
 
-			if( groups[ i ].generalRelay ) {
+			if( groups[ i ].generalRelay && groups[ i ].heatController.ssr ) {
 				await this.generalRelayUpdateGroup( groups[ i ].groupName );
 			}
 
@@ -385,7 +403,7 @@ class TrackerController extends InstrumentController {
 	 *	@param {Number} chanId - The channel ID
 	 *	@param {Object} newStatus - The new status
 	 */
-	async saveStatus( chanId, newStatus, noSave ) {
+	async saveStatus( chanId, newStatus, noSave, noIV ) {
 
 		if( this.getInstrumentId() === undefined || chanId === undefined ) {
 			throw "Cannot set channel status";
@@ -499,11 +517,11 @@ class TrackerController extends InstrumentController {
 			}
 		} );
 
-		await this.updateInstrumentStatusChanId( chanId, previousStatus );
+		await this.updateInstrumentStatusChanId( chanId, previousStatus, undefined, undefined, noIV );
 	}
 
-	enableChannel( chanId ) {
-		return this.saveStatus( chanId, { enable: true } );
+	enableChannel( chanId, noIV ) {
+		return this.saveStatus( chanId, { enable: true }, true, noIV );
 	}
 
 	disableChannel( chanId ) {
@@ -547,7 +565,7 @@ class TrackerController extends InstrumentController {
 	}
 
 
-	async updateInstrumentStatusChanId( chanId, previousState = {}, force = false, pauseChannels = true ) {
+	async updateInstrumentStatusChanId( chanId, previousState = {}, force = false, pauseChannels = true, noIV = false ) {
 
 		let instrumentId = this.getInstrumentId(),
 			status = this.getStatus( chanId ),
@@ -580,14 +598,22 @@ class TrackerController extends InstrumentController {
 		}
 
 
-		if( this.getInstrumentConfig().relayController ) {
-			if( status.connection == "external" ) {
 
-				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 1 ) );	
+		if( this.getInstrumentConfig().relayController ) {
+
+			if( this.getInstrumentConfig().relayController.host ) {
+
+				const relayControllerHost = HostManager.getHost( this.getInstrumentConfig().relayController.host );
+
+				if( status.connection == "external" ) {
+					relayControllerHost.enableRelay( chanId );
+				} else {
+					relayControllerHost.disableRelay( chanId );
+				}
 
 			} else {
 
-				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, 0 ) );	
+				await this.query( globalConfig.trackerControllers.specialcommands.relay.external( chanId, ( status.connection == "external" ) ? 1 : 0 ) );	
 			}
 		}
 
@@ -662,7 +688,7 @@ class TrackerController extends InstrumentController {
 
 			( async () => {
 
-				if( previousState.enable == 0 && status.enable == 1 ) { // Off to tracking
+				if( previousState.enable == 0 && status.enable == 1 && ! noIV ) { // Off to tracking
 
 					let iv = await this.makeIV( chanId ),
 						pow = iv.math( ( y, x ) => { return x * y } ),
@@ -670,6 +696,7 @@ class TrackerController extends InstrumentController {
 						maxEffLoc = pow.findLevel( maxEff ),
 						maxEffVoltage = pow.getX( maxEffLoc );
 						
+
 					if( ! isNaN( maxEffVoltage ) ) {
 						await this.setVoltage( chanId, maxEffVoltage );
 						setTrackTimer();
@@ -722,7 +749,7 @@ class TrackerController extends InstrumentController {
 
 			if( group.humiditySensor ) {
 				const humidity = await this.measureGroupHumidityTemperature( group );
-				
+			
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
 			}
@@ -730,12 +757,11 @@ class TrackerController extends InstrumentController {
 			if( group.dcdc ) {
 
 				Object.assign( data, {
-					dcdc_status: await this.dcdcIsEnabled( group.groupName ),
-					dcdc_voltage: Math.round( await this.dcdcGetVoltage( group.groupName ) * 100 ) / 100,
-					dcdc_current: Math.round( await this.dcdcGetCurrent( group.groupName ) * 100 ) / 100,
+					heater_voltage: Math.round( await this.heaterGetVoltage( group.groupName ) * 100 ) / 100,
+					heater_current: Math.round( await this.heaterGetCurrent( group.groupName ) * 100 ) / 100,
 				} );
 
-				data.dcdc_power = Math.round( data.dcdc_voltage * data.dcdc_current * 100 ) / 100;
+				data.heater_power = Math.round( data.heater_voltage * data.heater_current * 100 ) / 100;
 			}
 
 			if( group.relay_external ) {
@@ -769,7 +795,38 @@ class TrackerController extends InstrumentController {
 
 					break;
 				}
-				
+
+
+
+
+				if( group.light.uv ) {
+
+					switch( group.light.uv.intensityMode ) {
+
+						case 'calibration':
+
+							Object.assign( data, {
+								lightUVSetpoint: group.light.uv.setPoint
+							});
+
+							if( await this.lightIsAutomatic( group.groupName ) ) {
+
+								Object.assign( data, {
+									lightUVValue: "Following calibration"
+								});
+							}		
+
+						break;
+
+						case 'sensor':
+
+							Object.assign( data, {
+								lightUVValue: await this.lightMeasureUV( group.groupName )
+							});
+
+						break;
+					}
+				}
 			}
 			
 			if( group.temperatureSensors && Array.isArray( group.temperatureSensors ) ) {
@@ -778,7 +835,7 @@ class TrackerController extends InstrumentController {
 
 					let thermistor = await this.readBaseTemperature( sensor.thermistor, group );
 					let thermopile = await this.readIRTemperature( sensor.thermopile, group );
-console.log( thermistor, thermopile );
+
 					for( let chan of sensor.channels ) {
 						
 						this.temperatures[ group.groupName ] = this.temperatures[ group.groupName ] || {}; 
@@ -788,7 +845,7 @@ console.log( thermistor, thermopile );
 							thermopile: Math.round( thermopile * 10 ) / 10
 						};
 
-				//		console.log( this.temperatures[ group.groupName ][ chan ] );
+						console.log( this.temperatures[ group.groupName ][ chan ] );
 					}
 				}
 
@@ -801,7 +858,7 @@ console.log( thermistor, thermopile );
 			}
 
 
-			if( group.heatController ) {
+			if( group.heatController && group.heatController.feedbackTemperatureSensor ) {
 
 				Object.assign( data, {
 					heater_reference_temperature: this.temperatures[ group.groupName ][ group.heatController.feedbackTemperatureSensor ].total,
@@ -869,6 +926,12 @@ console.log( thermistor, thermopile );
 			if( group.light.type == "photodiode" || group.light.type == undefined ) {
 				// Set the photodiode scaling
 				await this.lightSetScaling( group.groupName, group.light.scaling );
+
+
+				if( ! isNaN( group.light.offset ) ) {
+			
+					await this.lightSetOffset( group.groupName, group.light.offset );
+				}
 			}
 		}
 	}
@@ -959,12 +1022,68 @@ console.log( thermistor, thermopile );
 		return this._lightCommand( groupName, 'setSetpoint', setpoint );
 	}
 
+	async lightSetPWM( groupName, chanId, value ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.setPoint = setpoint;
+		return this.query( globalConfig.trackerControllers.specialcommands.light.setPWM( chanId, value ) );
+	}
+
+
+
 	async lightCheck( groupName, force ) {
 		const group = this.getGroupFromGroupName( groupName );
+		const light = group.light;
+
 		if( force ) {
 			return this._lightCommand( groupName, 'forcecheck', undefined, true ).then( val => console.log( val ) );
 		} else {
 			return this._lightCommand( groupName, 'check', undefined, true ).then( val => console.log( val ) );
+		}
+
+
+		if( light.uv ) {
+
+			switch( light.uv.intensityMode ) {
+
+				case 'calibration':
+
+					const value = light.uv.calibrateOffset + light.uv.calibrateGain * light.uv.setPoint;
+
+					if( light.uv.controlMode == 'lightExpander' ) {
+						await this.query( globalConfig.trackerControllers.specialcommands.light( group.light.channelId, value.toFixed( 2 ) ), request ? 2 : 1 );	
+					}
+
+				break;
+
+				case 'sensor':
+
+					if( light.uv.controlMode == 'direct' ) {
+						let i = 0;
+						while( true ) {
+
+
+							let uvIntensity = this.lightMeasureUV( groupName );
+
+							if( Math.abs( light.uv.setPoint - uvIntensity ) < 1 ) {
+								break;
+							}
+
+							if( light.uv.setPoint < uvIntensity ) {
+								light.uv.pwm ++;
+							} else {
+								light.uv.pwm --;
+							}
+
+							this.lightSetPWM( groupName, light.uv.channel, light.uv.pwm );
+
+							if( i > 1000 ) {
+								break;
+							}
+						}
+					}
+
+				break;
+			}
 		}
 	}
 
@@ -972,6 +1091,18 @@ console.log( thermistor, thermopile );
 		const group = this.getGroupFromGroupName( groupName );
 		group.light.scaling = scaling;
 		return this._lightCommand( groupName, 'setScaling', scaling );
+	}
+
+
+	async lightSetOffset( groupName, offset ) {
+		const group = this.getGroupFromGroupName( groupName );
+		group.light.offset = offset;
+		return this._lightCommand( groupName, 'setOffset', offset );
+	}
+
+	async lightMeasureUV( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readUVIntensity( group.slaveNumber ), 2 ) );
 	}
 
 	async measureGroupLightIntensity( groupName ) {
@@ -1035,7 +1166,7 @@ console.log( thermistor, thermopile );
 		const status = this.getStatus( chanId );
 		
 
-		if( status.lightRefValue && status.connection == "external" ) { // If the value is forced
+		if( status.lightRefValue ) { // If the value is forced
 			return status.lightRefValue / 1000;
 		}
 
@@ -1066,114 +1197,6 @@ console.log( thermistor, thermopile );
 		return this.query( globalConfig.trackerControllers.specialcommands.resetSlave );
 	}
 
-
-
-
-	//***************************//
-	// DCDC Converter ***********//
-	//***************************//
-
-	async dcdcIsEnabled( groupName ) {
-		return this._dcdcCommand( groupName, 'isEnabled', undefined, true ).then( value => value == "1" );
-	}
-
-	async dcdcEnable( groupName ) {
-		const group = this.getGroupFromGroupName( groupName );
-		group.dcdc.enable = true;
-		return this._dcdcCommand( groupName, 'enable', undefined ).then( value => value == "1" );
-	}
-
-	async dcdcDisable( groupName ) {
-		const group = this.getGroupFromGroupName( groupName );
-		group.dcdc.enable = false;
-	//	const group = this.getGroupFromGroupName( groupName );
-		return this._dcdcCommand( groupName, 'disable', undefined ).then( value => value == "1" );
-	}
-
-	async dcdcGetVoltage( groupName ) {
-		return this._dcdcCommand( groupName, 'getVoltage', undefined, true ).then( val => parseFloat( val ) );
-	}
-
-	async dcdcGetCurrent( groupName ) {
-		return this._dcdcCommand( groupName, 'getCurrent', undefined, true ).then( val => parseFloat( val ) );
-	}
-
-	async dcdcUpdate(  ) {
-
-		let groups = this.getInstrumentConfig().groups;
-		for( let group of groups ) {
-			if( ! group.dcdc ) {
-				continue;
-			}
-			await this.setDCDCPower( group.groupName, group.dcdc.power );
-		}
-	}
-
-	async setDCDCPower( groupName, power ) {
-		
-		const group = this.getGroupFromGroupName( groupName );
-		
-		if( isNaN( power ) ) {
-			return;
-		}
-
-		if( power > 1 ) {
-			power = 1;
-		}
-
-		if( power < 0 ) {
-			power = 0;
-		}
-
-		const setVoltage = power * group.dcdc.maxVoltage;
-		let rbottom = 0.75 * 82000 / ( setVoltage - 0.75 );
-		rbottom = 50000 - rbottom;
-		let rbottomcode = Math.round( rbottom / 50000 * 256 );
-
-		if( rbottomcode < 0 ) {
-			rbottomcode = 0;
-		} else if( rbottomcode > 255 ) {
-			rbottomcode = 255;
-		}
-		
-		if( isNaN( rbottomcode ) ) {
-			return;
-		}
-
-		group.dcdc.power = power;
-
-		if( setVoltage < 1 ) {
-			
-		} else {
-			
-			await this._dcdcCommand( groupName, "setPower", rbottomcode );
-		}
-	}
-
-	async increaseDCDCPower( groupName ) {
-		const group = this.getGroupFromGroupName( groupName );
-		return this.setDCDCPower( groupName, ( group.dcdc.power || 0 ) + 0.05 );
-	}
-
-	async decreaseDCDCPower( groupName ) {
-		const group = this.getGroupFromGroupName( groupName );
-		return this.setDCDCPower( groupName, ( group.dcdc.power || 0 ) - 0.05 );
-	}
-
-	async _dcdcCommand( groupName, command, value, request ) {
-
-		const group = this.getGroupFromGroupName( groupName );
-
-		if( ! groupName ) {
-			throw new Error(`No light configuration for the group ${ groupName }` );
-		}
-
-		if( group.dcdc.channelId ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.dcdc[ command ]( group.dcdc.channelId, value ), request ? 2 : 1 );	
-		}
-
-		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
-	}
 
 
 	//***************************//
@@ -1421,11 +1444,12 @@ console.log( thermistor, thermopile );
 	async makeIV( chanId ) {
 		
 		let light;
+		const cfg = this.getInstrumentConfig();
 
 		try {
 
-
-			return this.getManager('state_' + chanId ).addQuery( async () => {
+			const stateName = ( cfg.board_version && cfg.board_version < 80 ) ? 'IV_once' : 'state_' + chan;
+			return this.getManager( stateName ).addQuery( async () => {
 
 				//this._setStatus( chanId, 'iv_booked', true, undefined, true );
 
@@ -1546,7 +1570,7 @@ console.log( thermistor, thermopile );
 									message: `j-V sweep terminated`
 								}
 							} );
-
+						
 							data.shift();
 							light = await this.getChannelLightIntensity( chanId );
 
@@ -1570,13 +1594,17 @@ console.log( thermistor, thermopile );
 					
 				} else {
 
-
 					try {
 
 					//	console.log( data, light );
 
-						await this.lease( () => {
-							return influx.storeIV( status.measurementName, data, light );		
+						await this.lease( async () => {
+
+							try {
+								await influx.storeIV( status.measurementName, data, light );		
+							} catch( e ) {
+								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
+							}
 						} )
 						//await influx.storeIV( status.measurementName, data, light );
 
@@ -1683,7 +1711,7 @@ console.log( thermistor, thermopile );
 			
 			out.push( data.readUInt8( 9 * 4 ) ); // Byte 32 has data
 			out.push( data.readUInt8( 9 * 4 + 1 ) ); // Byte 33 has data
-		console.log( data );
+		
 			return out; 
 		
 	}
@@ -2152,7 +2180,12 @@ console.log( thermistor, thermopile );
 			}
 
 			if( group.heatController.ssr ) {
+
 				this.normalizeHeatControllerSSR( group.groupName, force );
+
+			} else if( group.heatController.dcdc ) {
+
+				this.normalizeHeatControllerDCDC(); // Normalize the light sensing
 			}
 		}
 	}
@@ -2166,21 +2199,21 @@ console.log( thermistor, thermopile );
 		}
 
 	
-	//	await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );			
+	//	await this.query( globalConfig.trackerControllers.specialcommands.heat.enable( group.ssr.channelId ) );			
 
 
 		if( group.heatController.pid.kp_heating !== undefined ) {
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'heating', group.heatController.pid.kp_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'heating', group.heatController.pid.kd_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'heating', group.heatController.pid.ki_heating ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'heating', group.heatController.pid.bias_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_kp( group.ssr.channelId, 'heating', group.heatController.pid.kp_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_kd( group.ssr.channelId, 'heating', group.heatController.pid.kd_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_ki( group.ssr.channelId, 'heating', group.heatController.pid.ki_heating ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_bias( group.ssr.channelId, 'heating', group.heatController.pid.bias_heating ) );
 		}
 
 		if( group.heatController.pid.kp_cooling !== undefined ) {
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kp( group.ssr.channelId, 'cooling', group.heatController.pid.kp_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_kd( group.ssr.channelId, 'cooling', group.heatController.pid.kd_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_ki( group.ssr.channelId, 'cooling', group.heatController.pid.ki_cooling ) );
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.pid_bias( group.ssr.channelId, 'cooling', group.heatController.pid.bias_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_kp( group.ssr.channelId, 'cooling', group.heatController.pid.kp_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_kd( group.ssr.channelId, 'cooling', group.heatController.pid.kd_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_ki( group.ssr.channelId, 'cooling', group.heatController.pid.ki_cooling ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.pid_bias( group.ssr.channelId, 'cooling', group.heatController.pid.bias_cooling ) );
 		}
 	}
 
@@ -2206,7 +2239,7 @@ console.log( thermistor, thermopile );
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.ssr.target( group.ssr.channelId, group.heatController.target ) );
+			return this.query( globalConfig.trackerControllers.specialcommands.target( group.ssr.channelId, group.heatController.target ) );
 		}
 
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
@@ -2220,7 +2253,7 @@ console.log( thermistor, thermopile );
 			await this.generalRelayUpdateGroup( groupName );
 			return;
 		} else {
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.heating( group.ssr.channelId ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.heating( group.ssr.channelId ) );
 			return;
 		}
 
@@ -2235,7 +2268,7 @@ console.log( thermistor, thermopile );
 			await this.generalRelayUpdateGroup( groupName );
 			return;
 		} else {
-			await this.query( globalConfig.trackerControllers.specialcommands.ssr.cooling( group.ssr.channelId ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.cooling( group.ssr.channelId ) );
 			return;
 		}
 
@@ -2275,7 +2308,7 @@ console.log( thermistor, thermopile );
 
 		const group = this.getGroupFromGroupName( groupName );
 
-		if( ! group.heatController.pid ) {
+		if( ! group.heatController || ! group.heatController.pid ) {
 			return {
 				heating: {},
 				cooling: {}
@@ -2334,10 +2367,34 @@ console.log( thermistor, thermopile );
 	async heatSetPower( groupName, power ) {
 
 		const group = this.getGroupFromGroupName( groupName );
-		group.heatController.power = power;
 
-		await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );
-		await this.query( globalConfig.trackerControllers.specialcommands.ssr.power( group.ssr.channelId, group.heatController.power ) );
+		if( group.heatController.mode == 'dcdc_resistor' ) {
+
+			if( power > 1 ) {
+				power = 1;
+			} else if ( power < 0 ) {
+				power = 0;
+			}
+
+			group.heatController.power = this._dcdcResistorFromPower( groupName, power );
+
+			if( group.heatController.power === undefined ) {
+				console.warn("No power defined (" + group.heatController.power + ")");
+				return;
+			}
+			group.heatController._power = power;
+
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.enable( group.heatController.channelId ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.power( group.heatController.channelId, group.heatController.power ) );
+
+		} else {
+			group.heatController.power = power;
+
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.enable( group.ssr.channelId ) );
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.power( group.ssr.channelId, group.heatController.power ) );
+		}
+
+		
 	}
 
 
@@ -2349,12 +2406,12 @@ console.log( thermistor, thermopile );
 			// SSR:CH1:FEEDBACK 20.5
 
 			if( isNaN( feedbackTemperature ) ) {
-				return await this.query( globalConfig.trackerControllers.specialcommands.ssr.disable( group.ssr.channelId ) );
+				return await this.query( globalConfig.trackerControllers.specialcommands.heat.disable( group.ssr.channelId ) );
 			} else {
-				await this.query( globalConfig.trackerControllers.specialcommands.ssr.enable( group.ssr.channelId ) );
+				await this.query( globalConfig.trackerControllers.specialcommands.heat.enable( group.ssr.channelId ) );
 			}
 
-			return await this.query( globalConfig.trackerControllers.specialcommands.ssr.feedback( group.ssr.channelId, feedbackTemperature ) );
+			return await this.query( globalConfig.trackerControllers.specialcommands.heat.feedback( group.ssr.channelId, feedbackTemperature ) );
 		}
 
 		throw new Error(`No heat controller for this group (${groupName}), or no temperature sensor, or no SSR channel associated`);
@@ -2379,11 +2436,100 @@ console.log( thermistor, thermopile );
 		}
 	}
 
-
 	async autoZero( chanId ) {
 
 		await this.query( globalConfig.trackerControllers.specialcommands.autoZero( chanId ) );
 	}
+
+	async heaterGetVoltage( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController.mode == 'dcdc_resistor' ) {
+			return this._dcdcCommand( groupName, 'getVoltage', undefined, true ).then( val => parseFloat( val ) );
+		}
+	}
+
+	async heaterGetCurrent( groupName ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+		if( group.heatController.mode == 'dcdc_resistor' ) {
+			return this._dcdcCommand( groupName, 'getCurrent', undefined, true ).then( val => parseFloat( val ) );
+		}
+	}
+
+	async normalizeHeatControllerDCDC( groupName, force ) {
+		const group = this.getGroupFromGroupName( groupName );
+
+		if( !isNaN( group.heatController._power ) ) {
+			this.heatSetPower( groupName, group.heatController._power );
+		}
+	}
+
+	_dcdcResistorFromPower( groupName, power ) {
+		
+		const group = this.getGroupFromGroupName( groupName );
+		
+		if( isNaN( power ) ) {
+			return;
+		}
+
+		if( power > 1 ) {
+			power = 1;
+		}
+
+		if( power < 0 ) {
+			power = 0;
+		}
+
+		let setVoltage = power * group.heatController.maxVoltage;
+		if( setVoltage < 1 ) {
+			setVoltage = 1;
+		}
+
+		let rbottom = 0.75 * 82000 / ( setVoltage - 0.75 );
+		rbottom = 50000 - rbottom;
+		let rbottomcode = Math.round( rbottom / 50000 * 256 );
+
+		if( rbottomcode < 0 ) {
+			rbottomcode = 0;
+		} else if( rbottomcode > 255 ) {
+			rbottomcode = 255;
+		}
+		
+		if( isNaN( rbottomcode ) ) {
+			return;
+		}
+
+		return rbottomcode;
+	}
+
+	async heatIncreasePower( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		return this.heatSetPower( groupName, ( group.heatController._power || 0 ) + 0.05 );
+	}
+
+	async heatDecreasePower( groupName ) {
+		const group = this.getGroupFromGroupName( groupName );
+		return this.heatSetPower( groupName, ( group.heatController._power || 0 ) - 0.05 );
+	}
+
+	async _dcdcCommand( groupName, command, value, request ) {
+
+		const group = this.getGroupFromGroupName( groupName );
+
+		if( ! groupName ) {
+			throw new Error(`No light configuration for the group ${ groupName }` );
+		}
+
+		if( group.heatController.channelId ) {
+			return this.query( globalConfig.trackerControllers.specialcommands.dcdc[ command ]( group.heatController.channelId, value ), request ? 2 : 1 );	
+		}
+
+		throw new Error(`No light channel was defined for the group ${ groupName }. Check that the option "channelId" is set and different from null or 0.`);	
+	}
+
+
+
 }
 
 /*

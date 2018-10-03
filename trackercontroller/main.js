@@ -105,7 +105,13 @@ module.exports = {
 	},
 
 	setPDScaling: async ( instrumentId, pdRef, pdScale ) => {
-		await getInstrument( instrumentId ).setPDScaling( pdRef, pdScale );
+		await getInstrument( instrumentId ).lightSetScaling( pdRef, pdScale );
+		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
+	},
+
+
+	setPDOffset: async ( instrumentId, pdRef, pdOffset ) => {
+		await getInstrument( instrumentId ).lightSetOffset( pdRef, pdOffset );
 		fs.writeFileSync('./config/trackerControllers.json', JSON.stringify( trackerControllers.hosts, undefined, "\t" ) );
 	},
 
@@ -209,9 +215,9 @@ module.exports = {
 		return getInstrument( instrumentId ).measurePDCurrent( group.light.channelId );
 	},
 
-	enableChannel: ( instrumentId, chanNumber ) => {
+	enableChannel: ( instrumentId, chanNumber, noIV ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
-		return getInstrument( instrumentId ).enableChannel( chanId );
+		return getInstrument( instrumentId ).enableChannel( chanId, noIV );
 	},
 
 	disableChannel: ( instrumentId, chanNumber ) => {
@@ -235,19 +241,20 @@ module.exports = {
 		await save();
 	},
 
-	increaseDCDCPower: async( instrumentId, groupName ) => {
+	heatIncreasePower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
-		return await instrument.increaseDCDCPower( groupName );
-		await getInstrument( instrumentId ).measureEnvironment();
+		await instrument.heatIncreasePower( groupName );
+		//await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
 
-	decreaseDCDCPower: async( instrumentId, groupName ) => {
+	heatDecreasePower: async( instrumentId, groupName ) => {
 		let instrument = getInstrument( instrumentId );
-		return await instrument.decreaseDCDCPower( groupName );
-		await getInstrument( instrumentId ).measureEnvironment();
+		await instrument.heatDecreasePower( groupName );
+	//	await getInstrument( instrumentId ).measureEnvironment();
 		await save();
 	},
+
 
 	heatSetTarget: async( instrumentId, groupName, target ) => {
 		await getInstrument( instrumentId ).heatSetTarget( groupName, target );

@@ -3,6 +3,7 @@ const HostManager = require('./hostmanager');
 const trackerController = require('./trackercontroller/main');
 const influx = require('./trackercontroller/influxhandler');
 const config = require("./config");
+const pm2 = require('pm2');
 
 module.exports = ( app ) => {
 
@@ -207,9 +208,10 @@ module.exports = ( app ) => {
 	app.get("/enableChannel", ( req, res ) => {
 
 		let instrumentId = req.query.instrumentId,
-			chanId = req.query.chanId;
+			chanId = req.query.chanId,
+			noIV = req.query.noIV;
 
-		trackerController.enableChannel( instrumentId, chanId ).then( () => {
+		trackerController.enableChannel( instrumentId, chanId, noIV ).then( () => {
 			res.send("");
 
 		}).catch( ( error ) => {
@@ -368,6 +370,14 @@ module.exports = ( app ) => {
 
 	} );
 
+
+	app.get("/restart", ( req, res ) => {
+		pm2.restart('main');
+	} );
+
+
+
+
 	app.get("/light.enable", ( req, res ) => {
 		trackerController.lightEnable( req.query.instrumentId, req.query.groupName ).then( () => {
 			res.send("");
@@ -416,7 +426,14 @@ module.exports = ( app ) => {
 
 	app.post("/light.setPDScaling", ( req, res ) => {
 
-		trackerController.lightSetScaling( req.body.instrumentId, req.body.groupName, req.body.pdScale ).then( () => {
+		trackerController.setPDScaling( req.body.instrumentId, req.body.groupName, req.body.pdScale ).then( () => {
+			res.send("");
+		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+	});
+
+	app.post("/light.setPDOffset", ( req, res ) => {
+
+		trackerController.setPDOffset( req.body.instrumentId, req.body.groupName, req.body.pdOffset ).then( () => {
 			res.send("");
 		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
 	});
