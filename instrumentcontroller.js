@@ -219,7 +219,7 @@ class InstrumentController {
 								clearTimeout( timeout );
 							}
 
-					//		console.timeEnd( "query:" + queryString );
+							console.timeEnd( "query:" + queryString );
 							await delay( queryAfterWait );
 							
 
@@ -240,7 +240,7 @@ class InstrumentController {
 					}
 				} );
 
-		//		console.time( "query:" + queryString );
+				console.time( "query:" + queryString );
 			//	console.log( queryString );
 				communication.write( queryString + "\n" );
 				communication.drain( );
