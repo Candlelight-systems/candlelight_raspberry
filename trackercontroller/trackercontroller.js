@@ -1736,7 +1736,7 @@ console.log( group.groupName, data );
 		if( this.temperatures[ group.groupName ] && this.temperatures[ group.groupName ][ chanId ] ) {
 			temperature = this.temperatures[ group.groupName ][ chanId ];
 		} else {
-			temperature = this.groupTemperature[ group.groupName ];
+			temperature = { thermistor: this.groupTemperature[ group.groupName ] };
 		}
 
 		const voltageMean = parseFloat( data[ 0 ] ),
@@ -1798,8 +1798,8 @@ console.log( group.groupName, data );
 				power: powerMean,
 				efficiency: efficiency,
 				sun: sun,
-				temperature: temperature ? temperature.thermistor : -1,
-				temperature_junction: temperature ? temperature.total : -1,
+				temperature: temperature && temperature.thermistor ? temperature.thermistor : -1,
+				temperature_junction: temperature && temperature.total ? temperature.total : -1,
 				humidity: isNaN( this.groupHumidity[ group.groupName ] ) ? -1 : this.groupHumidity[ group.groupName ]
 			},
 
@@ -1836,8 +1836,8 @@ console.log( group.groupName, data );
           efficiency: efficiency,
           sun: sun,
           pga: pga,
-		  temperature_base: temperature ? temperature.thermistor : 0,
-		  temperature_junction: temperature ? temperature.total : 0,
+		  temperature_base: temperature && temperature.thermistor ? temperature.thermistor : 0,
+		  temperature_junction: temperature && temperature.total ? temperature.total : 0,
 		  humidity: this.groupHumidity[ group.groupName ]
         };
 
