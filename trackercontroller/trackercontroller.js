@@ -1849,9 +1849,12 @@ console.log( group.groupName, data );
         	delete fields.humidity;
         }
 
-        if( ! temperature || isNaN( temperature.thermistor ) || isNaN( temperature.total ) ) {
+        if( ! temperature || isNaN( temperature.thermistor ) ) {
         	delete fields.temperature_base;
-        	delete fields.temperature_junction;
+        }
+
+        if( ! temperature || isNaN( temperature.total ) ) {
+			delete fields.temperature_junction;
         }
 
 		this.trackData.push( 
