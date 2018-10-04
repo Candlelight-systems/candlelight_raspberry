@@ -752,6 +752,8 @@ class TrackerController extends InstrumentController {
 			
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
+
+
 			}
 			
 			if( group.dcdc ) {
@@ -797,7 +799,7 @@ class TrackerController extends InstrumentController {
 				}
 
 
-
+console.log( group.groupName, data );
 
 				if( group.light.uv ) {
 
@@ -1448,7 +1450,7 @@ class TrackerController extends InstrumentController {
 
 		try {
 
-			const stateName = ( cfg.board_version && cfg.board_version < 80 ) ? 'IV_once' : 'state_' + chan;
+			const stateName = ( cfg.board_version && cfg.board_version < 80 ) ? 'IV_once' : 'state_' + chanId;
 			return this.getManager( stateName ).addQuery( async () => {
 
 				//this._setStatus( chanId, 'iv_booked', true, undefined, true );
@@ -1733,6 +1735,8 @@ class TrackerController extends InstrumentController {
 
 		if( this.temperatures[ group.groupName ] && this.temperatures[ group.groupName ][ chanId ] ) {
 			temperature = this.temperatures[ group.groupName ][ chanId ];
+		} else {
+			temperature = this.groupTemperature[ group.groupName ];
 		}
 
 		const voltageMean = parseFloat( data[ 0 ] ),
@@ -2239,7 +2243,7 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.target( group.ssr.channelId, group.heatController.target ) );
+			return this.query( globalConfig.trackerControllers.specialcommands.heat.target( group.ssr.channelId, group.heatController.target ) );
 		}
 
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
