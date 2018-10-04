@@ -1320,9 +1320,9 @@ class TrackerController extends InstrumentController {
 					if( ! this.paused ) {
 				
 						intervals[ i ].lastTime = Date.now();
-						// Removed the "await". The method does not need to fail before being started again
 						intervals[ i ].processing = true;
 
+						// Removed the "await", which could hang other processes
 						this.processCallback( intervals[ i ] );
 					}
 				}
