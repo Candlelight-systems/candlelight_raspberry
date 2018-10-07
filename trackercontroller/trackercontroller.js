@@ -2162,6 +2162,7 @@ console.log( group.groupName, data );
 			if( ! group.heatController ) {
 				continue;
 			}
+console.log( group.heatController );
 
 			if( group.heatController.target ) {
 				await this.heatUpdateSSRTarget( group.groupName );
@@ -2258,6 +2259,9 @@ console.log( group.groupName, data );
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
 			group.generalRelay.state = group.heatController.relay_heating;
 			await this.generalRelayUpdateGroup( groupName );
+
+			// We still need to tell the PID that we're heating up
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.heating( group.ssr.channelId ) );
 			return;
 		} else {
 			await this.query( globalConfig.trackerControllers.specialcommands.heat.heating( group.ssr.channelId ) );
@@ -2273,6 +2277,10 @@ console.log( group.groupName, data );
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
 			group.generalRelay.state = group.heatController.relay_cooling;
 			await this.generalRelayUpdateGroup( groupName );
+
+			// We still need to tell the PID that we're cooling down
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.cooling( group.ssr.channelId ) );
+
 			return;
 		} else {
 			await this.query( globalConfig.trackerControllers.specialcommands.heat.cooling( group.ssr.channelId ) );
@@ -2324,13 +2332,13 @@ console.log( group.groupName, data );
 		
 		return {
 
-			heating: {
+			cooling: {
 				Kp: group.heatController.pid.kp_cooling,
 				Kd: group.heatController.pid.kd_cooling,
 				Ki: group.heatController.pid.ki_cooling,
 				bias: group.heatController.pid.bias_cooling,
 			},
-			cooling: {
+			heating: {
 				Kp: group.heatController.pid.kp_heating,
 				Kd: group.heatController.pid.kd_heating,
 				Ki: group.heatController.pid.ki_heating,
@@ -2607,7 +2615,7 @@ function possibleNewMeasurement( measurementName, status, group, chanId ) {
 		break;
 	}
 
-	const trackingLight = !! group.light.channelId;
+	const trackingLight = group.light ? !! group.light.channelId : false;
 	const trackingHumidity = !! group.humiditySensor;
 	let trackingTemperature = false;
 
