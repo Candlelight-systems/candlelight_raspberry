@@ -752,6 +752,8 @@ class TrackerController extends InstrumentController {
 			
 				data.temperature = humidity.temperature;
 				data.humidity = humidity.humidity;
+
+
 			}
 			
 			if( group.dcdc ) {
@@ -797,7 +799,7 @@ class TrackerController extends InstrumentController {
 				}
 
 
-
+console.log( group.groupName, data );
 
 				if( group.light.uv ) {
 
@@ -1448,7 +1450,7 @@ class TrackerController extends InstrumentController {
 
 		try {
 
-			const stateName = ( cfg.board_version && cfg.board_version < 80 ) ? 'IV_once' : 'state_' + chan;
+			const stateName = ( cfg.board_version && cfg.board_version < 80 ) ? 'IV_once' : 'state_' + chanId;
 			return this.getManager( stateName ).addQuery( async () => {
 
 				//this._setStatus( chanId, 'iv_booked', true, undefined, true );
@@ -1649,7 +1651,7 @@ class TrackerController extends InstrumentController {
 				return wave;
 			});
 		} catch( e ) {
-			console.log('rejection');
+			
 			this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
 		}
 	}
@@ -1733,6 +1735,8 @@ class TrackerController extends InstrumentController {
 
 		if( this.temperatures[ group.groupName ] && this.temperatures[ group.groupName ][ chanId ] ) {
 			temperature = this.temperatures[ group.groupName ][ chanId ];
+		} else {
+			temperature = { thermistor: this.groupTemperature[ group.groupName ] };
 		}
 
 		const voltageMean = parseFloat( data[ 0 ] ),
@@ -1794,8 +1798,8 @@ class TrackerController extends InstrumentController {
 				power: powerMean,
 				efficiency: efficiency,
 				sun: sun,
-				temperature: temperature ? temperature.thermistor : -1,
-				temperature_junction: temperature ? temperature.total : -1,
+				temperature: temperature && temperature.thermistor ? temperature.thermistor : -1,
+				temperature_junction: temperature && temperature.total ? temperature.total : -1,
 				humidity: isNaN( this.groupHumidity[ group.groupName ] ) ? -1 : this.groupHumidity[ group.groupName ]
 			},
 
@@ -1832,8 +1836,8 @@ class TrackerController extends InstrumentController {
           efficiency: efficiency,
           sun: sun,
           pga: pga,
-		  temperature_base: temperature ? temperature.thermistor : 0,
-		  temperature_junction: temperature ? temperature.total : 0,
+		  temperature_base: temperature && temperature.thermistor ? temperature.thermistor : 0,
+		  temperature_junction: temperature && temperature.total ? temperature.total : 0,
 		  humidity: this.groupHumidity[ group.groupName ]
         };
 
@@ -1845,9 +1849,12 @@ class TrackerController extends InstrumentController {
         	delete fields.humidity;
         }
 
-        if( ! temperature || isNaN( temperature.thermistor ) || isNaN( temperature.total ) ) {
+        if( ! temperature || isNaN( temperature.thermistor ) ) {
         	delete fields.temperature_base;
-        	delete fields.temperature_junction;
+        }
+
+        if( ! temperature || isNaN( temperature.total ) ) {
+			delete fields.temperature_junction;
         }
 
 		this.trackData.push( 
@@ -1958,6 +1965,9 @@ class TrackerController extends InstrumentController {
 								message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
 							}
 						} );
+
+
+						this.preventMPPT[ chanId ] = false;
 
 					}
 
@@ -2074,6 +2084,9 @@ class TrackerController extends InstrumentController {
 								message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
 							}
 						} );
+
+
+						this.preventMPPT[ chanId ] = true;
 					}
 
 
@@ -2149,6 +2162,7 @@ class TrackerController extends InstrumentController {
 			if( ! group.heatController ) {
 				continue;
 			}
+console.log( group.heatController );
 
 			if( group.heatController.target ) {
 				await this.heatUpdateSSRTarget( group.groupName );
@@ -2233,7 +2247,7 @@ class TrackerController extends InstrumentController {
 
 		const group = this.getGroupFromGroupName( groupName );
 		if( group.heatController && group.heatController.ssr ) {
-			return this.query( globalConfig.trackerControllers.specialcommands.target( group.ssr.channelId, group.heatController.target ) );
+			return this.query( globalConfig.trackerControllers.specialcommands.heat.target( group.ssr.channelId, group.heatController.target ) );
 		}
 
 		throw new Error( "No heat controller defined for this group or no SSR channel assigned" );
@@ -2245,6 +2259,9 @@ class TrackerController extends InstrumentController {
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
 			group.generalRelay.state = group.heatController.relay_heating;
 			await this.generalRelayUpdateGroup( groupName );
+
+			// We still need to tell the PID that we're heating up
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.heating( group.ssr.channelId ) );
 			return;
 		} else {
 			await this.query( globalConfig.trackerControllers.specialcommands.heat.heating( group.ssr.channelId ) );
@@ -2260,6 +2277,10 @@ class TrackerController extends InstrumentController {
 		if( group.heatController && group.heatController.relay && group.generalRelay ) {
 			group.generalRelay.state = group.heatController.relay_cooling;
 			await this.generalRelayUpdateGroup( groupName );
+
+			// We still need to tell the PID that we're cooling down
+			await this.query( globalConfig.trackerControllers.specialcommands.heat.cooling( group.ssr.channelId ) );
+
 			return;
 		} else {
 			await this.query( globalConfig.trackerControllers.specialcommands.heat.cooling( group.ssr.channelId ) );
@@ -2311,13 +2332,13 @@ class TrackerController extends InstrumentController {
 		
 		return {
 
-			heating: {
+			cooling: {
 				Kp: group.heatController.pid.kp_cooling,
 				Kd: group.heatController.pid.kd_cooling,
 				Ki: group.heatController.pid.ki_cooling,
 				bias: group.heatController.pid.bias_cooling,
 			},
-			cooling: {
+			heating: {
 				Kp: group.heatController.pid.kp_heating,
 				Kd: group.heatController.pid.kd_heating,
 				Ki: group.heatController.pid.ki_heating,
@@ -2594,7 +2615,7 @@ function possibleNewMeasurement( measurementName, status, group, chanId ) {
 		break;
 	}
 
-	const trackingLight = !! group.light.channelId;
+	const trackingLight = group.light ? !! group.light.channelId : false;
 	const trackingHumidity = !! group.humiditySensor;
 	let trackingTemperature = false;
 
