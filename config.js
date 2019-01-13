@@ -55,16 +55,11 @@ module.exports = {
 			},
 
 			dcdc: {
-
-				isEnabled: ( chanId ) => { return { string: `DCDC:ENABLED?:CH${ chanId }` } },
-				setPower: ( chanId, value ) => { return { string: `DCDC:VALUE:CH${ chanId } ${ value }` } },
-				enable:  ( chanId ) => { return { string: `DCDC:ENABLE:CH${ chanId }` } },
-				disable:  ( chanId ) => { return { string: `DCDC:DISABLE:CH${ chanId }` } },
 				getVoltage:  ( chanId ) => { return { string: `DCDC:VOLTAGE:CH${ chanId }` } },
 				getCurrent:  ( chanId ) => { return { string: `DCDC:CURRENT:CH${ chanId }` } }
 			},
 
-			ssr: {
+			heat: {
 				feedback: ( chanId, value ) => { return { string: `SSR:FEEDBACK:CH${ chanId } ${ value }` } },
 				target: ( chanId, value ) => { return { string: `SSR:TARGET:CH${ chanId } ${ value }` } },
 				heating:  ( chanId ) => { return { string: `SSR:HEATING:CH${ chanId }` } },
@@ -77,6 +72,7 @@ module.exports = {
 				pid_ki:  ( chanId, mode, value ) => { return { string: `SSR:KI_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } },
 				pid_bias:  ( chanId, mode, value ) => { return { string: `SSR:BIAS_${ mode == 'heating' ? 'HEATING' : 'COOLING' }:CH${ chanId } ${ value }` } }
 			},
+
 
 			relay: {
 				external: ( chanId, enabled ) => { return { string: `RELAY:EXTERNAL:CH${ chanId } ${ enabled ? 1 : 0 }` } },

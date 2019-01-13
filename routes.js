@@ -208,9 +208,10 @@ module.exports = ( app ) => {
 	app.get("/enableChannel", ( req, res ) => {
 
 		let instrumentId = req.query.instrumentId,
-			chanId = req.query.chanId;
+			chanId = req.query.chanId,
+			noIV = req.query.noIV;
 
-		trackerController.enableChannel( instrumentId, chanId ).then( () => {
+		trackerController.enableChannel( instrumentId, chanId, noIV ).then( () => {
 			res.send("");
 
 		}).catch( ( error ) => {
