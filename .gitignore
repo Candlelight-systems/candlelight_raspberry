@@ -1,4 +1,5 @@
 node_modules/
+config/influx.json
 config/hosts.json
 config/trackerControllers.json
 trackercontroller/measurements.json
