@@ -173,7 +173,10 @@ class InstrumentController {
 
 						if( lineCount == linesExpected ) {
 
+							// Collect the status byte from the remote host
+							// If the instance implements the updateStatus method, then call it
 							statusByte = data.slice( 0, index );
+							console.log( statusByte );
 							if ( this.updateStatus ) {
 								this.updateStatus();
 							}

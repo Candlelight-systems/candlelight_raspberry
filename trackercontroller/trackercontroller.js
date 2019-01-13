@@ -117,6 +117,8 @@ class TrackerController extends InstrumentController {
 	}
 
 	updateStatus() {
+
+		// In this case, byte 0 is the overall instrument status, byte 1 the light 1, byte 2 the light 2
 		const statusByte = this.statusByte;
 		let i = 0;
 		let statusLightPositions = [ undefined, 1, 2 ]
@@ -217,10 +219,7 @@ class TrackerController extends InstrumentController {
 			return new Promise( ( resolver, rejecter ) => rejecter() );
 		}
 
-		return super.query( command, lines, executeBefore, prependToQueue, rawOutput, expectedBytes ).then( result => {
-			this.updateStatus();
-			console.log( result );
-		} );
+		return super.query( command, lines, executeBefore, prependToQueue, rawOutput, expectedBytes );
 	}
 
 	/**
