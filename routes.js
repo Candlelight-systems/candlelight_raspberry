@@ -439,6 +439,13 @@ module.exports = ( app ) => {
 	});
 
 
+	app.get("/light.applyUV", ( req, res ) => {
+		trackerController.lightUVCheck( req.query.instrumentId, req.query.groupName).then( () => {
+			res.send("");
+		}).catch( ( error ) => { res.status( 500 ).send( `Request error: ${error}`) } )
+	});
+
+
 	app.get("/lightGetControl", function( req, res ) {
 		try {
 			let control = trackerController.getLightControl( req.query.instrumentId, req.query.groupName );

@@ -14,6 +14,10 @@ module.exports = {
 		port: 8080
 	},
 
+	express_processmanagement: {
+		port: 8082
+	},
+
 	influx: influx,
 
 	hosts: hosts,

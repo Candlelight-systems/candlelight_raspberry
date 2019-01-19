@@ -366,6 +366,11 @@ module.exports = {
 		await save();
 	},
 
+
+	async lightUVCheck( instrumentId, groupName ) {
+		await getInstrument( instrumentId ).lightUVCheck( groupName );
+	},
+
 	lightSetPyranometerScaling( instrumentId, groupName, scale, offset ) {
 		const group = getInstrument( instrumentId ).getGroupFromGroupName( groupName );
 

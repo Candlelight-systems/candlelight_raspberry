@@ -1,7 +1,9 @@
+
 'use strict';
 
-const fs = require("fs");
-const path = require("path");
+const fs 		= require("fs");
+const path 		= require("path");
+const extend 	= require("extend");
 
 const statusPath = path.join( __dirname, './status.json' );
 
@@ -22,8 +24,7 @@ try {
 	statusGlobal = { channels: [] };
 }
 
-
-let status = statusGlobal.channels;
+let status 							= statusGlobal.channels;
 let measurements;
 
 try {
@@ -45,6 +46,7 @@ const calculateCRC 					= require('./crc').calculateCRC;
 let connections = {};
 let intervals = {};
 let thermal_modules = {};
+let uvCalibration = false;
 
 thermal_modules.ztp_101t = require( '../config/sensors/ztp_101t' );
 
@@ -100,7 +102,7 @@ class TrackerController extends InstrumentController {
 		await this.query( "RESERVED:SETUP" );
 		await this.normalizeStatus();
 		await this.resumeChannels();
-		await this.scheduleEnvironmentSensing( 1000 );
+		await this.scheduleEnvironmentSensing( 10000 );
 		await this.scheduleLightSensing( 10000 );
 		await this.normalizeLightController(); // Normalize the light sensing
 		await this.normalizeHeatController(); // Normalize the light sensing
@@ -738,6 +740,10 @@ class TrackerController extends InstrumentController {
 
 	async measureEnvironment() {
 
+		if( uvCalibration ) {
+			return;
+		}
+
 		let groups = this.getInstrumentConfig().groups;
 		let temperature, lights, humidity;
 
@@ -798,9 +804,6 @@ class TrackerController extends InstrumentController {
 					break;
 				}
 
-
-console.log( group.groupName, data );
-
 				if( group.light.uv ) {
 
 					switch( group.light.uv.intensityMode ) {
@@ -821,8 +824,8 @@ console.log( group.groupName, data );
 						break;
 
 						case 'sensor':
-
 							Object.assign( data, {
+								lightUVSetpoint: group.light.uv.setPoint,
 								lightUVValue: await this.lightMeasureUV( group.groupName )
 							});
 
@@ -830,6 +833,10 @@ console.log( group.groupName, data );
 					}
 				}
 			}
+
+
+
+
 			
 			if( group.temperatureSensors && Array.isArray( group.temperatureSensors ) ) {
 				
@@ -889,7 +896,7 @@ console.log( group.groupName, data );
 			throw "Cannot update the light controller for this group: a light control must pre-exist."
 		}
 
-		Object.assign( group.light, control );
+		extend( true, group.light, control );
 		
 		await this.normalizeLightController( ); // Pushes the modifications to the controller board
 		await this.lightSensing( true ); // Forces a new recording of the light
@@ -940,11 +947,17 @@ console.log( group.groupName, data );
 
 	async lightSensing( force = false ) {
 
+		if( uvCalibration ) {
+			return;
+		}
+
 		let groups = this.getInstrumentConfig().groups;
 
 		// Do nothing while IVs are being recorded
 		let IVstatus = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( 1 ), 2 ) );
 		if( IVstatus > 0 ) {
+			console.log( IVstatus );
+			console.warn("IV curve in progress. Light is not changed")
 			return;
 		}			
 
@@ -975,7 +988,7 @@ console.log( group.groupName, data );
 				this.lightSetpoint[ group.groupName ] = group.light.setPoint;
 			}
 
-			return this.lightCheck( group.groupName, force );
+			await this.lightCheck( group.groupName, force );
 		}
 	}
 
@@ -1026,9 +1039,9 @@ console.log( group.groupName, data );
 
 	async lightSetPWM( groupName, chanId, value ) {
 		const group = this.getGroupFromGroupName( groupName );
-		group.light.setPoint = setpoint;
 		return this.query( globalConfig.trackerControllers.specialcommands.light.setPWM( chanId, value ) );
 	}
+
 
 
 
@@ -1060,34 +1073,77 @@ console.log( group.groupName, data );
 				case 'sensor':
 
 					if( light.uv.controlMode == 'direct' ) {
-						let i = 0;
-						while( true ) {
-
-
-							let uvIntensity = this.lightMeasureUV( groupName );
-
-							if( Math.abs( light.uv.setPoint - uvIntensity ) < 1 ) {
-								break;
-							}
-
-							if( light.uv.setPoint < uvIntensity ) {
-								light.uv.pwm ++;
-							} else {
-								light.uv.pwm --;
-							}
-
-							this.lightSetPWM( groupName, light.uv.channel, light.uv.pwm );
-
-							if( i > 1000 ) {
-								break;
-							}
-						}
+						// UV setting has to be done in the dark and on request
+						return;
 					}
 
 				break;
 			}
 		}
 	}
+
+
+	async lightUVCheck( groupName ) {
+
+		
+		const group = this.getGroupFromGroupName( groupName );
+		const light = group.light;
+
+		uvCalibration = true;
+		// Turn off white light
+		await this._lightCommand( groupName, 'setPWM', 0 );
+
+		await delay( 1000 );
+		
+		if( light.uv && light.uv.intensityMode == 'sensor' ) {
+
+			if( light.uv.controlMode == 'direct' ) {
+
+				let i = 0;
+				while( true ) {
+
+					let uvIntensity = await this.lightMeasureUV( groupName );
+					if( Math.abs( light.uv.setPoint - uvIntensity ) < 1 ) {
+						break;
+					}
+
+
+
+					if( light.uv.setPoint < uvIntensity ) {
+
+						if( light.uv.pwm == 0 ) {
+							break;
+						}
+						
+						light.uv.pwm --;
+					} else {
+
+
+						if( light.uv.pwm == 1024 ) {
+							break;
+						}
+
+						light.uv.pwm ++;
+					}
+
+
+					await delay( 10 );
+
+					this.lightSetPWM( groupName, light.uv.channel, light.uv.pwm );
+
+					if( i > 1000 ) {
+						break;
+					}
+				}
+			}
+		}
+
+		uvCalibration = false;
+
+		// Turn white light back on
+		return this._lightCommand( groupName, 'check', undefined, true ).then( val => console.log( val ) );
+	}
+
 
 	async lightSetScaling( groupName, scaling ) {
 		const group = this.getGroupFromGroupName( groupName );
@@ -1103,8 +1159,15 @@ console.log( group.groupName, data );
 	}
 
 	async lightMeasureUV( groupName ) {
+
 		const group = this.getGroupFromGroupName( groupName );
-		return parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readUVIntensity( group.slaveNumber ), 2 ) );
+		let intensity = parseFloat( await this.query( globalConfig.trackerControllers.specialcommands.readUVIntensity( group.slaveNumber ), 2 ) );
+
+		if( intensity > 250 ) {
+			intensity = "Intensity readout failed";
+		}
+
+		return intensity;
 	}
 
 	async measureGroupLightIntensity( groupName ) {
@@ -1167,7 +1230,7 @@ console.log( group.groupName, data );
 
 		const status = this.getStatus( chanId );
 		
-console.log( status, status.lightRefValue );
+
 		if( status.lightRefValue ) { // If the value is forced
 			return status.lightRefValue / 1000;
 		}
@@ -1496,7 +1559,7 @@ console.log( status, status.lightRefValue );
 
 
 					let status = parseInt( await this.query( globalConfig.trackerControllers.specialcommands.iv.status( chanId ), 2 ) );
-
+console.log( status );
 					if( status & 0b00000001 ) { // If this particular jv curve is still running
 
 						wsconnection.send( {
@@ -1558,10 +1621,12 @@ console.log( status, status.lightRefValue );
 							
 							data = await this.query( globalConfig.trackerControllers.specialcommands.iv.data( chanId ), 2 )
 
-							data = data.replace('"', '').replace('"', '')
-								.split(',');			
-							data.pop();
+							data = data
+									.replace('"', '')
+									.replace('"', '')
+									.split(',');
 
+							data.pop();
 
 							wsconnection.send( {
 
@@ -1575,7 +1640,7 @@ console.log( status, status.lightRefValue );
 						
 							data.shift();
 							light = await this.getChannelLightIntensity( chanId );
-console.log( light, chanId );
+
 						} catch( e ) {
 							this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
 						}
@@ -1605,8 +1670,7 @@ console.log( light, chanId );
 							try {
 								await influx.storeIV( status.measurementName, data, light );		
 							} catch( e ) {
-								
-								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId, e );
+								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
 							}
 						} )
 						//await influx.storeIV( status.measurementName, data, light );
