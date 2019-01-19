@@ -179,6 +179,7 @@ module.exports = {
 
 	saveStatus: ( instrumentId, chanNumber, status ) => {
 		const chanId = lookupChanId( instrumentId, chanNumber );
+		console.log( status );
 		return getInstrument( instrumentId ).saveStatus( chanId, status );
 	},
 

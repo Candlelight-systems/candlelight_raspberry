@@ -6,8 +6,8 @@ const wsconnection	= require('./wsconnection' );
 
 let resetted = false;
 class InstrumentController {
-	
-	
+
+
 	constructor( config ) {
 
 		this.communicationConfig = config;
@@ -15,7 +15,7 @@ class InstrumentController {
 		this.managers = {
 			'state': new queryManager()
 		}
-		
+
 
 		if( this.communicationConfig.resetPin ) {
 
@@ -23,7 +23,7 @@ class InstrumentController {
 			rpio.open( this.communicationConfig.resetPin, rpio.OUTPUT, rpio.LOW );
 
 		}
-	}	
+	}
 
 	setInstrumentConfig( config ) {
 		this.instrumentConfig = config;
@@ -92,8 +92,6 @@ class InstrumentController {
 
 		queryTimeout = queryTimeout || 1000; // Default to 1 second
 
-		let statusByte;
-		
 		if( ! communication ) {
 			throw "Could not find communication based on the instrument id";
 		}
@@ -112,17 +110,14 @@ class InstrumentController {
 				}
 			}
 
-			let statusByte;
-
 			// Wait for the lease the be released
 			return communication.lease = new Promise( ( resolver, rejecter ) => {
 
-				let data = Buffer.alloc(0), 
-				dOut = [], 
-				lineCount = 0,	
+				let data = Buffer.alloc(0),
+				dOut = [],
+				lineCount = 0,
 				timeout = setTimeout( () => {
 
-				
 					console.error(`Query ${ queryString } has timed out (${ queryTimeout } ms).`);
 
 					wsconnection.send( {
@@ -138,49 +133,44 @@ class InstrumentController {
 					rejecter(); // Reject the current promise
 				//	this.reset(); // Reset the instrument
 				}, queryTimeout );
-			
+
 				// Start by remove all listeners
 				communication.removeAllListeners( "data" );
 
 				// Listening
 				communication.on( "data", async ( d ) => {
 
-
 					data = Buffer.concat( [ data, d ] );
-
 					let index;
 
 					function condition( expectedBytes ) {
-
-						if( expectedBytes ) {
-
+						if( expectedBytes && lineCount == 0 ) {
 							if( data.length < expectedBytes ) {
 								return -1;
 							}
-
 							return expectedBytes;
-
 						} else {
-
-							return data.indexOf( Buffer.from( [0x0d, 0x0a] ) );
+ 							return data.indexOf( Buffer.from( [0x0d, 0x0a] ) );
 						}
 					}
 
-					while( ( index = condition( expectedBytes ) ) >= 0 ) { // CRLF detection
-						
-						
+					while( ( index = condition( expectedBytes) ) >= 0 ) {
 
-						expectedBytes = 0;
+					//	expectedBytes = 0;
 						lineCount++; // Found a new line, increment the counter
-
 						if( lineCount == linesExpected ) {
 
-							statusByte = data.slice( 0, index )[ 0 ];
-							
+							// Collect the status byte from the remote host
+							// If the instance implements the updateStatus method, then call it
+							this.statusByte = data.slice( 0, index );
+							//console.log( "Status byte ", this.statusByte );
+							if ( this.updateStatus ) {
+								this.updateStatus();
+							}
 						} else {
 
 							const d = data.slice( 0, index );
-							
+
 							if( rawOutput ) {
 								dOut.push( d );
 							} else {
@@ -188,32 +178,23 @@ class InstrumentController {
 							}
 						}
 
+						//console.log( data, data.length );
+						
+						// Strip the CRLF from the data
 						data = data.slice( index + 2 );
-
 
 						if( lineCount >= linesExpected ) {	// End of the transmission
 
-							if( statusByte !== undefined ) {
-								if( this.checkStatusbyte && ( statusByte & 0x01 ) == 0x00 && this.configured ) {  // LSB is the reset bit
+							if( this.checkStatusbyte && this.statusByte && this.configured && this.statusByte[ 0 ] & 0b00000001 == 0 ) {
 									console.error("Instrument is not in a configured state. Attempting to re-configure");
 									this.configured = false;
 									this.configure(); // Instrument has been reset. We
-								}
 							}
 							// Remove all listeners
 							communication.removeAllListeners( "data" );
 
 							// Flush the connection
 							communication.flush();
-
-/*
-							if( queryString == 'DATA:TRACKER:CH1' && ! resetted ) {
-								resetted = true;
-							
-								await delay( 10000 );
-							}
-
-*/
 							// Inform about the communication time
 							if( timeout ) {
 								clearTimeout( timeout );
@@ -221,20 +202,16 @@ class InstrumentController {
 
 							console.timeEnd( "query:" + queryString );
 							await delay( queryAfterWait );
-							
-
 							if( dOut.length == 1 ) {
-
-
-								resolver( dOut[ 0 ] );
-
-
+								if( expectedBytes ) {
+									resolver( dOut[ 0 ].slice( 0, expectedBytes ) );
+								} else {
+									resolver( dOut[ 0 ] );
+								}
 							} else {
-
-
 								resolver( dOut );
 							}
-							
+
 							return;
 						}
 					}
@@ -243,7 +220,7 @@ class InstrumentController {
 				console.time( "query:" + queryString );
 			//	console.log( queryString );
 				communication.write( queryString + "\n" );
-				communication.drain( );
+			//	communication.drain( );
 			} );
 
 		}, prepend );
@@ -306,7 +283,7 @@ class InstrumentController {
 		await this.waitAndReconnect();	// Should reattempt directly here, because the rejection occurs only once.
 		this.emptyQueryQueue();
 		this.connection.lease = Promise.resolve();
-		
+
 		await this.configure();
 
 		this.emptyQueryQueue();
@@ -334,9 +311,9 @@ class InstrumentController {
 
 		const connection = new serialport( cfg.host, cfg.params );
 		this.connection = connection;
-		
+
 		connection.on("error", ( err ) => {
-			
+
 			console.log( err );
 			this.reset();
 
@@ -352,7 +329,7 @@ class InstrumentController {
 			} );
 
 
-			console.warn(`Error thrown by the serial communication: ${ err }`); 
+			console.warn(`Error thrown by the serial communication: ${ err }`);
 		} );
 
 		connection.on("close", ( ) => {
@@ -394,7 +371,7 @@ class InstrumentController {
 		try {
 
 			if( this.connection.isOpen() ) {
-				this.connection.close();	
+				this.connection.close();
 			}
 		} catch( e ) {}
 
@@ -415,7 +392,7 @@ class InstrumentController {
 		//this.getConnection().queryManager.unblock();
 	}
 
-	
+
 	getStateManager() {
 		return this.getManager('state');
 	}
