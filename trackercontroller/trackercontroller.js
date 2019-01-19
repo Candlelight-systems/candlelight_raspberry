@@ -1167,7 +1167,7 @@ console.log( group.groupName, data );
 
 		const status = this.getStatus( chanId );
 		
-
+console.log( status, status.lightRefValue );
 		if( status.lightRefValue ) { // If the value is forced
 			return status.lightRefValue / 1000;
 		}
@@ -1575,7 +1575,7 @@ console.log( group.groupName, data );
 						
 							data.shift();
 							light = await this.getChannelLightIntensity( chanId );
-
+console.log( light, chanId );
 						} catch( e ) {
 							this.preventMPPT[ chanId ] = false; // Worst case scenario, we need to make sure we disable the MPP preventer
 						}
@@ -1605,7 +1605,8 @@ console.log( group.groupName, data );
 							try {
 								await influx.storeIV( status.measurementName, data, light );		
 							} catch( e ) {
-								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId );
+								
+								this.error( `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`, chanId, e );
 							}
 						} )
 						//await influx.storeIV( status.measurementName, data, light );

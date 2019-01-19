@@ -1,0 +1,176 @@
+{
+  "Small cells": {
+    "board_version": 81,
+    "fullScaleCurrent": 0.015,
+    "instrumentId": "Small cells",
+    "crc_check": true,
+
+    "groups": [
+      {
+        "groupName": "Sample holder",
+        "groupID": "Sample holder",
+
+        "slaveNumber": 1,
+
+        "light": {
+          "type": "photodiode",
+          "on": true,
+          "channelId": 1,
+          "scaling": 0.5,
+          "factory_scaling": 0.5,
+          "scheduling": {
+            "enabled": false,
+            "basis": 3600,
+            "intensities": [0, 1, 0]
+          },
+          "control": false,
+          "setPoint": 0,
+          "sensing": {},
+          "offset": 0.01904
+        },
+
+        "temperatureSensors": [
+          {
+            "thermistor": {
+              "I2CAddress": 72,
+              "ADCChannel": 0,
+              "model": "ztp_101t",
+              "vref": 2.5,
+              "resistor": 14300,
+              "offset": -7.5
+            },
+            "thermopile": {
+              "I2CAddress": 72,
+              "ADCChannel": 1,
+              "model": "ztp_101t",
+              "gain": 1023,
+              "offset": 0
+            },
+            "channels": [4, 5, 7, 8]
+          },
+          {
+            "thermistor": {
+              "I2CAddress": 72,
+              "ADCChannel": 2,
+              "model": "ztp_101t",
+              "vref": 2.5,
+              "resistor": 14300,
+              "offset": -7.5
+            },
+            "thermopile": {
+              "I2CAddress": 72,
+              "ADCChannel": 3,
+              "model": "ztp_101t",
+              "gain": 1000,
+              "offset": 0
+            },
+            "channels": [10, 11, 15, 16]
+          },
+          {
+            "thermistor": {
+              "I2CAddress": 73,
+              "ADCChannel": 0,
+              "model": "ztp_101t",
+              "vref": 2.5,
+              "resistor": 14300,
+              "offset": -7.5
+            },
+            "thermopile": {
+              "I2CAddress": 73,
+              "ADCChannel": 1,
+              "model": "ztp_101t",
+              "gain": 1000,
+              "offset": 0
+            },
+            "channels": [9, 12, 13, 14]
+          },
+          {
+            "thermistor": {
+              "I2CAddress": 73,
+              "ADCChannel": 2,
+              "model": "ztp_101t",
+              "vref": 2.5,
+              "resistor": 14300,
+              "offset": -7.5
+            },
+            "thermopile": {
+              "I2CAddress": 73,
+              "ADCChannel": 3,
+              "model": "ztp_101t",
+              "gain": 1000,
+              "offset": 0
+            },
+            "channels": [1, 2, 3, 6]
+          }
+        ],
+
+        "channels": [
+          {
+            "chanId": 1,
+            "chanName": "Channel 1"
+          },
+          {
+            "chanId": 2,
+            "chanName": "Channel 2"
+          },
+          {
+            "chanId": 3,
+            "chanName": "Channel 3"
+          },
+          {
+            "chanId": 4,
+            "chanName": "Channel 4"
+          },
+          {
+            "chanId": 5,
+            "chanName": "Channel 5"
+          },
+          {
+            "chanId": 6,
+            "chanName": "Channel 6"
+          },
+          {
+            "chanId": 7,
+            "chanName": "Channel 7"
+          },
+          {
+            "chanId": 8,
+            "chanName": "Channel 8"
+          },
+          {
+            "chanId": 9,
+            "chanName": "Channel 9"
+          },
+          {
+            "chanId": 10,
+            "chanName": "Channel 10"
+          },
+          {
+            "chanId": 11,
+            "chanName": "Channel 11"
+          },
+          {
+            "chanId": 12,
+            "chanName": "Channel 12"
+          },
+          {
+            "chanId": 13,
+            "chanName": "Channel 13"
+          },
+          {
+            "chanId": 14,
+            "chanName": "Channel 14"
+          },
+          {
+            "chanId": 15,
+            "chanName": "Channel 15"
+          },
+          {
+            "chanId": 16,
+            "chanName": "Channel 16"
+          }
+        ]
+      }
+    ]
+  }
+}
