@@ -5,7 +5,7 @@ const express = require('express');
 const config = require('./config');
 const bodyParser = require('body-parser');
 const { execFile } = require('child_process');
-const hosts = require('config/hosts.json');
+const hosts = require('./config/hosts.json');
 var app = express();
 
 app.use(bodyParser.json()); // to support JSON-encoded bodies
@@ -42,29 +42,62 @@ app.get('/processRestart', function(req, res, next) {
   });
 });
 
-app.get('/listBoards', function(req, res) {
-  execFile('ls', ['/dev/serial/by-path/'], (error, stout, stderr) => {
-    boards = stdout.split('\t');
-  });
-
-  const h = hosts.map(b => {
-    for (var i = 0; i < boards.length; i++) {
-      if (b.host == path + boards[i]) {
-        return {
-          host: b.host,
-          responsive: true
-        };
-      }
+app.get('/processStart', function(req, res, next) {
+  pm2.connect(function(err) {
+    if (err) {
+      next(err);
     }
 
-    return {
-      host: b.host,
-      responsive: false
-    };
+    pm2.restart({ script: 'main.js' }, err => {
+      res.send(err);
+      pm2.disconnect();
+    });
   });
+});
 
-  res.header('Content-Type', 'application/json');
-  res.send(JSON.stringify(h));
+app.get('/listBoards', function(req, res) {
+  const path = '/dev/serial/by-path/';
+  execFile('ls', [path], (error, stdout, stderr) => {
+    const boards = stdout.split('\n');
+    const h = hosts.map(b => {
+      for (var i = 0; i < boards.length; i++) {
+        if (b.host == path + boards[i]) {
+          return {
+            host: b.host,
+            alias: b.alias,
+            responsive: true
+          };
+        }
+      }
+
+      return {
+        host: b.host,
+        alias: b.alias,
+        responsive: false
+      };
+    });
+
+    res.header('Content-Type', 'application/json');
+    res.send(JSON.stringify(h));
+  });
+});
+
+app.get('/downloadLog', function(req, res) {
+  pm2.list((error, processes) => {
+    processes = processes.filter(process => process.name == 'main');
+    //res.send(processes[0].pm2_env.pm_out_log_path);
+    console.log(processes[0].pm2_env.pm_error_log_path);
+    res.sendFile(processes[0].pm2_env.pm_out_log_path);
+  });
+});
+
+app.get('/downloadErrorLog', function(req, res) {
+  pm2.list((error, processes) => {
+    processes = processes.filter(process => process.name == 'main');
+    //res.send(processes[0].pm2_env.pm_error_log_path);
+
+    res.sendFile(processes[0].pm2_env.pm_err_log_path);
+  });
 });
 
 var server = app.listen(config.express_processmanagement.port, function() {
