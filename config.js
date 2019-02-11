@@ -122,6 +122,7 @@ module.exports = {
 
 			[ "IV:START", function( status ) { return status.iv_start || 1; } ],
 			[ "IV:AUTOSTART", function( status ) { return +status.iv_autostart || 0; } ],
+			[ "IV:AUTOSTOP", function( status ) { return +status.iv_autostop || 0; } ],
 			[ "IV:STOP", function( status ) { return status.iv_stop || 0; } ],
 			[ "IV:HYSTERESIS", function( status ) { return +( !! status.iv_hysteresis ); } ],
 			[ "IV:RATE", function( status ) { return status.iv_rate || 0.02; } ],
@@ -165,7 +166,10 @@ module.exports = {
 			"measurementName": null,
 			"cellName": null,
 			"correctionFactor_type": "manual",
-			"correctionFactor_value": 1
+			"correctionFactor_value": 1,
+			"iv_measurement_interval_auto_pdrop": 0.25,
+			"iv_measurement_interval_auto_minTime": 60000,
+			"iv_measurement_interval_auto_maxTime": 3600000
 		},
 	},
 

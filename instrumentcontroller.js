@@ -84,8 +84,6 @@ class InstrumentController {
 
     queryTimeout = queryTimeout || 1000; // Default to 1 second
 
-    let statusByte;
-
     if (!communication) {
       throw 'Could not find communication based on the instrument id';
     }
@@ -102,8 +100,6 @@ class InstrumentController {
           throw 'Cannot execute method. Forbidden';
         }
       }
-
-      let statusByte;
 
       // Wait for the lease the be released
       return (communication.lease = new Promise((resolver, rejecter) => {
@@ -134,15 +130,13 @@ class InstrumentController {
         // Listening
         communication.on('data', async d => {
           data = Buffer.concat([data, d]);
-
           let index;
 
           function condition(expectedBytes) {
-            if (expectedBytes) {
+            if (expectedBytes && lineCount == 0) {
               if (data.length < expectedBytes) {
                 return -1;
               }
-
               return expectedBytes;
             } else {
               return data.indexOf(Buffer.from([0x0d, 0x0a]));
@@ -150,13 +144,16 @@ class InstrumentController {
           }
 
           while ((index = condition(expectedBytes)) >= 0) {
-            // CRLF detection
-
-            expectedBytes = 0;
+            //	expectedBytes = 0;
             lineCount++; // Found a new line, increment the counter
-
             if (lineCount == linesExpected) {
-              statusByte = data.slice(0, index)[0];
+              // Collect the status byte from the remote host
+              // If the instance implements the updateStatus method, then call it
+              this.statusByte = data.slice(0, index);
+              //console.log( "Status byte ", this.statusByte );
+              if (this.updateStatus) {
+                this.updateStatus();
+              }
             } else {
               const d = data.slice(0, index);
 
@@ -167,39 +164,31 @@ class InstrumentController {
               }
             }
 
+            //console.log( data, data.length );
+
+            // Strip the CRLF from the data
             data = data.slice(index + 2);
 
             if (lineCount >= linesExpected) {
               // End of the transmission
 
-              if (statusByte !== undefined) {
-                if (
-                  this.checkStatusbyte &&
-                  (statusByte & 0x01) == 0x00 &&
-                  this.configured
-                ) {
-                  // LSB is the reset bit
-                  console.error(
-                    'Instrument is not in a configured state. Attempting to re-configure'
-                  );
-                  this.configured = false;
-                  this.configure(); // Instrument has been reset. We
-                }
+              if (
+                this.checkStatusbyte &&
+                this.statusByte &&
+                this.configured &&
+                this.statusByte[0] & (0b00000001 == 0)
+              ) {
+                console.error(
+                  'Instrument is not in a configured state. Attempting to re-configure'
+                );
+                this.configured = false;
+                this.configure(); // Instrument has been reset. We
               }
               // Remove all listeners
               communication.removeAllListeners('data');
 
               // Flush the connection
               communication.flush();
-
-              /*
-							if( queryString == 'DATA:TRACKER:CH1' && ! resetted ) {
-								resetted = true;
-							
-								await delay( 10000 );
-							}
-
-*/
               // Inform about the communication time
               if (timeout) {
                 clearTimeout(timeout);
@@ -207,9 +196,12 @@ class InstrumentController {
 
               console.timeEnd('query:' + queryString);
               await delay(queryAfterWait);
-
               if (dOut.length == 1) {
-                resolver(dOut[0]);
+                if (expectedBytes) {
+                  resolver(dOut[0].slice(0, expectedBytes));
+                } else {
+                  resolver(dOut[0]);
+                }
               } else {
                 resolver(dOut);
               }
@@ -222,7 +214,7 @@ class InstrumentController {
         console.time('query:' + queryString);
         //	console.log( queryString );
         communication.write(queryString + '\n');
-        communication.drain();
+        //	communication.drain( );
       }));
     }, prepend);
   }
@@ -393,7 +385,7 @@ class InstrumentController {
     });
   }
 
-  error(message, chanId, caughtError) {
+  error(message, chanId) {
     wsconnection.send({
       instrumentId: this.getInstrumentId(),
       log: {
@@ -402,11 +394,6 @@ class InstrumentController {
         message: message
       }
     });
-
-    console.error(message + (chanId ? ` (On channel ${chanId}) ` : ''));
-    if (caughtError) {
-      console.error(caughtError);
-    }
 
     throw message;
   }
