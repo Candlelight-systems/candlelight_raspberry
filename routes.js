@@ -240,7 +240,7 @@ module.exports = ( app ) => {
 
 	app.get("/pauseChannels", function( req, res ) {
 
-		trackerController.pauseChannels( req.query.instrumentId ).then( () => {
+		trackerController.pauseChannels( req.query.instrumentId, true ).then( () => {
 
 			res.send( "" );	
 
@@ -257,7 +257,7 @@ module.exports = ( app ) => {
 
 		res.type("application/json");
 		
-		trackerController.resumeChannels( req.query.instrumentId ).then( () => {
+		trackerController.resumeChannels( req.query.instrumentId, true ).then( () => {
 
 			res.send( "" );
 

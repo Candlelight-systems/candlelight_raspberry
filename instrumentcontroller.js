@@ -137,10 +137,10 @@ class InstrumentController {
               if (data.length < expectedBytes) {
                 return -1;
               }
-              return expectedBytes;
-            } else {
-              return data.indexOf(Buffer.from([0x0d, 0x0a]));
+
+              return data.indexOf(Buffer.from([0x0d, 0x0a]), expectedBytes - 1);
             }
+            return data.indexOf(Buffer.from([0x0d, 0x0a]), 0);
           }
 
           while ((index = condition(expectedBytes)) >= 0) {
@@ -326,9 +326,11 @@ class InstrumentController {
       const connectionTimeout = setTimeout(() => {
         // TODO: Reset hardware
         //connection.open();
+
+        console.log('Connection timeout');
         this.reset();
         this.waitAndReconnect();
-      }, 1000);
+      }, 5000);
 
       connection.once('open', async () => {
         connection.flush();
