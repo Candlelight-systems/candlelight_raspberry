@@ -10,7 +10,9 @@ if (!fs.existsSync(statusPath)) {
   fs.writeFileSync(statusPath, JSON.stringify({ channels: [] }));
 }
 
+
 const measurements = require("./measurements");
+
 
 let statusGlobal;
 try {
@@ -20,6 +22,7 @@ try {
 }
 
 let status = statusGlobal.channels;
+
 
 const influx = require('./influxhandler');
 const globalConfig = require('../config');
@@ -32,7 +35,6 @@ const calculateCRC = require('./crc').calculateCRC;
 let connections = {};
 let intervals = {};
 let thermal_modules = {};
-let uvCalibration = false;
 
 thermal_modules.ztp_101t = require('../config/sensors/ztp_101t');
 
@@ -73,6 +75,8 @@ class TrackerController extends InstrumentController {
       currentStatus: [],
       timeStatusStart: []
     };
+
+    this.uvCalibration = false;
   }
 
   init() {
@@ -89,8 +93,8 @@ class TrackerController extends InstrumentController {
     await this.query('RESERVED:SETUP');
     await this.normalizeStatus();
     await this.resumeChannels();
-    await this.scheduleEnvironmentSensing(2000);
-    await this.scheduleLightSensing(20000);
+    await this.scheduleEnvironmentSensing(10000);
+    await this.scheduleLightSensing(10000);
     await this.normalizeLightController(); // Normalize the light sensing
     await this.normalizeHeatController(); // Normalize the light sensing
     //		await this.dcdcUpdate(); // Normalize the DC DC converter
@@ -311,12 +315,23 @@ class TrackerController extends InstrumentController {
     return statusGlobal.acquisitionSpeed;
   }
 
-  async pauseChannels() {
+  async isPaused() {
+    return this.query(
+      globalConfig.trackerControllers.specialcommands.isPaused,
+      2,
+      undefined,
+      true
+    ).then(val => parseInt(val));
+  }
+
+  async pauseChannels(keepPaused = false) {
+    this.lockPause = keepPaused;
+
     if (this.paused) {
       return;
     }
 
-    return this.query(
+    await this.query(
       globalConfig.trackerControllers.specialcommands.pauseHardware,
       1,
       undefined,
@@ -324,16 +339,38 @@ class TrackerController extends InstrumentController {
     ).then(() => {
       this.paused = true;
     });
+
+    this.eachGroup(group => {
+      wsconnection.send({
+        instrumentId: this.getInstrumentId(),
+        groupName: group.groupName,
+        data: { paused: this.paused }
+      });
+    });
   }
 
-  async resumeChannels() {
-    return this.query(
+  async resumeChannels(forceUnlock) {
+    if (this.lockPause && !forceUnlock) {
+      return;
+    }
+
+    this.lockPause = false;
+
+    await this.query(
       globalConfig.trackerControllers.specialcommands.resumeHardware,
       1,
       undefined,
       true
     ).then(() => {
       this.paused = false;
+    });
+
+    this.eachGroup(group => {
+      wsconnection.send({
+        instrumentId: this.getInstrumentId(),
+        groupName: group.groupName,
+        data: { paused: this.paused }
+      });
     });
   }
 
@@ -904,22 +941,29 @@ class TrackerController extends InstrumentController {
     //}
   }
 
+  async eachGroup(method) {
+    let groups = this.getInstrumentConfig().groups;
+    for (let group of groups) {
+      await method(group);
+    }
+  }
+
   async measureEnvironment() {
-    if (uvCalibration) {
+    if (this.uvCalibration) {
       return;
     }
 
     let groups = this.getInstrumentConfig().groups;
     let temperature, lights, humidity;
 
-    for (let group of groups) {
+    this.eachGroup(async group => {
       let data = {
-        paused: this.paused
+        paused: await this.isPaused()
       };
 
       if (group.humiditySensor) {
         const humidity = await this.measureGroupHumidityTemperature(group);
-        console.log(humidity);
+
         data.temperature = humidity.temperature;
         data.humidity = humidity.humidity;
       }
@@ -952,6 +996,8 @@ class TrackerController extends InstrumentController {
 
           case 'photodiode':
           default:
+
+          console.log( await this.measureGroupLightIntensity(group.groupName) );
             Object.assign(data, {
               lightOnOff: group.light.on,
               lightOnOffButton: await this.lightIsEnabled(group.groupName),
@@ -964,6 +1010,16 @@ class TrackerController extends InstrumentController {
 
             break;
         }
+
+        if (group.light.temperature) {
+          Object.assign(data, {
+            lightTemperature: await this.lightMeasureTemperature(
+              group.groupName
+            )
+          });
+        }
+
+        console.log(data);
 
         if (group.light.uv) {
           switch (group.light.uv.intensityMode) {
@@ -1030,9 +1086,9 @@ class TrackerController extends InstrumentController {
         group.heatController.feedbackTemperatureSensor
       ) {
         Object.assign(data, {
-          heater_reference_temperature: this.temperatures[group.groupName][
-            group.heatController.feedbackTemperatureSensor
-          ].total,
+          heater_reference_temperature: this.heatGetTemperature(
+            group.groupName
+          ),
           heater_target_temperature: group.heatController.target,
           heater_power: group.heatController.power,
           heater_cooling: group.generalRelay
@@ -1047,7 +1103,7 @@ class TrackerController extends InstrumentController {
         groupName: group.groupName,
         data: data
       });
-    }
+    });
   }
 
   updateStatus() {
@@ -1077,7 +1133,6 @@ class TrackerController extends InstrumentController {
         lightMode: lightStatusByte & 0b00100000 ? 'auto' : 'manual',
         lightOverTemperature: lightStatusByte & 0b00010000
       };
-      console.log(data, lightStatusByte & 0b01000000);
       wsconnection.send({
         instrumentId: this.getInstrumentId(),
         groupName: group.groupName,
@@ -1096,8 +1151,9 @@ class TrackerController extends InstrumentController {
     extend(true, group.light, control);
 
     await this.normalizeLightController(); // Pushes the modifications to the controller board
+    //await this.triggerTimerName('light');
     await this.lightSensing(true); // Forces a new recording of the light
-    await this.measureEnvironment(); // Re-measure the light values, setpoint, and so on
+    await this.triggerTimerName('env'); //this.measureEnvironment(); // Re-measure the light values, setpoint, and so on
   }
 
   lightGetControl(groupName) {
@@ -1138,7 +1194,7 @@ class TrackerController extends InstrumentController {
   }
 
   async lightSensing(force = false) {
-    if (uvCalibration) {
+    if (this.uvCalibration) {
       return;
     }
 
@@ -1187,11 +1243,35 @@ class TrackerController extends InstrumentController {
         this.lightSetpoint[group.groupName] = group.light.setPoint;
       }
 
-      await this.lightCheck(group.groupName, force);
+      const lightStatusByte = this.lightStatusBytes[group.light.channelId];
+      if ((lightStatusByte & 0b11110000) == 0b11110000) {
+        await this.lightCheck(group.groupName, force, () => {
+          wsconnection.send({
+            instrumentId: this.getInstrumentId(),
+
+            log: {
+              type: 'info',
+              message: `Adjusting light...`
+            }
+          });
+
+          return true; // Allow method execution
+        });
+
+        wsconnection.send({
+          instrumentId: this.getInstrumentId(),
+          log: {
+            type: 'info',
+            message: `Light adjusted`
+          }
+        });
+
+        this.measureEnvironment();
+      }
     }
   }
 
-  async _lightCommand(groupName, command, value, request) {
+  async _lightCommand(groupName, command, value, request, executeBefore) {
     const group = this.getGroupFromGroupName(groupName);
 
     if (!groupName) {
@@ -1204,7 +1284,8 @@ class TrackerController extends InstrumentController {
           group.light.channelId,
           value
         ),
-        request ? 2 : 1
+        request ? 2 : 1,
+        executeBefore
       );
     }
 
@@ -1239,6 +1320,12 @@ class TrackerController extends InstrumentController {
     );
   }
 
+  async lightMeasureTemperature(groupName) {
+    return this._lightCommand(groupName, 'temperature', undefined, true).then(
+      value => parseFloat(value)
+    );
+  }
+
   async lightSetSetpoint(groupName, setpoint) {
     const group = this.getGroupFromGroupName(groupName);
     group.light.setPoint = setpoint;
@@ -1255,18 +1342,26 @@ class TrackerController extends InstrumentController {
     );
   }
 
-  async lightCheck(groupName, force) {
+  async lightCheck(groupName, force, executeBefore = () => {}) {
     const group = this.getGroupFromGroupName(groupName);
     const light = group.light;
 
     if (force) {
-      return this._lightCommand(groupName, 'forcecheck', undefined, true).then(
-        val => console.log(val)
-      );
+      return this._lightCommand(
+        groupName,
+        'forcecheck',
+        undefined,
+        true,
+        executeBefore
+      ).then(val => console.log(val));
     } else {
-      return this._lightCommand(groupName, 'check', undefined, true).then(val =>
-        console.log(val)
-      );
+      return this._lightCommand(
+        groupName,
+        'check',
+        undefined,
+        true,
+        executeBefore
+      ).then(val => console.log(val));
     }
 
     if (light.uv) {
@@ -1303,7 +1398,7 @@ class TrackerController extends InstrumentController {
     const group = this.getGroupFromGroupName(groupName);
     const light = group.light;
 
-    uvCalibration = true;
+    this.uvCalibration = true;
     // Turn off white light
     await this._lightCommand(groupName, 'setPWM', 0);
 
@@ -1314,7 +1409,14 @@ class TrackerController extends InstrumentController {
         let i = 0;
         while (true) {
           let uvIntensity = await this.lightMeasureUV(groupName);
-          if (Math.abs(light.uv.setPoint - uvIntensity) < 1) {
+
+          wsconnection.send({
+            instrumentId: this.getInstrumentId(),
+            groupName: groupName,
+            data: { lightUVValue: uvIntensity }
+          });
+
+          if (Math.abs(light.uv.setPoint - uvIntensity) < 0.5) {
             break;
           }
 
@@ -1323,27 +1425,27 @@ class TrackerController extends InstrumentController {
               break;
             }
 
-            light.uv.pwm--;
+            light.uv.pwm -= 4;
           } else {
-            if (light.uv.pwm == 1024) {
+            if (light.uv.pwm == 4094) {
               break;
             }
 
-            light.uv.pwm++;
+            light.uv.pwm += 4;
           }
 
-          await delay(10);
+          await delay(200);
 
           this.lightSetPWM(groupName, light.uv.channel, light.uv.pwm);
 
-          if (i > 1000) {
+          if (i > 4094) {
             break;
           }
         }
       }
     }
 
-    uvCalibration = false;
+    this.uvCalibration = false;
 
     // Turn white light back on
     return this._lightCommand(groupName, 'check', undefined, true).then(val =>
@@ -1624,15 +1726,28 @@ class TrackerController extends InstrumentController {
           !intervals[i].processing
         ) {
           if (!this.paused) {
-            intervals[i].lastTime = Date.now();
-            // Removed the "await", which could hang other processes
-            this.processCallback(intervals[i]);
+            this.triggerTimer(i);
           }
         }
       }
     } catch (e) {}
 
     setTimeout(this.processTimer, 1000);
+  }
+
+  triggerTimerName(timerName, chanId = undefined) {
+    const intervalId = this.getIntervalName(timerName, chanId);
+    this.triggerTimer(intervalId);
+  }
+
+  triggerTimer(i) {
+    if (!intervals[i]) {
+      console.error('No interval defined for: ' + i);
+      return;
+    }
+    intervals[i].lastTime = Date.now();
+    // Removed the "await", which could hang other processes
+    this.processCallback(intervals[i]);
   }
 
   async processCallback(interval) {
@@ -1874,7 +1989,6 @@ class TrackerController extends InstrumentController {
 
                 wsconnection.send({
                   instrumentId: this.getInstrumentId(),
-
                   log: {
                     type: 'info',
                     channel: chanId,
@@ -1991,6 +2105,10 @@ class TrackerController extends InstrumentController {
   //////////////////////////////////////
 
   async _getTrackData(chanId, iterator = 0) {
+    if (this.uvCalibration) {
+      return;
+    }
+
     const cfg = this.getInstrumentConfig();
 
     const data = await this.query(
@@ -2047,7 +2165,7 @@ class TrackerController extends InstrumentController {
       return;
     }
 
-    const data = await this._getTrackData(chanId);
+    let data = await this._getTrackData(chanId);
     let temperature;
 
     if (
@@ -2059,17 +2177,34 @@ class TrackerController extends InstrumentController {
       temperature = { thermistor: this.groupTemperature[group.groupName] };
     }
 
-    const voltageMean = parseFloat(data[0]),
-      currentMean = parseFloat(data[1]),
-      powerMean = parseFloat(data[2]),
-      voltageMin = parseFloat(data[3]),
-      currentMin = parseFloat(data[4]),
-      powerMin = parseFloat(data[5]),
-      voltageMax = parseFloat(data[6]),
-      currentMax = parseFloat(data[7]),
-      powerMax = parseFloat(data[8]),
-      nb = parseFloat(data[9]),
-      pga = parseFloat(data[10]);
+    data = data.map(el => parseFloat(el));
+
+    const voltageMean = data[0],
+      currentMean = data[1],
+      powerMean = data[2],
+      voltageMin = data[3],
+      currentMin = data[4],
+      powerMin = data[5],
+      voltageMax = data[6],
+      currentMax = data[7],
+      powerMax = data[8],
+      nb = data[9],
+      pga = data[10];
+
+    for (var i = 0; i < 9; i++) {
+      if (data[i] > 100) {
+        console.warn('Data out of range for chan ' + chanId, nb, i);
+        wsconnection.send({
+          instrumentId: this.getInstrumentId(),
+          log: {
+            type: 'warning',
+            channel: chanId,
+            message:
+              'Data out of range for this channel. Probably a communication error'
+          }
+        });
+      }
+    }
 
     if (nb == 0) {
       console.warn('No points collected for chan ' + chanId, nb);
@@ -2092,8 +2227,7 @@ class TrackerController extends InstrumentController {
     // powerMean in watt
 
     const lightChannel = group.light.channelId;
-    //const sun 			= await this.getChannelLightIntensity( chanId );
-    const sun = 0.01;
+    const sun = await this.getChannelLightIntensity(chanId);
 
     const efficiency =
       (powerMean / (status.cellArea / 10000) / (sun * 1000)) * 100;
@@ -2728,6 +2862,10 @@ class TrackerController extends InstrumentController {
       group.heatController &&
       group.heatController.feedbackTemperatureSensor
     ) {
+      if (group.heatController.feedbackTemperatureSensor == 'env') {
+        return this.groupTemperature[groupName];
+      }
+
       return this.temperatures[groupName][
         group.heatController.feedbackTemperatureSensor
       ].total;
@@ -2786,9 +2924,8 @@ class TrackerController extends InstrumentController {
   async heaterFeedback(groupName) {
     const group = this.getGroupFromGroupName(groupName);
     //	console.log( this.temperatures[ groupName ], group.heatController.feedbackTemperatureSensor );
-    const feedbackTemperature = this.temperatures[groupName][
-      group.heatController.feedbackTemperatureSensor
-    ].total;
+
+    const feedbackTemperature = this.heatGetTemperature(groupName);
 
     if (!group.heatController) {
       throw new Error(

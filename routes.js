@@ -25,6 +25,19 @@ module.exports = app => {
     const instrumentId = req.query.instrumentId;
     const groupName = req.query.groupName;
 
+    res.type('application/json');
+    res.header('Content-Type', 'application/json');
+
+    res.send(JSON.stringify(trackerController.getInstruments()));
+  });
+
+  app.get('/getChannels', function(req, res) {
+    res.type('application/json');
+    res.header('Content-Type', 'application/json');
+
+    const instrumentId = req.query.instrumentId;
+    const groupName = req.query.groupName;
+
     res.send(
       JSON.stringify(trackerController.getChannels(instrumentId, groupName))
     );
@@ -223,7 +236,7 @@ module.exports = app => {
 
   app.get('/pauseChannels', function(req, res) {
     trackerController
-      .pauseChannels(req.query.instrumentId)
+      .pauseChannels(req.query.instrumentId, true)
       .then(() => {
         res.send('');
       })
@@ -239,7 +252,7 @@ module.exports = app => {
     res.type('application/json');
 
     trackerController
-      .resumeChannels(req.query.instrumentId)
+      .resumeChannels(req.query.instrumentId, true)
       .then(() => {
         res.send('');
       })
@@ -760,6 +773,8 @@ module.exports = app => {
           .send('Error while adding the recipe: ' + error.toString());
       });
   });
+
+  
   app.get('/recipes.remove', (req, res) => {
     trackerController
       .deleteRecipe(req.query.recipeName)
