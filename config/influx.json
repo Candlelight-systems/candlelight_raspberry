@@ -1,10 +1,19 @@
 {
 	"db": "matahari",
-	"host": "192.168.0.100",
+	"host": "192.168.0.104",
 	"password": "",
 	"port": "8086",
 	"username": "",
 	"db_authentication": "No user defined",
 	"db_connection": "ok",
-	"db_dbexists": "ok"
+	"db_dbexists": "ok",
+	"buttonValue": "Update",
+	"connect": "Success ! Instrument response: candlelight.1206.10001",
+	"connectstate": "success",
+	"title": "Edit a Candlelight instrument",
+	"trackerHost": "192.168.0.104",
+	"trackerName": "Main Instrument",
+	"trackerPort": "8080",
+	"trackerPortDiagnosis": "8082",
+	"trackerPortWS": "8081"
 }
