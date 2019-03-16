@@ -1006,7 +1006,8 @@ class TrackerController extends InstrumentController {
           case 'photodiode':
           default:
 
-          console.log( await this.measureGroupLightIntensity(group.groupName) );
+console.log( group );
+
             Object.assign(data, {
               lightOnOff: group.light.on,
               lightOnOffButton: await this.lightIsEnabled(group.groupName),
@@ -1138,6 +1139,7 @@ class TrackerController extends InstrumentController {
       this.lightStatusBytes[group.light.channelId] = lightStatusByte;
 
       const data = {
+        lightOnOff: (lightStatusByte & 0b10000000) > 0,
         lightOnOffButton: (lightStatusByte & 0b01000000) > 0,
         lightMode: lightStatusByte & 0b00100000 ? 'auto' : 'manual',
         lightOverTemperature: lightStatusByte & 0b00010000
