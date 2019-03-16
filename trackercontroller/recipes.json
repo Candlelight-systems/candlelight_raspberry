@@ -1,0 +1,43 @@
+{
+	"MyRecipe": {
+		"iv_autostart": true
+	},
+	"MyRecipe2": {
+		"cellArea": "1",
+		"connection": "group",
+		"lightSource": "pd_pyr",
+		"correctionFactor_type": "manual",
+		"correctionFactor_value": 1,
+		"iv_start": "1",
+		"iv_stop": "-1",
+		"iv_rate": "1",
+		"chanId": 1,
+		"enable": 0,
+		"instrumentId": "Small cells",
+		"iv_autostart": false,
+		"iv_hysteresis": false,
+		"iv_interval": 86400000,
+		"iv_measurement_interval_auto_maxTime": 3600000,
+		"iv_measurement_interval_auto_minTime": 60000,
+		"iv_measurement_interval_auto_pdrop": 0.25,
+		"iv_measurement_interval_type": "fixed",
+		"lightRefValue": null,
+		"measurementName": null,
+		"tracking_bwfwthreshold": 0,
+		"tracking_fwbwthreshold": 0,
+		"tracking_gain": -1,
+		"tracking_interval": 100,
+		"tracking_measure_jsc": 0,
+		"tracking_measure_jsc_interval": 86400000,
+		"tracking_measure_jsc_time": 10000,
+		"tracking_measure_voc": 0,
+		"tracking_measure_voc_interval": 86400000,
+		"tracking_measure_voc_time": 10000,
+		"tracking_mode": "1",
+		"tracking_record_interval": 10000,
+		"tracking_step": null,
+		"tracking_switchdelay": 1,
+		"tracking_stepsize": "3",
+		"iv_autostop": false
+	}
+}

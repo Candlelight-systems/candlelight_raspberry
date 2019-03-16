@@ -10,11 +10,7 @@ if (!fs.existsSync(statusPath)) {
   fs.writeFileSync(statusPath, JSON.stringify({ channels: [] }));
 }
 
-const measurementsPath = path.join(__dirname, './measurements.json');
-
-if (!fs.existsSync(measurementsPath)) {
-  fs.writeFileSync(measurementsPath, JSON.stringify({}));
-}
+const measurements = require("./measurements");
 
 let statusGlobal;
 try {
@@ -24,14 +20,7 @@ try {
 }
 
 let status = statusGlobal.channels;
-let measurements;
 
-try {
-  measurements = require('./measurements.json');
-} catch (e) {
-  fs.writeFileSync(measurementsPath, JSON.stringify({}));
-  measurements = {};
-}
 
 const influx = require('./influxhandler');
 const globalConfig = require('../config');
@@ -1144,7 +1133,6 @@ console.log( group );
         lightMode: lightStatusByte & 0b00100000 ? 'auto' : 'manual',
         lightOverTemperature: lightStatusByte & 0b00010000
       };
-
       wsconnection.send({
         instrumentId: this.getInstrumentId(),
         groupName: group.groupName,
@@ -2252,7 +2240,7 @@ console.log( group );
     }
 
     this.automaticJV(chanId, efficiency);
-
+console.log( measurements );
     wsconnection.send({
       instrumentId: this.getInstrumentId(),
       chanId: chanId,

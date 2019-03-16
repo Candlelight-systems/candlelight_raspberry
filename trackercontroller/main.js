@@ -3,10 +3,13 @@ const HostManager = require('../hostmanager');
 const config = require('../config');
 const { trackerControllers } = require('../config');
 const TrackerController = require('./trackercontroller');
-let allMeasurements = require('./measurements.json');
+//let allMeasurements = require('./measurements.json');
 const wsconnection = require('../wsconnection');
 
+const { recipes, saveRecipes } = require('./recipes');
+
 let instrumentInstances = {};
+const allMeasurements = require('./measurements');
 
 for (var i = 0; i < config.hosts.length; i++) {
   if (config.hosts[i].constructorName == 'TrackerController') {
@@ -403,5 +406,20 @@ module.exports = {
 
   batchIV: (instrumentId, parameters) => {
     return getInstrument()._batchIV(parameters);
+  },
+
+  getRecipes: async () => {
+    console.log(recipes);
+    return recipes;
+  },
+
+  addRecipe: async (recipeName, recipe) => {
+    recipes[recipeName] = recipe;
+    return saveRecipes();
+  },
+
+  deleteRecipe: async recipeName => {
+    delete recipes[recipeName];
+    return saveRecipes();
   }
 };
