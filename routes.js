@@ -17,7 +17,7 @@ module.exports = app => {
 
     res.send(JSON.stringify(trackerController.getInstruments()));
   });
-
+/*
   app.get('/getChannels', function(req, res) {
     res.type('application/json');
     res.header('Content-Type', 'application/json');
@@ -30,7 +30,7 @@ module.exports = app => {
 
     res.send(JSON.stringify(trackerController.getInstruments()));
   });
-
+*/
   app.get('/getChannels', function(req, res) {
     res.type('application/json');
     res.header('Content-Type', 'application/json');
