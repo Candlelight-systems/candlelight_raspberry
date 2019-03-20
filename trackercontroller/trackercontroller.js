@@ -10,7 +10,7 @@ if (!fs.existsSync(statusPath)) {
   fs.writeFileSync(statusPath, JSON.stringify({ channels: [] }));
 }
 
-const measurements = require("./measurements");
+const measurements = require('./measurements');
 
 let statusGlobal;
 try {
@@ -20,7 +20,6 @@ try {
 }
 
 let status = statusGlobal.channels;
-
 
 const influx = require('./influxhandler');
 const globalConfig = require('../config');
@@ -204,7 +203,7 @@ class TrackerController extends InstrumentController {
         chanId = groups[i].channels[j].chanId;
 
         if (!this.statusExists(chanId)) {
-          console.log(instrumentId);
+          
           status.push(
             Object.assign(
               {},
@@ -814,7 +813,7 @@ class TrackerController extends InstrumentController {
           status.iv_interval,
           undefined,
           chanId => {
-            console.log(chanId, this.getConfig(chanId));
+            
             return (
               this.getConfig(chanId).iv_measurement_interval_type !== 'auto'
             );
@@ -994,8 +993,7 @@ class TrackerController extends InstrumentController {
 
           case 'photodiode':
           default:
-
-console.log( group );
+            
 
             Object.assign(data, {
               lightOnOff: group.light.on,
@@ -1017,8 +1015,6 @@ console.log( group );
             )
           });
         }
-
-        console.log(data);
 
         if (group.light.uv) {
           switch (group.light.uv.intensityMode) {
@@ -1066,7 +1062,6 @@ console.log( group );
               thermopile: Math.round(thermopile * 10) / 10
             };
 
-            console.log(this.temperatures[group.groupName][chan]);
           }
         }
 
@@ -1448,9 +1443,7 @@ console.log( group );
     this.uvCalibration = false;
 
     // Turn white light back on
-    return this._lightCommand(groupName, 'check', undefined, true).then(val =>
-      console.log(val)
-    );
+    return this._lightCommand(groupName, 'check', undefined, true);
   }
 
   async lightSetScaling(groupName, scaling) {
@@ -1813,23 +1806,23 @@ console.log( group );
       return;
     }
 
-    try {
-      await influx.saveTrackData(
+    await influx
+      .saveTrackData(
         this.trackData.map(data => {
           chans.add(data.chanId);
           return data.influx;
         })
-      );
-    } catch (error) {
-      console.error(error);
-      wsconnection.send({
-        instrumentId: this.getInstrumentId(),
-        log: {
-          type: 'error',
-          message: `Did not manage to save the tracking data into the database. Check that it is running and accessible.`
-        }
+      )
+      .catch(error => {
+        console.error(error);
+        wsconnection.send({
+          instrumentId: this.getInstrumentId(),
+          log: {
+            type: 'error',
+            message: `Did not manage to save the tracking data into the database. Check that it is running and accessible.`
+          }
+        });
       });
-    }
 
     chans.forEach(chan => {
       wsconnection.send({
@@ -1934,7 +1927,7 @@ console.log( group );
               2
             )
           );
-          console.log(status);
+          
           if (status & 0b00000001) {
             // If this particular jv curve is still running
 
@@ -2042,14 +2035,14 @@ console.log( group );
             //	console.log( data, light );
 
             await this.lease(async () => {
-              try {
-                await influx.storeIV(status.measurementName, data, light);
-              } catch (e) {
-                this.error(
-                  `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`,
-                  chanId
-                );
-              }
+              await influx
+                .storeIV(status.measurementName, data, light)
+                .catch(error => {
+                  this.error(
+                    `Did not manage to save the j(V) curve into the database. Check that it is running and accessible.`,
+                    chanId
+                  );
+                });
             });
             //await influx.storeIV( status.measurementName, data, light );
 
@@ -2240,7 +2233,7 @@ console.log( group );
     }
 
     this.automaticJV(chanId, efficiency);
-console.log( measurements );
+    
     wsconnection.send({
       instrumentId: this.getInstrumentId(),
       chanId: chanId,
@@ -2481,23 +2474,21 @@ console.log( measurements );
 
         console.info(`Voc for channel ${chanId}: ${voc}`);
 
-        try {
-          await this.lease(() => {
-            return influx.storeVoc(status.measurementName, voc);
-          });
-        } catch (error) {
-          console.log(error);
+        await this.lease(() => {
+          return influx.storeVoc(status.measurementName, voc).catch(error => {
+            console.log(error);
 
-          wsconnection.send({
-            instrumentId: this.getInstrumentId(),
-            log: {
-              type: 'error',
-              message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
-            }
-          });
+            wsconnection.send({
+              instrumentId: this.getInstrumentId(),
+              log: {
+                type: 'error',
+                message: `Did not manage to save the open circuit voltage into the database. Check that it is running and accessible.`
+              }
+            });
 
-          this.preventMPPT[chanId] = false;
-        }
+            this.preventMPPT[chanId] = false;
+          });
+        });
 
         wsconnection.send({
           instrumentId: this.getInstrumentId(),
@@ -2590,21 +2581,19 @@ console.log( measurements );
           2
         ).then(val => parseFloat(val));
 
-        try {
-          await this.lease(() => {
-            return influx.storeJsc(status.measurementName, jsc);
-          });
-        } catch (error) {
-          wsconnection.send({
-            instrumentId: this.getInstrumentId(),
-            log: {
-              type: 'error',
-              message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
-            }
-          });
+        await this.lease(() => {
+          return influx.storeJsc(status.measurementName, jsc).catch(error => {
+            wsconnection.send({
+              instrumentId: this.getInstrumentId(),
+              log: {
+                type: 'error',
+                message: `Did not manage to save the short circuit current into the database. Check that it is running and accessible.`
+              }
+            });
 
-          this.preventMPPT[chanId] = true;
-        }
+            this.preventMPPT[chanId] = true;
+          });
+        });
 
         wsconnection.send({
           instrumentId: this.getInstrumentId(),
@@ -2661,7 +2650,6 @@ console.log( measurements );
       if (!group.heatController) {
         continue;
       }
-      console.log(group.heatController);
 
       if (group.heatController.target) {
         await this.heatUpdateSSRTarget(group.groupName);
