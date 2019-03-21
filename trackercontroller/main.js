@@ -404,6 +404,10 @@ module.exports = {
     return getInstrument(instrumentId).autoZero(chanId);
   },
 
+  autoZeroMaster: (instrumentId, chanId) => {
+    return getInstrument(instrumentId).autoZeroMaster(chanId);
+  },
+
   batchIV: (instrumentId, parameters) => {
     return getInstrument()._batchIV(parameters);
   },

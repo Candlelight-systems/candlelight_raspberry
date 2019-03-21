@@ -745,6 +745,19 @@ module.exports = app => {
       });
   });
 
+  app.get('/instrument.autoZeroMaster', (req, res) => {
+    trackerController
+      .autoZeroMaster(req.query.instrumentId, req.query.channelId)
+      .then(() => {
+        res.send('ok');
+      })
+      .catch(error => {
+        console.error(error);
+        console.trace(error);
+        res.status(500).send(`Cannot auto-zero. Error was "${error}"`);
+      });
+  });
+
   app.post('/measurement.batchIV', (req, res) => {
     trackerController.batchIV(req.query.instrumentId, req.body);
   });

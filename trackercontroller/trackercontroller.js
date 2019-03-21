@@ -3052,6 +3052,12 @@ class TrackerController extends InstrumentController {
       globalConfig.trackerControllers.specialcommands.autoZero(chanId)
     );
   }
+  
+  async autoZeroMaster(chanId) {
+    await this.query(
+      globalConfig.trackerControllers.specialcommands.autoZeroMaster(chanId)
+    );
+  }
 
   async heaterGetVoltage(groupName) {
     const group = this.getGroupFromGroupName(groupName);

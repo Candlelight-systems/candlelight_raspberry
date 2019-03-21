@@ -33,6 +33,11 @@ module.exports = {
       autoZero: chanId => {
         return { string: `RESERVED:AUTOZERO${chanId ? `:CH${chanId}` : ''}` };
       },
+      autoZeroMaster: chanId => {
+        return {
+          string: `RESERVED:AUTOZEROMASTER${chanId ? `:CH${chanId}` : ''}`
+        };
+      },
 
       iv: {
         execute: chanId => {
