@@ -41,7 +41,11 @@ module.exports = {
 
       iv: {
         execute: chanId => {
-          return { string: `IV:EXECUTE:CH${chanId}`, waitAfter: 1000 };
+          return {
+            string: `IV:EXECUTE:CH${chanId}`,
+            timeout: 10000,
+            waitAfter: 1000
+          };
         },
         data: chanId => {
           return { string: `IV:DATA:CH${chanId}`, timeout: 10000 };
