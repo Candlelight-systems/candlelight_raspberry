@@ -1053,6 +1053,8 @@ class TrackerController extends InstrumentController {
             group
           );
 
+          console.log( thermistor, thermopile );
+
           for (let chan of sensor.channels) {
             this.temperatures[group.groupName] =
               this.temperatures[group.groupName] || {};
@@ -1070,6 +1072,10 @@ class TrackerController extends InstrumentController {
           group.heatController.feedbackTemperatureSensor
         ) {
           await this.heaterFeedback(group.groupName);
+        }
+
+        if( group.heatController ) {
+          data.fanswitch = group.heatController.fanswitch;
         }
 
         //throw "No heat controller for this group, or no temperature sensor, or no SSR channel associated";
@@ -2843,6 +2849,46 @@ class TrackerController extends InstrumentController {
       'Either no heat controller for this group or cannot execute the requested action'
     );
   }
+
+
+
+
+
+
+  
+  async heatFansOn(groupName) {
+    const group = this.getGroupFromGroupName(groupName);
+    if (group.heatController ) {
+      group.heatController.fanswitch = true;
+
+      // We still need to tell the PID that we're cooling down
+      return this.query( globalConfig.trackerControllers.specialcommands.heat.fansOn( group.slaveNumber ) );
+    }
+
+    throw new Error(
+      'Either no heat controller for this group or cannot execute the requested action'
+    );
+  }
+  
+  async heatFansOff(groupName) {
+    const group = this.getGroupFromGroupName(groupName);
+    if ( group.heatController ) {
+      group.heatController.fanswitch = false;
+
+      // We still need to tell the PID that we're cooling down
+      return this.query( globalConfig.trackerControllers.specialcommands.heat.fansOff( group.slaveNumber ) );
+    }
+
+    throw new Error(
+      'Either no heat controller for this group or cannot execute the requested action'
+    );
+  }
+
+
+
+
+
+
 
   heatGetTemperature(groupName) {
     const group = this.getGroupFromGroupName(groupName);

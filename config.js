@@ -125,6 +125,12 @@ module.exports = {
         cooling: chanId => {
           return { string: `SSR:COOLING:CH${chanId}` };
         },
+        fansOn: slaveNumber => {
+          return { string: `ENVIRONMENT:FANS:SLAVE${slaveNumber} 1` };
+        },
+        fansOff: slaveNumber => {
+          return { string: `ENVIRONMENT:FANS:SLAVE${slaveNumber} 0` };
+        },
         enable: chanId => {
           return { string: `SSR:ENABLE:CH${chanId}` };
         },

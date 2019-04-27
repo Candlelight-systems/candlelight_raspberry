@@ -683,6 +683,39 @@ module.exports = app => {
       });
   });
 
+
+
+  app.get('/heat.fansOn', function(req, res) {
+    trackerController
+      .heatFansOn(req.query.instrumentId, req.query.groupName)
+      .then(power => {
+        res.send('Ok');
+      })
+      .catch(error => {
+        console.log(error);
+        console.trace(error);
+        res
+          .status(500)
+          .send('Fans could not be enabled. Error was "' + error + '"');
+      });
+  });
+
+  app.get('/heat.fansOff', function(req, res) {
+    trackerController
+      .heatFansOff(req.query.instrumentId, req.query.groupName)
+      .then(power => {
+        res.send('Ok');
+      })
+      .catch(error => {
+        console.log(error);
+        console.trace(error);
+        res
+          .status(500)
+          .send('Fans could not be disabled. Error was "' + error + '"');
+      });
+  });
+
+
   app.get('/heat.setPower', function(req, res) {
     trackerController
       .heatSetPower(

@@ -269,6 +269,18 @@ module.exports = {
     await save();
   },
 
+  heatFansOn: async (instrumentId, groupName) => {
+    await getInstrument(instrumentId).heatFansOn(groupName);
+    await getInstrument(instrumentId).measureEnvironment();
+    await save();
+  },
+
+  heatFansOff: async (instrumentId, groupName) => {
+    await getInstrument(instrumentId).heatFansOff(groupName);
+    await getInstrument(instrumentId).measureEnvironment();
+    await save();
+  },
+
   heatSetHeating: async (instrumentId, groupName) => {
     await getInstrument(instrumentId).heatSetHeating(groupName);
     await getInstrument(instrumentId).measureEnvironment();
