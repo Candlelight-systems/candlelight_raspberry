@@ -203,7 +203,6 @@ class TrackerController extends InstrumentController {
         chanId = groups[i].channels[j].chanId;
 
         if (!this.statusExists(chanId)) {
-          
           status.push(
             Object.assign(
               {},
@@ -813,7 +812,6 @@ class TrackerController extends InstrumentController {
           status.iv_interval,
           undefined,
           chanId => {
-            
             return (
               this.getConfig(chanId).iv_measurement_interval_type !== 'auto'
             );
@@ -993,8 +991,6 @@ class TrackerController extends InstrumentController {
 
           case 'photodiode':
           default:
-            
-
             Object.assign(data, {
               lightOnOff: group.light.on,
               lightOnOffButton: await this.lightIsEnabled(group.groupName),
@@ -1053,7 +1049,7 @@ class TrackerController extends InstrumentController {
             group
           );
 
-          console.log( thermistor, thermopile );
+          console.log(thermistor, thermopile);
 
           for (let chan of sensor.channels) {
             this.temperatures[group.groupName] =
@@ -1063,7 +1059,6 @@ class TrackerController extends InstrumentController {
               thermistor: Math.round(thermistor * 10) / 10,
               thermopile: Math.round(thermopile * 10) / 10
             };
-
           }
         }
 
@@ -1074,7 +1069,7 @@ class TrackerController extends InstrumentController {
           await this.heaterFeedback(group.groupName);
         }
 
-        if( group.heatController ) {
+        if (group.heatController) {
           data.fanswitch = group.heatController.fanswitch;
         }
 
@@ -1120,6 +1115,9 @@ class TrackerController extends InstrumentController {
     const groups = this.getInstrumentConfig().groups;
 
     for (let group of groups) {
+      if (!group.light) {
+        continue;
+      }
       const lightStatusByte =
         statusByte[statusLightPositions[group.light.channelId]];
       if (lightStatusByte == this.lightStatusBytes[group.light.channelId]) {
@@ -1933,7 +1931,7 @@ class TrackerController extends InstrumentController {
               2
             )
           );
-          
+
           if (status & 0b00000001) {
             // If this particular jv curve is still running
 
@@ -2225,7 +2223,6 @@ class TrackerController extends InstrumentController {
     //results[9] in sun (1 / 1000 W m^-2)
     // powerMean in watt
 
-    const lightChannel = group.light.channelId;
     const sun = await this.getChannelLightIntensity(chanId);
 
     const efficiency =
@@ -2239,7 +2236,7 @@ class TrackerController extends InstrumentController {
     }
 
     this.automaticJV(chanId, efficiency);
-    
+
     wsconnection.send({
       instrumentId: this.getInstrumentId(),
       chanId: chanId,
@@ -2850,45 +2847,41 @@ class TrackerController extends InstrumentController {
     );
   }
 
-
-
-
-
-
-  
   async heatFansOn(groupName) {
     const group = this.getGroupFromGroupName(groupName);
-    if (group.heatController ) {
+    if (group.heatController) {
       group.heatController.fanswitch = true;
 
       // We still need to tell the PID that we're cooling down
-      return this.query( globalConfig.trackerControllers.specialcommands.heat.fansOn( group.slaveNumber ) );
+      return this.query(
+        globalConfig.trackerControllers.specialcommands.heat.fansOn(
+          group.slaveNumber
+        )
+      );
     }
 
     throw new Error(
       'Either no heat controller for this group or cannot execute the requested action'
     );
   }
-  
+
   async heatFansOff(groupName) {
     const group = this.getGroupFromGroupName(groupName);
-    if ( group.heatController ) {
+    if (group.heatController) {
       group.heatController.fanswitch = false;
 
       // We still need to tell the PID that we're cooling down
-      return this.query( globalConfig.trackerControllers.specialcommands.heat.fansOff( group.slaveNumber ) );
+      return this.query(
+        globalConfig.trackerControllers.specialcommands.heat.fansOff(
+          group.slaveNumber
+        )
+      );
     }
 
     throw new Error(
       'Either no heat controller for this group or cannot execute the requested action'
     );
   }
-
-
-
-
-
-
 
   heatGetTemperature(groupName) {
     const group = this.getGroupFromGroupName(groupName);
@@ -3098,7 +3091,7 @@ class TrackerController extends InstrumentController {
       globalConfig.trackerControllers.specialcommands.autoZero(chanId)
     );
   }
-  
+
   async autoZeroMaster(chanId) {
     await this.query(
       globalConfig.trackerControllers.specialcommands.autoZeroMaster(chanId)
