@@ -312,6 +312,12 @@ class TrackerController extends InstrumentController {
   }
 
   async isPaused() {
+
+    if( this.getInstrumentConfig().noPauseIndication ) {
+      return this.paused;
+    }
+    
+    
     return this.query(
       globalConfig.trackerControllers.specialcommands.isPaused,
       2,
