@@ -1032,6 +1032,12 @@ class TrackerController extends InstrumentController {
                 lightUVSetpoint: group.light.uv.setPoint,
                 lightUVValue: await this.lightMeasureUV(group.groupName)
               });
+              break;
+            case 'psuIntensity':
+              Object.assign(data, {
+                lightUVValue: group.light.uv.setPoint,
+                lightUVMode: 'psuIntensity'
+              });
 
               break;
           }
@@ -1442,6 +1448,12 @@ class TrackerController extends InstrumentController {
           }
         }
       }
+    } else if (light.uv.intensityMode == 'psuIntensity') {
+      this.lightSetPWM(
+        groupName,
+        light.uv.channel,
+        light.uv.intensityMode * 4095
+      );
     }
 
     this.uvCalibration = false;
@@ -1904,6 +1916,10 @@ class TrackerController extends InstrumentController {
 
         let startTime = Date.now();
         let safetyExpiracy = 1000 * 300; // 300 seconds max = 5 minutes.
+
+        await this.getManager('IV').addQuery(async () => {
+          return this.resumeChannels();
+        });
 
         await this.getManager('IV').addQuery(async () => {
           return this.query(
