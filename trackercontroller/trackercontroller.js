@@ -2893,6 +2893,12 @@ class TrackerController extends InstrumentController {
         return this.groupTemperature[groupName];
       }
 
+      if( ! this.temperatures[groupName][
+        group.heatController.feedbackTemperatureSensor
+      ] ) {
+        throw "No temperature for that sensor";
+      }
+    
       return this.temperatures[groupName][
         group.heatController.feedbackTemperatureSensor
       ].total;
