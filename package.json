@@ -1,7 +1,7 @@
 {
   "version": "0.0.1",
   "devDependencies": {
-    "express": "^4.15.2",
+    "express": "^4.17.3",
     "influx": "^5.0.7"
   },
   "dependencies": {
